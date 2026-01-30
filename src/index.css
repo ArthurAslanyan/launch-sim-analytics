@@ -2,95 +2,124 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* LaunchIndex Design System
+   Executive analytics platform - clean, credible, data-focused
+   Primary: Dark Green | Secondary: Muted Green | Background: Light Grey
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Core palette - Executive Green */
+    --background: 150 10% 96%;
+    --foreground: 160 15% 10%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 160 15% 10%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 160 15% 10%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary - Dark Green */
+    --primary: 160 45% 22%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary - Muted Green */
+    --secondary: 155 20% 92%;
+    --secondary-foreground: 160 35% 25%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 150 12% 90%;
+    --muted-foreground: 160 10% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent - Warm subtle highlight */
+    --accent: 155 25% 88%;
+    --accent-foreground: 160 40% 20%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 155 15% 88%;
+    --input: 155 15% 88%;
+    --ring: 160 45% 22%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 98%;
+    /* Chart colors - professional palette */
+    --chart-1: 160 45% 35%;
+    --chart-2: 180 35% 45%;
+    --chart-3: 200 40% 50%;
+    --chart-4: 40 50% 55%;
+    --chart-5: 25 45% 50%;
 
-    --sidebar-foreground: 240 5.3% 26.1%;
+    /* Custom semantic tokens */
+    --success: 160 50% 35%;
+    --success-foreground: 0 0% 98%;
+    --warning: 40 85% 55%;
+    --warning-foreground: 40 90% 15%;
+    --info: 200 75% 45%;
+    --info-foreground: 0 0% 98%;
 
-    --sidebar-primary: 240 5.9% 10%;
+    /* Sidebar */
+    --sidebar-background: 160 35% 18%;
+    --sidebar-foreground: 150 15% 90%;
+    --sidebar-primary: 155 40% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 30% 25%;
+    --sidebar-accent-foreground: 150 15% 95%;
+    --sidebar-border: 160 25% 25%;
+    --sidebar-ring: 155 40% 50%;
 
-    --sidebar-primary-foreground: 0 0% 98%;
+    /* Metric card variants */
+    --metric-positive: 160 50% 35%;
+    --metric-negative: 0 72% 51%;
+    --metric-neutral: 200 45% 45%;
+    --metric-warning: 40 85% 55%;
 
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    /* Badge variants */
+    --badge-success-bg: 160 45% 92%;
+    --badge-success-text: 160 50% 25%;
+    --badge-warning-bg: 40 80% 92%;
+    --badge-warning-text: 40 75% 25%;
+    --badge-info-bg: 200 70% 92%;
+    --badge-info-text: 200 65% 30%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 160 25% 8%;
+    --foreground: 150 15% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 160 20% 12%;
+    --card-foreground: 150 15% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 160 20% 12%;
+    --popover-foreground: 150 15% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 155 45% 50%;
+    --primary-foreground: 160 25% 8%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 160 20% 18%;
+    --secondary-foreground: 150 15% 90%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 160 15% 20%;
+    --muted-foreground: 150 10% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 160 20% 22%;
+    --accent-foreground: 150 15% 95%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --border: 160 15% 22%;
+    --input: 160 15% 22%;
+    --ring: 155 45% 50%;
+
+    --sidebar-background: 160 30% 6%;
+    --sidebar-foreground: 150 15% 90%;
+    --sidebar-primary: 155 40% 50%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 160 25% 15%;
+    --sidebar-accent-foreground: 150 15% 95%;
+    --sidebar-border: 160 20% 15%;
+    --sidebar-ring: 155 40% 50%;
   }
 }
 
@@ -100,6 +129,131 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Typography scale */
+  h1 {
+    @apply text-3xl font-semibold tracking-tight text-foreground;
+  }
+
+  h2 {
+    @apply text-2xl font-semibold tracking-tight text-foreground;
+  }
+
+  h3 {
+    @apply text-xl font-medium text-foreground;
+  }
+
+  h4 {
+    @apply text-lg font-medium text-foreground;
+  }
+}
+
+@layer components {
+  /* Metric card styles */
+  .metric-card {
+    @apply rounded-lg border bg-card p-5 shadow-sm transition-shadow hover:shadow-md;
+  }
+
+  .metric-value {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  .metric-label {
+    @apply text-sm font-medium text-muted-foreground;
+  }
+
+  /* Form section styles */
+  .form-section {
+    @apply rounded-lg border bg-card p-6 shadow-sm;
+  }
+
+  .form-section-title {
+    @apply mb-4 text-lg font-semibold text-foreground flex items-center gap-2;
+  }
+
+  .form-section-description {
+    @apply mb-6 text-sm text-muted-foreground;
+  }
+
+  /* Chart container */
+  .chart-container {
+    @apply rounded-lg border bg-card p-5 shadow-sm;
+  }
+
+  .chart-title {
+    @apply text-base font-semibold text-foreground mb-4;
+  }
+
+  /* Dashboard grid */
+  .dashboard-grid {
+    @apply grid gap-6;
+  }
+
+  /* Navigation link active state */
+  .nav-link-active {
+    @apply bg-sidebar-accent text-sidebar-accent-foreground;
+  }
+
+  /* Score badges */
+  .score-badge {
+    @apply inline-flex items-center rounded-full px-3 py-1 text-sm font-medium;
+  }
+
+  .score-badge-success {
+    @apply bg-[hsl(var(--badge-success-bg))] text-[hsl(var(--badge-success-text))];
+  }
+
+  .score-badge-warning {
+    @apply bg-[hsl(var(--badge-warning-bg))] text-[hsl(var(--badge-warning-text))];
+  }
+
+  .score-badge-info {
+    @apply bg-[hsl(var(--badge-info-bg))] text-[hsl(var(--badge-info-text))];
+  }
+
+  /* Recommendation badge */
+  .recommendation-badge {
+    @apply inline-flex items-center gap-2 rounded-lg px-4 py-2 text-base font-semibold;
+  }
+
+  /* Data table enhancements */
+  .data-table-header {
+    @apply bg-muted/50 font-semibold;
+  }
+}
+
+@layer utilities {
+  /* Subtle animations */
+  .animate-fade-in {
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-in {
+    animation: slideIn 0.4s ease-out;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
   }
 }
