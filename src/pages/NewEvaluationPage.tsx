@@ -188,6 +188,15 @@ export default function NewEvaluationPage() {
       subtitle="Configure game mechanics to run behavioral simulation"
     >
       <form onSubmit={handleSubmit} className="mx-auto max-w-4xl space-y-6">
+        {/* Upload Section */}
+        <FormSection
+          title="Upload Game Brief (Auto-Fill)"
+          description="Upload a game design document to auto-fill the form below"
+          icon={<FileUp className="h-5 w-5" />}
+        >
+          <DocumentUpload onExtracted={handleExtracted} />
+        </FormSection>
+
         {/* Section 1: Basic Info */}
         <FormSection
           title="Basic Information"
