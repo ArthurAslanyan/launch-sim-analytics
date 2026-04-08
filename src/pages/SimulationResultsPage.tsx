@@ -42,7 +42,7 @@ export default function SimulationResultsPage() {
     }
   }, []);
 
-  if (!game || !results) {
+  if (!game || !results || !results.archetypeSelection) {
     return (
       <DashboardLayout title="No Simulation Data">
         <div className="flex flex-col items-center justify-center py-20 text-center">
