@@ -1,5 +1,14 @@
-// LaunchIndex Behavioral Simulation Engine
-// Rule-based mechanics simulation for slot game evaluation
+// LaunchIndex Deterministic Behavioral Simulation Engine
+// All outputs are rule-based, computed from game math inputs
+
+export interface RtpBreakdown {
+  baseGameRtp: number;
+  wildRtp: number;
+  respinRtp: number;
+  freeSpinsRtp: number;
+  jackpotRtp: number;
+  otherFeatureRtp: number;
+}
 
 export interface GameConcept {
   gameName: string;
@@ -10,7 +19,9 @@ export interface GameConcept {
   cascades: string;
   baseHitFrequency: string;
   volatility: string;
-  rtpTarget?: number;
+  rtpTarget: number;
+  topWin: number;
+  rtpBreakdown: RtpBreakdown;
   features: Feature[];
   sessionLength: string;
   bonusImportance: string;
@@ -27,414 +38,495 @@ export interface Feature {
   progressImpact: string;
 }
 
-// Player Archetype Definitions
-interface ArchetypeProfile {
-  name: string;
-  startingBankroll: { min: number; max: number };
-  lossTolerancePercent: number;
-  deadSpinTolerance: number;
-  featureSensitivity: number; // 0-1, how much they care about features
-  volatilityPreference: number; // -1 to 1, negative = low vol, positive = high vol
-  sessionPatienceMultiplier: number;
+// ============================================
+// INPUT MODEL PROCESSING
+// ============================================
+
+export interface ComputedInputMetrics {
+  totalRtp: number;
+  featureRtpTotal: number;
+  baseRtpRatio: number;
+  featureDependencyIndex: number;
+  jackpotWeight: number;
 }
 
-const ARCHETYPES: ArchetypeProfile[] = [
-  {
-    name: "Casual",
-    startingBankroll: { min: 50, max: 100 },
-    lossTolerancePercent: 40,
-    deadSpinTolerance: 12,
-    featureSensitivity: 0.3,
-    volatilityPreference: -0.5,
-    sessionPatienceMultiplier: 0.8,
-  },
-  {
-    name: "Bonus-Seeking",
-    startingBankroll: { min: 100, max: 200 },
-    lossTolerancePercent: 50,
-    deadSpinTolerance: 20,
-    featureSensitivity: 0.9,
-    volatilityPreference: 0.2,
-    sessionPatienceMultiplier: 1.2,
-  },
-  {
-    name: "Volatility-Seeking",
-    startingBankroll: { min: 150, max: 300 },
-    lossTolerancePercent: 70,
-    deadSpinTolerance: 25,
-    featureSensitivity: 0.5,
-    volatilityPreference: 0.8,
-    sessionPatienceMultiplier: 1.0,
-  },
-  {
-    name: "Budget-Constrained",
-    startingBankroll: { min: 30, max: 60 },
-    lossTolerancePercent: 25,
-    deadSpinTolerance: 8,
-    featureSensitivity: 0.4,
-    volatilityPreference: -0.7,
-    sessionPatienceMultiplier: 0.6,
-  },
-  {
-    name: "Progress-Oriented",
-    startingBankroll: { min: 80, max: 150 },
-    lossTolerancePercent: 45,
-    deadSpinTolerance: 15,
-    featureSensitivity: 0.7,
-    volatilityPreference: 0,
-    sessionPatienceMultiplier: 1.1,
-  },
-];
-
-// Outcome probability calculation based on game mechanics
-function calculateOutcomeProbabilities(game: GameConcept) {
-  const gridMultiplier = {
-    "3×5": 0.9,
-    "4×5": 1.0,
-    "5×5": 1.1,
-    "6×5": 1.2,
-  }[game.gridLayout] || 1.0;
-
-  const payStructureModifier = {
-    Lines: { deadSpin: 0.55, smallWin: 0.30, meaningfulWin: 0.10 },
-    Ways: { deadSpin: 0.45, smallWin: 0.38, meaningfulWin: 0.12 },
-    Cluster: { deadSpin: 0.50, smallWin: 0.32, meaningfulWin: 0.13 },
-  }[game.payStructure] || { deadSpin: 0.50, smallWin: 0.33, meaningfulWin: 0.12 };
-
-  const volatilityModifier = {
-    Low: { deadSpinMod: 0.85, meaningfulMod: 0.7 },
-    Medium: { deadSpinMod: 1.0, meaningfulMod: 1.0 },
-    "Medium-High": { deadSpinMod: 1.1, meaningfulMod: 1.3 },
-    High: { deadSpinMod: 1.2, meaningfulMod: 1.6 },
-  }[game.volatility] || { deadSpinMod: 1.0, meaningfulMod: 1.0 };
-
-  const hitFreqModifier = {
-    Low: 1.15,
-    Medium: 1.0,
-    High: 0.85,
-  }[game.baseHitFrequency] || 1.0;
-
-  const cascadeBonus = game.cascades === "Yes" ? 0.92 : 1.0;
-
-  // Calculate base feature trigger probability
-  const avgFeatureTrigger = game.features.length > 0
-    ? game.features.reduce((sum, f) => {
-        const freqProb = { Low: 0.005, Medium: 0.015, High: 0.03 }[f.triggerFrequency] || 0.015;
-        return sum + freqProb;
-      }, 0) / game.features.length
-    : 0.01;
+export function computeInputMetrics(game: GameConcept): ComputedInputMetrics {
+  const bd = game.rtpBreakdown;
+  const featureRtpTotal = bd.wildRtp + bd.respinRtp + bd.freeSpinsRtp + bd.jackpotRtp + bd.otherFeatureRtp;
+  const totalRtp = game.rtpTarget || (bd.baseGameRtp + featureRtpTotal);
+  const baseRtpRatio = totalRtp > 0 ? bd.baseGameRtp / totalRtp : 0;
+  const featureDependencyIndex = totalRtp > 0 ? featureRtpTotal / totalRtp : 0;
+  const jackpotWeight = totalRtp > 0 ? bd.jackpotRtp / totalRtp : 0;
 
   return {
-    deadSpin: Math.min(0.75, payStructureModifier.deadSpin * volatilityModifier.deadSpinMod * hitFreqModifier * cascadeBonus * gridMultiplier),
-    smallWin: Math.max(0.15, payStructureModifier.smallWin * (2 - hitFreqModifier)),
-    meaningfulWin: Math.max(0.05, payStructureModifier.meaningfulWin * volatilityModifier.meaningfulMod / gridMultiplier),
-    featureTrigger: avgFeatureTrigger,
+    totalRtp,
+    featureRtpTotal,
+    baseRtpRatio,
+    featureDependencyIndex,
+    jackpotWeight,
   };
 }
 
-// Session outcome types
-type SessionEndReason = 
-  | "boredom"
-  | "loss_tolerance"
-  | "bankroll_depleted"
-  | "no_bonus"
-  | "time_limit";
+// ============================================
+// ARCHETYPE SELECTION LOGIC
+// ============================================
 
-interface SessionResult {
-  spins: number;
-  duration: number; // minutes
-  endReason: SessionEndReason;
-  finalBankroll: number;
-  startingBankroll: number;
-  featureTriggered: boolean;
-  peakBankroll: number;
+export interface ArchetypeSelection {
+  archetype: string;
+  reason: string;
 }
 
-interface ArchetypeResults {
-  archetype: string;
-  sessions: SessionResult[];
-  avgDuration: number;
-  medianDuration: number;
+export function selectArchetype(game: GameConcept, metrics: ComputedInputMetrics): ArchetypeSelection {
+  if (metrics.featureDependencyIndex > 0.45) {
+    return {
+      archetype: "Bonus-Seeking Player",
+      reason: `Feature Dependency Index is ${(metrics.featureDependencyIndex * 100).toFixed(1)}% (> 45%), indicating heavy reliance on bonus features for RTP delivery.`,
+    };
+  }
+  if (game.volatility === "High" && game.topWin > 2000) {
+    return {
+      archetype: "Volatility-Seeking Player",
+      reason: `High volatility combined with top win of ${game.topWin}x (> 2000x) appeals to risk-tolerant, high-reward seekers.`,
+    };
+  }
+  if (metrics.baseRtpRatio > 0.60) {
+    return {
+      archetype: "Casual Player",
+      reason: `Base RTP ratio is ${(metrics.baseRtpRatio * 100).toFixed(1)}% (> 60%), suggesting consistent base game returns suited for casual players.`,
+    };
+  }
+  return {
+    archetype: "Balanced Player",
+    reason: "No dominant feature dependency, volatility, or base game bias detected. Game appeals broadly across player types.",
+  };
+}
+
+// ============================================
+// SESSION BEHAVIOR CALCULATION
+// ============================================
+
+export interface SessionBehavior {
+  baseSessionLength: number;
+  adjustedSessionLength: number;
+  earlyExitProbability: number;
   survivalAt30: number;
   survivalAt60: number;
   survivalAt120: number;
-  endReasonDistribution: Record<SessionEndReason, number>;
-  avgBankrollDepletion: number;
-  avgDurationWithFeature: number;
-  avgDurationWithoutFeature: number;
 }
 
+export function computeSessionBehavior(game: GameConcept, metrics: ComputedInputMetrics): SessionBehavior {
+  // Base session length
+  const baseMap: Record<string, number> = {
+    Low: 5,
+    Medium: 6,
+    "Medium-High": 7,
+    High: 8.5,
+  };
+  let baseSessionLength = baseMap[game.volatility] ?? 6;
+
+  let adjustedSessionLength = baseSessionLength;
+  if (metrics.featureDependencyIndex > 0.5) adjustedSessionLength += 1;
+  if (metrics.baseRtpRatio < 0.45) adjustedSessionLength -= 1;
+
+  // Early exit probability
+  let earlyExit = 20;
+  // Feature trigger probability is "low" if average feature trigger freq is Low
+  const avgFeatureFreqIsLow = game.features.length === 0 || 
+    game.features.filter(f => f.triggerFrequency === "Low").length > game.features.length / 2;
+  if (avgFeatureFreqIsLow) earlyExit += 15;
+  if (metrics.baseRtpRatio < 0.45) earlyExit += 10;
+  if (metrics.jackpotWeight > 0.08) earlyExit += 10;
+  earlyExit = Math.min(60, earlyExit);
+
+  // Survival curve
+  const survivalAt30 = 100 - earlyExit / 2;
+  const survivalAt60 = 100 - earlyExit;
+  const remaining = survivalAt60;
+  const survivalAt120 = remaining * 0.5;
+
+  return {
+    baseSessionLength,
+    adjustedSessionLength,
+    earlyExitProbability: earlyExit,
+    survivalAt30: Math.round(survivalAt30 * 10) / 10,
+    survivalAt60: Math.round(survivalAt60 * 10) / 10,
+    survivalAt120: Math.round(survivalAt120 * 10) / 10,
+  };
+}
+
+// ============================================
+// FEATURE INTERACTION
+// ============================================
+
+export interface FeatureInteraction {
+  sessionsReachingFeature: number;
+  sessionsReachingJackpot: number;
+  sessionsEndingBeforeFeature: number;
+}
+
+export function computeFeatureInteraction(game: GameConcept, metrics: ComputedInputMetrics): FeatureInteraction {
+  let sessionsReachingFeature = 50;
+  const featureFreqIsLow = game.features.length === 0 || 
+    game.features.filter(f => f.triggerFrequency === "Low").length > game.features.length / 2;
+  if (featureFreqIsLow) sessionsReachingFeature -= 10;
+  if (game.baseHitFrequency === "High") sessionsReachingFeature += 10;
+  sessionsReachingFeature = Math.max(10, Math.min(90, sessionsReachingFeature));
+
+  let sessionsReachingJackpot: number;
+  if (metrics.jackpotWeight > 0.08) {
+    sessionsReachingJackpot = 5; // 4-6% range, use midpoint
+  } else {
+    sessionsReachingJackpot = 2.5; // 2-3% range, use midpoint
+  }
+
+  const sessionsEndingBeforeFeature = 100 - sessionsReachingFeature;
+
+  return {
+    sessionsReachingFeature,
+    sessionsReachingJackpot,
+    sessionsEndingBeforeFeature,
+  };
+}
+
+// ============================================
+// ECONOMY BEHAVIOR
+// ============================================
+
+export interface EconomyBehavior {
+  bankrollDepletion: number;
+  lossDrivenExits: number;
+}
+
+export function computeEconomyBehavior(game: GameConcept, metrics: ComputedInputMetrics): EconomyBehavior {
+  let bankrollDepletion = 35;
+  if (game.volatility === "Medium-High" || game.volatility === "High") bankrollDepletion += 10;
+  if (metrics.baseRtpRatio < 0.45) bankrollDepletion += 10;
+
+  let lossDrivenExits = 25;
+  if (bankrollDepletion > 40) lossDrivenExits += 10;
+  if (metrics.featureDependencyIndex > 0.50) lossDrivenExits += 5;
+
+  return {
+    bankrollDepletion: Math.min(90, bankrollDepletion),
+    lossDrivenExits: Math.min(80, lossDrivenExits),
+  };
+}
+
+// ============================================
+// STOP REASONS DISTRIBUTION
+// ============================================
+
+export interface StopReasons {
+  lossToleranceExceeded: number;
+  noFeatureTrigger: number;
+  timeLimit: number;
+  bigWinExit: number;
+}
+
+export function computeStopReasons(game: GameConcept, metrics: ComputedInputMetrics): StopReasons {
+  let lossTolerance = 30;
+  let noFeature = 15;
+  let bigWin = 10;
+  let timeLimit = 45;
+
+  if (metrics.featureDependencyIndex > 0.45) {
+    noFeature = Math.max(noFeature, 25);
+  }
+  if (game.volatility === "High") {
+    bigWin = Math.max(bigWin, 15);
+  }
+
+  // Normalize to 100
+  const total = lossTolerance + noFeature + bigWin + timeLimit;
+  return {
+    lossToleranceExceeded: Math.round(lossTolerance / total * 100),
+    noFeatureTrigger: Math.round(noFeature / total * 100),
+    timeLimit: Math.round(timeLimit / total * 100),
+    bigWinExit: Math.round(bigWin / total * 100),
+  };
+}
+
+// ============================================
+// BEHAVIORAL INTERPRETATION ENGINE
+// ============================================
+
+export interface BehavioralInsight {
+  title: string;
+  description: string;
+  type: "warning" | "info" | "positive";
+}
+
+export function generateBehavioralInsights(
+  game: GameConcept,
+  metrics: ComputedInputMetrics,
+  featureInteraction: FeatureInteraction
+): BehavioralInsight[] {
+  const insights: BehavioralInsight[] = [];
+
+  // Hope vs Delivery
+  if (metrics.featureDependencyIndex > 0.50 && featureInteraction.sessionsReachingFeature < 50) {
+    insights.push({
+      title: "Hope vs Delivery Mismatch",
+      description: "Strong anticipation curve with weak reward delivery. Players expect feature triggers that don't arrive frequently enough.",
+      type: "warning",
+    });
+  }
+
+  // Mid-layer weakness
+  if (metrics.baseRtpRatio < 0.45) {
+    insights.push({
+      title: "Base Game Reward Gap",
+      description: "Base game does not provide sufficient reward support. Players experience extended low-return periods between features.",
+      type: "warning",
+    });
+  }
+
+  // Jackpot distortion
+  if (metrics.jackpotWeight > 0.08) {
+    insights.push({
+      title: "Jackpot Perception Distortion",
+      description: "Jackpot heavily influences perceived value but has low session impact. Most players will never experience the jackpot reward.",
+      type: "info",
+    });
+  }
+
+  // If no issues detected
+  if (insights.length === 0) {
+    insights.push({
+      title: "Balanced Reward Distribution",
+      description: "Game math shows a balanced distribution between base game and feature rewards, supporting consistent player engagement.",
+      type: "positive",
+    });
+  }
+
+  return insights;
+}
+
+// ============================================
+// RISK FLAGS
+// ============================================
+
+export interface RiskFlag {
+  flag: string;
+  description: string;
+  severity: "high" | "medium";
+}
+
+export function computeRiskFlags(
+  metrics: ComputedInputMetrics,
+  session: SessionBehavior,
+  game: GameConcept
+): RiskFlag[] {
+  const flags: RiskFlag[] = [];
+
+  if (metrics.featureDependencyIndex > 0.50) {
+    flags.push({
+      flag: "HIGH FEATURE DEPENDENCY",
+      description: `Feature Dependency Index at ${(metrics.featureDependencyIndex * 100).toFixed(1)}%. Over half of RTP is delivered through bonus features.`,
+      severity: "high",
+    });
+  }
+
+  if (session.earlyExitProbability > 45) {
+    flags.push({
+      flag: "EARLY SESSION FRAGILITY",
+      description: `Early exit probability at ${session.earlyExitProbability}%. Nearly half of sessions may end before meaningful engagement.`,
+      severity: "high",
+    });
+  }
+
+  if (game.baseHitFrequency === "Medium" && metrics.baseRtpRatio < 0.45) {
+    flags.push({
+      flag: "DRY PERCEPTION RISK",
+      description: "Medium hit frequency combined with low base RTP creates extended periods where players perceive no progress.",
+      severity: "medium",
+    });
+  }
+
+  return flags;
+}
+
+// ============================================
+// WHAT WORKS WELL
+// ============================================
+
+export interface Strength {
+  title: string;
+  description: string;
+}
+
+export function computeStrengths(game: GameConcept, metrics: ComputedInputMetrics): Strength[] {
+  const strengths: Strength[] = [];
+
+  if (metrics.featureDependencyIndex > 0.45) {
+    strengths.push({
+      title: "Strong Feature Engagement",
+      description: "High feature dependency drives strong engagement when bonus features trigger, creating memorable session peaks.",
+    });
+  }
+
+  if (game.topWin > 2000) {
+    strengths.push({
+      title: "Aspirational Win Potential",
+      description: `Top win of ${game.topWin}x provides clear aspirational value and jackpot appeal that attracts volatility-seeking players.`,
+    });
+  }
+
+  if (metrics.baseRtpRatio >= 0.55) {
+    strengths.push({
+      title: "Solid Base Game Returns",
+      description: "Strong base RTP ratio ensures consistent small wins that sustain player engagement between feature triggers.",
+    });
+  }
+
+  if (game.baseHitFrequency === "High") {
+    strengths.push({
+      title: "High Hit Frequency",
+      description: "Frequent base game wins maintain player engagement and reduce perceived volatility during extended sessions.",
+    });
+  }
+
+  if (strengths.length === 0) {
+    strengths.push({
+      title: "Balanced Design",
+      description: "No single outstanding strength, but the overall design shows consistent balance across key metrics.",
+    });
+  }
+
+  return strengths;
+}
+
+// ============================================
+// IMPROVEMENT ENGINE
+// ============================================
+
+export interface Improvement {
+  category: string;
+  suggestion: string;
+  priority: "high" | "medium" | "low";
+}
+
+export function generateImprovements(
+  game: GameConcept,
+  metrics: ComputedInputMetrics,
+  session: SessionBehavior
+): Improvement[] {
+  const improvements: Improvement[] = [];
+
+  if (session.earlyExitProbability > 40) {
+    improvements.push({
+      category: "Early Session Retention",
+      suggestion: "Shift 5–8% RTP into the 1x–5x win range to provide more frequent small wins during early spins.",
+      priority: "high",
+    });
+  }
+
+  if (metrics.featureDependencyIndex > 0.45) {
+    improvements.push({
+      category: "Feature Dependency Reduction",
+      suggestion: "Reduce feature RTP by 2–3% and redistribute to mid-tier wins in the base game to smooth the reward curve.",
+      priority: "high",
+    });
+  }
+
+  if (metrics.baseRtpRatio < 0.45) {
+    improvements.push({
+      category: "Base Game Enhancement",
+      suggestion: "Strengthen base game reward frequency or add micro-features (e.g., random wilds, mini multipliers) to bridge gaps between bonuses.",
+      priority: "medium",
+    });
+  }
+
+  if (metrics.jackpotWeight > 0.08) {
+    improvements.push({
+      category: "Jackpot Rebalancing",
+      suggestion: "Reduce jackpot RTP slightly and increase mid-tier reward density to improve perceived session value for the majority of players.",
+      priority: "medium",
+    });
+  }
+
+  return improvements;
+}
+
+// ============================================
+// ONE-LINE DIAGNOSIS
+// ============================================
+
+export function generateDiagnosis(
+  metrics: ComputedInputMetrics,
+  session: SessionBehavior,
+  riskFlags: RiskFlag[]
+): string {
+  if (riskFlags.length === 0) {
+    return "Game math structure is well-balanced with no critical risk indicators — suitable for production validation.";
+  }
+
+  const highRisks = riskFlags.filter(f => f.severity === "high");
+  if (highRisks.length >= 2) {
+    return "Multiple structural risks detected — recommend significant game math revision before production commitment.";
+  }
+
+  if (session.earlyExitProbability > 45) {
+    return "Early session fragility is the primary risk — redistribution of RTP toward base game small wins is recommended.";
+  }
+
+  if (metrics.featureDependencyIndex > 0.50) {
+    return "High feature dependency creates inconsistent player experience — consider rebalancing RTP between base and feature layers.";
+  }
+
+  return "Minor structural concerns identified — targeted adjustments to game math will improve session stability.";
+}
+
+// ============================================
+// MAIN SIMULATION ENTRY POINT
+// ============================================
+
 export interface SimulationResults {
-  archetypeResults: ArchetypeResults[];
+  inputMetrics: ComputedInputMetrics;
+  archetypeSelection: ArchetypeSelection;
+  sessionBehavior: SessionBehavior;
+  featureInteraction: FeatureInteraction;
+  economyBehavior: EconomyBehavior;
+  stopReasons: StopReasons;
+  behavioralInsights: BehavioralInsight[];
+  riskFlags: RiskFlag[];
+  strengths: Strength[];
+  improvements: Improvement[];
+  diagnosis: string;
+  recommendation: string;
+  // Legacy compat for charts
   structuralStabilityScore: number;
   earlySessionRiskScore: number;
   featureDependencyLevel: "Low" | "Medium" | "High";
-  overallFit: Record<string, { robustness: string; volatilityTolerance: string; bankrollSensitivity: string; overallFit: string }>;
-  recommendation: string;
-  riskSummary: string;
-}
-
-// Pseudo-random with seed for deterministic results
-function seededRandom(seed: number): () => number {
-  let state = seed;
-  return () => {
-    state = (state * 1103515245 + 12345) & 0x7fffffff;
-    return state / 0x7fffffff;
-  };
-}
-
-function runSession(
-  archetype: ArchetypeProfile,
-  probs: ReturnType<typeof calculateOutcomeProbabilities>,
-  game: GameConcept,
-  random: () => number
-): SessionResult {
-  const startingBankroll = archetype.startingBankroll.min + 
-    random() * (archetype.startingBankroll.max - archetype.startingBankroll.min);
-  
-  let bankroll = startingBankroll;
-  let peakBankroll = startingBankroll;
-  let spins = 0;
-  let consecutiveDeadSpins = 0;
-  let featureTriggered = false;
-  let totalSpinsWithoutFeature = 0;
-  const betSize = startingBankroll * 0.02; // 2% of starting bankroll per spin
-  
-  const maxSpins = {
-    Short: 100,
-    Medium: 180,
-    Long: 300,
-  }[game.sessionLength] || 180;
-
-  const adjustedMaxSpins = Math.floor(maxSpins * archetype.sessionPatienceMultiplier);
-  const lossThreshold = startingBankroll * (1 - archetype.lossTolerancePercent / 100);
-  
-  // Feature expectation based on archetype
-  const featurePatience = archetype.featureSensitivity > 0.7 ? 80 : 150;
-
-  let endReason: SessionEndReason = "time_limit";
-
-  while (spins < adjustedMaxSpins && bankroll > betSize) {
-    spins++;
-    bankroll -= betSize;
-    totalSpinsWithoutFeature++;
-
-    const roll = random();
-    let cumProb = 0;
-
-    cumProb += probs.deadSpin;
-    if (roll < cumProb) {
-      // Dead spin
-      consecutiveDeadSpins++;
-      if (consecutiveDeadSpins > archetype.deadSpinTolerance) {
-        endReason = "boredom";
-        break;
-      }
-    } else {
-      consecutiveDeadSpins = 0;
-      cumProb += probs.smallWin;
-      if (roll < cumProb) {
-        // Small win
-        const winMultiplier = 0.5 + random() * 1.5;
-        bankroll += betSize * winMultiplier;
-      } else {
-        cumProb += probs.meaningfulWin;
-        if (roll < cumProb) {
-          // Meaningful win
-          const winMultiplier = 3 + random() * 15;
-          bankroll += betSize * winMultiplier;
-        } else {
-          // Feature trigger
-          featureTriggered = true;
-          totalSpinsWithoutFeature = 0;
-          const featureMultiplier = 10 + random() * 50;
-          bankroll += betSize * featureMultiplier;
-        }
-      }
-    }
-
-    peakBankroll = Math.max(peakBankroll, bankroll);
-
-    // Check stop conditions
-    if (bankroll <= 0) {
-      endReason = "bankroll_depleted";
-      break;
-    }
-
-    if (bankroll < lossThreshold) {
-      endReason = "loss_tolerance";
-      break;
-    }
-
-    if (!featureTriggered && totalSpinsWithoutFeature > featurePatience && archetype.featureSensitivity > 0.6) {
-      endReason = "no_bonus";
-      break;
-    }
-  }
-
-  // Duration: ~3 seconds per spin average
-  const duration = (spins * 3) / 60;
-
-  return {
-    spins,
-    duration: Math.min(duration, 10), // Cap at 10 minutes
-    endReason,
-    finalBankroll: Math.max(0, bankroll),
-    startingBankroll,
-    featureTriggered,
-    peakBankroll,
-  };
-}
-
-function calculateMedian(values: number[]): number {
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-}
-
-function runArchetypeSimulation(
-  archetype: ArchetypeProfile,
-  game: GameConcept,
-  probs: ReturnType<typeof calculateOutcomeProbabilities>,
-  seed: number
-): ArchetypeResults {
-  const random = seededRandom(seed);
-  const sessions: SessionResult[] = [];
-  
-  for (let i = 0; i < 500; i++) {
-    sessions.push(runSession(archetype, probs, game, random));
-  }
-
-  const durations = sessions.map(s => s.duration);
-  const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
-  const medianDuration = calculateMedian(durations);
-
-  const spins = sessions.map(s => s.spins);
-  const survivalAt30 = sessions.filter(s => s.spins >= 30).length / sessions.length * 100;
-  const survivalAt60 = sessions.filter(s => s.spins >= 60).length / sessions.length * 100;
-  const survivalAt120 = sessions.filter(s => s.spins >= 120).length / sessions.length * 100;
-
-  const endReasonDistribution: Record<SessionEndReason, number> = {
-    boredom: 0,
-    loss_tolerance: 0,
-    bankroll_depleted: 0,
-    no_bonus: 0,
-    time_limit: 0,
-  };
-
-  sessions.forEach(s => {
-    endReasonDistribution[s.endReason]++;
-  });
-
-  Object.keys(endReasonDistribution).forEach(key => {
-    endReasonDistribution[key as SessionEndReason] = 
-      (endReasonDistribution[key as SessionEndReason] / sessions.length) * 100;
-  });
-
-  const avgBankrollDepletion = sessions.reduce((sum, s) => {
-    return sum + ((s.startingBankroll - s.finalBankroll) / s.startingBankroll) * 100;
-  }, 0) / sessions.length;
-
-  const sessionsWithFeature = sessions.filter(s => s.featureTriggered);
-  const sessionsWithoutFeature = sessions.filter(s => !s.featureTriggered);
-
-  const avgDurationWithFeature = sessionsWithFeature.length > 0
-    ? sessionsWithFeature.reduce((sum, s) => sum + s.duration, 0) / sessionsWithFeature.length
-    : 0;
-  
-  const avgDurationWithoutFeature = sessionsWithoutFeature.length > 0
-    ? sessionsWithoutFeature.reduce((sum, s) => sum + s.duration, 0) / sessionsWithoutFeature.length
-    : avgDuration;
-
-  return {
-    archetype: archetype.name,
-    sessions,
-    avgDuration,
-    medianDuration,
-    survivalAt30,
-    survivalAt60,
-    survivalAt120,
-    endReasonDistribution,
-    avgBankrollDepletion,
-    avgDurationWithFeature,
-    avgDurationWithoutFeature,
-  };
 }
 
 export function runSimulation(game: GameConcept): SimulationResults {
-  const probs = calculateOutcomeProbabilities(game);
-  const baseSeed = game.gameName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  const inputMetrics = computeInputMetrics(game);
+  const archetypeSelection = selectArchetype(game, inputMetrics);
+  const sessionBehavior = computeSessionBehavior(game, inputMetrics);
+  const featureInteraction = computeFeatureInteraction(game, inputMetrics);
+  const economyBehavior = computeEconomyBehavior(game, inputMetrics);
+  const stopReasons = computeStopReasons(game, inputMetrics);
+  const behavioralInsights = generateBehavioralInsights(game, inputMetrics, featureInteraction);
+  const riskFlags = computeRiskFlags(inputMetrics, sessionBehavior, game);
+  const strengths = computeStrengths(game, inputMetrics);
+  const improvements = generateImprovements(game, inputMetrics, sessionBehavior);
+  const diagnosis = generateDiagnosis(inputMetrics, sessionBehavior, riskFlags);
 
-  const archetypeResults = ARCHETYPES.map((archetype, index) => 
-    runArchetypeSimulation(archetype, game, probs, baseSeed + index * 1000)
-  );
+  // Structural Stability Score
+  const stabilityBase = 70;
+  const stabilityPenalties = riskFlags.length * 15 + (sessionBehavior.earlyExitProbability > 40 ? 10 : 0);
+  const structuralStabilityScore = Math.max(0, Math.min(100, stabilityBase - stabilityPenalties));
 
-  // Calculate cross-archetype metrics
-  const avgSurvival60 = archetypeResults.reduce((sum, r) => sum + r.survivalAt60, 0) / archetypeResults.length;
-  const avgBoredomRate = archetypeResults.reduce((sum, r) => sum + r.endReasonDistribution.boredom, 0) / archetypeResults.length;
-  const avgBankrollDepletion = archetypeResults.reduce((sum, r) => sum + r.avgBankrollDepletion, 0) / archetypeResults.length;
+  // Early Session Risk Score
+  const earlySessionRiskScore = Math.min(100, Math.max(0, sessionBehavior.earlyExitProbability));
 
-  // Structural Stability Score (0-100)
-  const structuralStabilityScore = Math.round(
-    Math.min(100, Math.max(0,
-      50 +
-      (avgSurvival60 - 50) * 0.5 +
-      (50 - avgBoredomRate) * 0.3 +
-      (70 - avgBankrollDepletion) * 0.3
-    ))
-  );
+  // Feature dependency level
+  const featureDependencyLevel: "Low" | "Medium" | "High" =
+    inputMetrics.featureDependencyIndex > 0.50 ? "High" :
+    inputMetrics.featureDependencyIndex > 0.30 ? "Medium" : "Low";
 
-  // Early Session Risk Score (0-100, higher = more risk)
-  const avgSurvival30 = archetypeResults.reduce((sum, r) => sum + r.survivalAt30, 0) / archetypeResults.length;
-  const casualResult = archetypeResults.find(r => r.archetype === "Casual");
-  const budgetResult = archetypeResults.find(r => r.archetype === "Budget-Constrained");
-  
-  const earlyDropoff = 100 - avgSurvival30;
-  const casualBoredom = casualResult?.endReasonDistribution.boredom || 0;
-  const budgetDepletion = budgetResult?.endReasonDistribution.bankroll_depleted || 0;
-
-  const earlySessionRiskScore = Math.round(
-    Math.min(100, Math.max(0,
-      earlyDropoff * 0.4 +
-      casualBoredom * 0.3 +
-      budgetDepletion * 0.3
-    ))
-  );
-
-  // Feature Dependency Level
-  const avgDurationDiff = archetypeResults.reduce((sum, r) => {
-    return sum + (r.avgDurationWithFeature - r.avgDurationWithoutFeature);
-  }, 0) / archetypeResults.length;
-
-  const featureDependencyLevel: "Low" | "Medium" | "High" = 
-    avgDurationDiff > 3 ? "High" :
-    avgDurationDiff > 1.5 ? "Medium" : "Low";
-
-  // Overall fit per archetype
-  const overallFit: SimulationResults["overallFit"] = {};
-  
-  archetypeResults.forEach(r => {
-    const robustness = r.survivalAt60 > 60 ? "High" : r.survivalAt60 > 40 ? "Medium" : "Low";
-    const volatilityTolerance = r.endReasonDistribution.loss_tolerance < 20 ? "High" : 
-      r.endReasonDistribution.loss_tolerance < 35 ? "Medium" : "Low";
-    const bankrollSensitivity = r.avgBankrollDepletion < 50 ? "Low" : 
-      r.avgBankrollDepletion < 70 ? "Medium" : "High";
-    
-    const fitScore = (robustness === "High" ? 3 : robustness === "Medium" ? 2 : 1) +
-                     (volatilityTolerance === "High" ? 3 : volatilityTolerance === "Medium" ? 2 : 1) +
-                     (bankrollSensitivity === "Low" ? 3 : bankrollSensitivity === "Medium" ? 2 : 1);
-    
-    const overallFitValue = fitScore >= 7 ? "Good" : fitScore >= 5 ? "Moderate" : "Poor";
-
-    overallFit[r.archetype] = {
-      robustness,
-      volatilityTolerance,
-      bankrollSensitivity,
-      overallFit: overallFitValue,
-    };
-  });
-
-  // Generate recommendation
+  // Recommendation
   let recommendation: string;
   if (structuralStabilityScore >= 70 && earlySessionRiskScore <= 30) {
     recommendation = "Ready to Launch";
@@ -446,101 +538,21 @@ export function runSimulation(game: GameConcept): SimulationResults {
     recommendation = "Redesign Recommended";
   }
 
-  // Generate risk summary
-  const risks: string[] = [];
-  
-  if (earlySessionRiskScore > 40) {
-    risks.push("High early-session dropout risk detected. Consider increasing hit frequency or adding early engagement mechanics.");
-  }
-  
-  if (featureDependencyLevel === "High") {
-    risks.push("Strong feature dependency observed. Sessions without bonus triggers are significantly shorter.");
-  }
-  
-  if (avgBoredomRate > 25) {
-    risks.push("Elevated boredom-driven exits. Dead spin sequences may be too long for target audience.");
-  }
-  
-  if (budgetResult && budgetResult.endReasonDistribution.bankroll_depleted > 40) {
-    risks.push("Budget-constrained players face high bankroll depletion risk. Consider lower volatility options.");
-  }
-
-  const opportunities: string[] = [];
-  
-  if (structuralStabilityScore >= 60) {
-    opportunities.push("Core mechanics show solid engagement potential across archetypes.");
-  }
-  
-  if (probs.featureTrigger > 0.02) {
-    opportunities.push("Feature trigger frequency supports bonus-seeking player retention.");
-  }
-
-  const riskSummary = [
-    ...risks.map(r => `• Risk: ${r}`),
-    ...opportunities.map(o => `• Opportunity: ${o}`),
-  ].join("\n") || "• No significant structural issues detected. Game mechanics are well-balanced for target player segments.";
-
   return {
-    archetypeResults,
+    inputMetrics,
+    archetypeSelection,
+    sessionBehavior,
+    featureInteraction,
+    economyBehavior,
+    stopReasons,
+    behavioralInsights,
+    riskFlags,
+    strengths,
+    improvements,
+    diagnosis,
+    recommendation,
     structuralStabilityScore,
     earlySessionRiskScore,
     featureDependencyLevel,
-    overallFit,
-    recommendation,
-    riskSummary,
   };
-}
-
-// Survival curve data for charts
-export function getSurvivalCurveData(results: SimulationResults) {
-  const spinPoints = [0, 10, 20, 30, 40, 50, 60, 80, 100, 120, 150, 180];
-  
-  return spinPoints.map(spin => {
-    const dataPoint: Record<string, number | string> = { spins: spin };
-    
-    results.archetypeResults.forEach(ar => {
-      const survival = ar.sessions.filter(s => s.spins >= spin).length / ar.sessions.length * 100;
-      dataPoint[ar.archetype] = Math.round(survival * 10) / 10;
-    });
-    
-    return dataPoint;
-  });
-}
-
-// Session end reason data for charts  
-export function getEndReasonData(results: SimulationResults) {
-  return results.archetypeResults.map(ar => ({
-    archetype: ar.archetype,
-    "Low Engagement": Math.round(ar.endReasonDistribution.boredom * 10) / 10,
-    "Loss Tolerance": Math.round(ar.endReasonDistribution.loss_tolerance * 10) / 10,
-    "Bankroll Depleted": Math.round(ar.endReasonDistribution.bankroll_depleted * 10) / 10,
-    "No Bonus": Math.round(ar.endReasonDistribution.no_bonus * 10) / 10,
-    "Time Limit": Math.round(ar.endReasonDistribution.time_limit * 10) / 10,
-  }));
-}
-
-// Feature impact data
-export function getFeatureImpactData(results: SimulationResults) {
-  return results.archetypeResults.map(ar => ({
-    archetype: ar.archetype,
-    "With Feature": Math.round(ar.avgDurationWithFeature * 100) / 100,
-    "Without Feature": Math.round(ar.avgDurationWithoutFeature * 100) / 100,
-  }));
-}
-
-// Bankroll depletion data
-export function getBankrollDepletionData(results: SimulationResults) {
-  return results.archetypeResults.map(ar => ({
-    archetype: ar.archetype,
-    depletion: Math.round(ar.avgBankrollDepletion * 10) / 10,
-  }));
-}
-
-// Duration data
-export function getDurationData(results: SimulationResults) {
-  return results.archetypeResults.map(ar => ({
-    archetype: ar.archetype,
-    average: Math.round(ar.avgDuration * 100) / 100,
-    median: Math.round(ar.medianDuration * 100) / 100,
-  }));
 }

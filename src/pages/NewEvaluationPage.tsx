@@ -7,14 +7,15 @@ import {
   Timer, 
   Plus, 
   Trash2,
-  Play
+  Play,
+  PieChart
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FormSection, FormField, FormRow } from "@/components/FormSection";
 import { MultiSelect, SelectButtons } from "@/components/MultiSelect";
-import { GameConcept, Feature, runSimulation } from "@/lib/simulation";
+import { GameConcept, Feature, RtpBreakdown, runSimulation } from "@/lib/simulation";
 
 const TARGET_MARKETS = ["UK", "Nordics", "EU", "LATAM", "Global"];
 const PLAYER_FOCUS = ["Casual", "Bonus-Seeking", "Volatility-Seeking", "Budget-Constrained", "Progress-Oriented"];
@@ -53,7 +54,16 @@ export default function NewEvaluationPage() {
   const [cascades, setCascades] = useState("");
   const [baseHitFrequency, setBaseHitFrequency] = useState("");
   const [volatility, setVolatility] = useState("");
-  const [rtpTarget, setRtpTarget] = useState("");
+  const [rtpTarget, setRtpTarget] = useState("96.5");
+  const [topWin, setTopWin] = useState("5000");
+
+  // RTP Breakdown
+  const [baseGameRtp, setBaseGameRtp] = useState("45");
+  const [wildRtp, setWildRtp] = useState("5");
+  const [respinRtp, setRespinRtp] = useState("3");
+  const [freeSpinsRtp, setFreeSpinsRtp] = useState("25");
+  const [jackpotRtp, setJackpotRtp] = useState("8");
+  const [otherFeatureRtp, setOtherFeatureRtp] = useState("10.5");
 
   const [features, setFeatures] = useState<Feature[]>([createEmptyFeature()]);
 
@@ -82,6 +92,15 @@ export default function NewEvaluationPage() {
     e.preventDefault();
     setIsSubmitting(true);
 
+    const rtpBreakdown: RtpBreakdown = {
+      baseGameRtp: parseFloat(baseGameRtp) || 0,
+      wildRtp: parseFloat(wildRtp) || 0,
+      respinRtp: parseFloat(respinRtp) || 0,
+      freeSpinsRtp: parseFloat(freeSpinsRtp) || 0,
+      jackpotRtp: parseFloat(jackpotRtp) || 0,
+      otherFeatureRtp: parseFloat(otherFeatureRtp) || 0,
+    };
+
     const gameConcept: GameConcept = {
       gameName: gameName || "Untitled Game",
       targetMarkets,
@@ -91,7 +110,9 @@ export default function NewEvaluationPage() {
       cascades,
       baseHitFrequency,
       volatility,
-      rtpTarget: rtpTarget ? parseFloat(rtpTarget) : undefined,
+      rtpTarget: parseFloat(rtpTarget) || 96.5,
+      topWin: parseFloat(topWin) || 5000,
+      rtpBreakdown,
       features: features.filter((f) => f.type),
       sessionLength,
       bonusImportance,
@@ -99,19 +120,20 @@ export default function NewEvaluationPage() {
       referenceGames,
     };
 
-    // Run simulation
     const results = runSimulation(gameConcept);
 
-    // Store results in sessionStorage for the results page
     sessionStorage.setItem("launchindex_game", JSON.stringify(gameConcept));
     sessionStorage.setItem("launchindex_results", JSON.stringify(results));
 
-    // Simulate processing delay for UX
     await new Promise((resolve) => setTimeout(resolve, 800));
 
     setIsSubmitting(false);
     navigate("/results");
   };
+
+  const computedFeatureRtp = (parseFloat(wildRtp) || 0) + (parseFloat(respinRtp) || 0) + 
+    (parseFloat(freeSpinsRtp) || 0) + (parseFloat(jackpotRtp) || 0) + (parseFloat(otherFeatureRtp) || 0);
+  const computedTotalRtp = (parseFloat(baseGameRtp) || 0) + computedFeatureRtp;
 
   return (
     <DashboardLayout
@@ -202,7 +224,28 @@ export default function NewEvaluationPage() {
               />
             </FormField>
 
-            <FormField label="RTP Target (optional)">
+            <FormField label="Top Win (× bet)">
+              <Input
+                type="number"
+                min="100"
+                max="50000"
+                value={topWin}
+                onChange={(e) => setTopWin(e.target.value)}
+                placeholder="e.g., 5000"
+                className="max-w-32"
+              />
+            </FormField>
+          </FormRow>
+        </FormSection>
+
+        {/* Section 2.5: RTP Breakdown */}
+        <FormSection
+          title="RTP Breakdown"
+          description="Define how total RTP is distributed across game layers"
+          icon={<PieChart className="h-5 w-5" />}
+        >
+          <FormRow>
+            <FormField label="Total RTP Target (%)">
               <Input
                 type="number"
                 step="0.01"
@@ -214,7 +257,105 @@ export default function NewEvaluationPage() {
                 className="max-w-32"
               />
             </FormField>
+            <FormField label="Base Game RTP (%)">
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="99"
+                value={baseGameRtp}
+                onChange={(e) => setBaseGameRtp(e.target.value)}
+                placeholder="e.g., 45"
+                className="max-w-32"
+              />
+            </FormField>
           </FormRow>
+
+          <FormRow columns={3}>
+            <FormField label="Wild RTP (%)">
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="50"
+                value={wildRtp}
+                onChange={(e) => setWildRtp(e.target.value)}
+                placeholder="e.g., 5"
+                className="max-w-32"
+              />
+            </FormField>
+            <FormField label="Respin RTP (%)">
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="50"
+                value={respinRtp}
+                onChange={(e) => setRespinRtp(e.target.value)}
+                placeholder="e.g., 3"
+                className="max-w-32"
+              />
+            </FormField>
+            <FormField label="Free Spins RTP (%)">
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="50"
+                value={freeSpinsRtp}
+                onChange={(e) => setFreeSpinsRtp(e.target.value)}
+                placeholder="e.g., 25"
+                className="max-w-32"
+              />
+            </FormField>
+          </FormRow>
+
+          <FormRow>
+            <FormField label="Jackpot RTP (%)">
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="50"
+                value={jackpotRtp}
+                onChange={(e) => setJackpotRtp(e.target.value)}
+                placeholder="e.g., 8"
+                className="max-w-32"
+              />
+            </FormField>
+            <FormField label="Other Feature RTP (%)">
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="50"
+                value={otherFeatureRtp}
+                onChange={(e) => setOtherFeatureRtp(e.target.value)}
+                placeholder="e.g., 10.5"
+                className="max-w-32"
+              />
+            </FormField>
+          </FormRow>
+
+          {/* Live computed summary */}
+          <div className="rounded-lg bg-secondary/50 p-4 text-sm">
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <span className="text-muted-foreground">Feature RTP Total</span>
+                <p className="text-lg font-semibold">{computedFeatureRtp.toFixed(1)}%</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Computed Total RTP</span>
+                <p className="text-lg font-semibold">{computedTotalRtp.toFixed(1)}%</p>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Feature Dependency</span>
+                <p className="text-lg font-semibold">
+                  {computedTotalRtp > 0 ? (computedFeatureRtp / computedTotalRtp * 100).toFixed(1) : "0.0"}%
+                </p>
+              </div>
+            </div>
+          </div>
         </FormSection>
 
         {/* Section 3: Features */}
