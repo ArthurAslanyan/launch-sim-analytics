@@ -74,6 +74,51 @@ export default function NewEvaluationPage() {
   const [earlyExcitement, setEarlyExcitement] = useState("");
   const [referenceGames, setReferenceGames] = useState("");
 
+  const handleExtracted = useCallback((data: ExtractedGameData) => {
+    if (data.game_name) setGameName(data.game_name);
+    if (data.target_market?.length) {
+      const mapped = data.target_market.map(m => {
+        const lower = m.toLowerCase();
+        return TARGET_MARKETS.find(t => t.toLowerCase() === lower) || m;
+      }).filter(Boolean);
+      setTargetMarkets(mapped);
+    }
+    if (data.grid_size) {
+      const normalized = data.grid_size.replace("x", "×");
+      const match = GRID_LAYOUTS.find(g => g.includes(normalized) || normalized.includes(g));
+      if (match) setGridLayout(match);
+    }
+    if (data.pay_mechanic) {
+      const pm = data.pay_mechanic.toLowerCase();
+      if (pm.includes("line")) setPayStructure("Lines");
+      else if (pm.includes("way")) setPayStructure("Ways");
+      else if (pm.includes("cluster")) setPayStructure("Cluster");
+    }
+    if (data.volatility) {
+      const vol = data.volatility.toLowerCase();
+      const match = VOLATILITIES.find(v => v.toLowerCase() === vol);
+      if (match) setVolatility(match);
+      else setVolatility("Medium"); // default
+    }
+    if (data.rtp != null) {
+      setRtpTarget(String(data.rtp));
+    }
+    if (data.features?.length) {
+      const mappedFeatures = data.features.map(f => {
+        const feat = createEmptyFeature();
+        const lower = f.toLowerCase();
+        if (lower.includes("free spin")) feat.type = "Free Spins";
+        else if (lower.includes("respin")) feat.type = "Respins";
+        else if (lower.includes("multiplier")) feat.type = "Multipliers";
+        else if (lower.includes("collect")) feat.type = "Collection";
+        else if (lower.includes("bonus")) feat.type = "Bonus Game";
+        else feat.type = FEATURE_TYPES.find(ft => lower.includes(ft.toLowerCase())) || f;
+        return feat;
+      });
+      setFeatures(mappedFeatures);
+    }
+  }, []);
+
   const addFeature = () => {
     setFeatures([...features, createEmptyFeature()]);
   };
