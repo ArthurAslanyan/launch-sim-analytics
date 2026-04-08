@@ -59,7 +59,7 @@ export default function SimulationResultsPage() {
     );
   }
 
-  const { inputMetrics, archetypeSelection, sessionBehavior, featureInteraction, economyBehavior, stopReasons, behavioralInsights, riskFlags, strengths, improvements, diagnosis } = results;
+  const { inputMetrics, archetypeSelection, sessionBehavior, featureInteraction, economyBehavior, stopReasons, behavioralInsights, riskFlags, strengths, improvements, diagnosis } = results || {} as SimulationResults;
 
   return (
     <DashboardLayout
