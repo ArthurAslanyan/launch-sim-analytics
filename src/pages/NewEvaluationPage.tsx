@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Info, 
@@ -8,7 +8,8 @@ import {
   Plus, 
   Trash2,
   Play,
-  PieChart
+  PieChart,
+  FileUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { FormSection, FormField, FormRow } from "@/components/FormSection";
 import { MultiSelect, SelectButtons } from "@/components/MultiSelect";
 import { GameConcept, Feature, RtpBreakdown, runSimulation } from "@/lib/simulation";
+import { DocumentUpload, ExtractedGameData } from "@/components/DocumentUpload";
 
 const TARGET_MARKETS = ["UK", "Nordics", "EU", "LATAM", "Global"];
 const PLAYER_FOCUS = ["Casual", "Bonus-Seeking", "Volatility-Seeking", "Budget-Constrained", "Progress-Oriented"];
