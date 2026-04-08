@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Info, 
@@ -8,7 +8,8 @@ import {
   Plus, 
   Trash2,
   Play,
-  PieChart
+  PieChart,
+  FileUp
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +17,7 @@ import { DashboardLayout } from "@/components/DashboardLayout";
 import { FormSection, FormField, FormRow } from "@/components/FormSection";
 import { MultiSelect, SelectButtons } from "@/components/MultiSelect";
 import { GameConcept, Feature, RtpBreakdown, runSimulation } from "@/lib/simulation";
+import { DocumentUpload, ExtractedGameData } from "@/components/DocumentUpload";
 
 const TARGET_MARKETS = ["UK", "Nordics", "EU", "LATAM", "Global"];
 const PLAYER_FOCUS = ["Casual", "Bonus-Seeking", "Volatility-Seeking", "Budget-Constrained", "Progress-Oriented"];
@@ -71,6 +73,51 @@ export default function NewEvaluationPage() {
   const [bonusImportance, setBonusImportance] = useState("");
   const [earlyExcitement, setEarlyExcitement] = useState("");
   const [referenceGames, setReferenceGames] = useState("");
+
+  const handleExtracted = useCallback((data: ExtractedGameData) => {
+    if (data.game_name) setGameName(data.game_name);
+    if (data.target_market?.length) {
+      const mapped = data.target_market.map(m => {
+        const lower = m.toLowerCase();
+        return TARGET_MARKETS.find(t => t.toLowerCase() === lower) || m;
+      }).filter(Boolean);
+      setTargetMarkets(mapped);
+    }
+    if (data.grid_size) {
+      const normalized = data.grid_size.replace("x", "×");
+      const match = GRID_LAYOUTS.find(g => g.includes(normalized) || normalized.includes(g));
+      if (match) setGridLayout(match);
+    }
+    if (data.pay_mechanic) {
+      const pm = data.pay_mechanic.toLowerCase();
+      if (pm.includes("line")) setPayStructure("Lines");
+      else if (pm.includes("way")) setPayStructure("Ways");
+      else if (pm.includes("cluster")) setPayStructure("Cluster");
+    }
+    if (data.volatility) {
+      const vol = data.volatility.toLowerCase();
+      const match = VOLATILITIES.find(v => v.toLowerCase() === vol);
+      if (match) setVolatility(match);
+      else setVolatility("Medium"); // default
+    }
+    if (data.rtp != null) {
+      setRtpTarget(String(data.rtp));
+    }
+    if (data.features?.length) {
+      const mappedFeatures = data.features.map(f => {
+        const feat = createEmptyFeature();
+        const lower = f.toLowerCase();
+        if (lower.includes("free spin")) feat.type = "Free Spins";
+        else if (lower.includes("respin")) feat.type = "Respins";
+        else if (lower.includes("multiplier")) feat.type = "Multipliers";
+        else if (lower.includes("collect")) feat.type = "Collection";
+        else if (lower.includes("bonus")) feat.type = "Bonus Game";
+        else feat.type = FEATURE_TYPES.find(ft => lower.includes(ft.toLowerCase())) || f;
+        return feat;
+      });
+      setFeatures(mappedFeatures);
+    }
+  }, []);
 
   const addFeature = () => {
     setFeatures([...features, createEmptyFeature()]);
@@ -141,6 +188,15 @@ export default function NewEvaluationPage() {
       subtitle="Configure game mechanics to run behavioral simulation"
     >
       <form onSubmit={handleSubmit} className="mx-auto max-w-4xl space-y-6">
+        {/* Upload Section */}
+        <FormSection
+          title="Upload Game Brief (Auto-Fill)"
+          description="Upload a game design document to auto-fill the form below"
+          icon={<FileUp className="h-5 w-5" />}
+        >
+          <DocumentUpload onExtracted={handleExtracted} />
+        </FormSection>
+
         {/* Section 1: Basic Info */}
         <FormSection
           title="Basic Information"
