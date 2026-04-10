@@ -9,8 +9,19 @@ import {
   Shield,
   Target,
   TrendingUp,
+  Users,
   Zap,
 } from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { MetricCard, RecommendationBadge, ScoreBadge } from "@/components/MetricCard";
 import {
