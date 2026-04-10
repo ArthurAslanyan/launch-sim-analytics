@@ -200,7 +200,131 @@ export default function SimulationResultsPage() {
           />
         </SectionCard>
 
-        {/* 6. Behavioral Interpretation */}
+        {/* Behavioral Simulation Engine - Survival Curves */}
+        {behavioralSimulation && (
+          <>
+            <SectionCard
+              title="Session Survival by Player Archetype"
+              icon={<Users className="h-5 w-5 text-primary" />}
+            >
+              <div className="mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Deterministic decay model showing estimated session survival across player archetypes based on loss pressure, dead spin pressure, and feature absence pressure.
+                </p>
+              </div>
+              <div className="h-[340px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={behavioralSimulation.survivalData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="spin"
+                      label={{ value: "Spin Count", position: "insideBottom", offset: -2, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      label={{ value: "% Sessions Active", angle: -90, position: "insideLeft", offset: 10, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }}
+                      tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: 12,
+                      }}
+                      formatter={(value: number) => [`${value}%`, undefined]}
+                    />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Line
+                      type="monotone"
+                      dataKey="casual_survival"
+                      name="Casual Player"
+                      stroke="hsl(160, 45%, 30%)"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="bonus_survival"
+                      name="Bonus-Seeking Player"
+                      stroke="hsl(160, 40%, 50%)"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="volatility_survival"
+                      name="Volatility-Seeking Player"
+                      stroke="hsl(155, 35%, 70%)"
+                      strokeWidth={2.5}
+                      dot={{ r: 3 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Decay Rate Table */}
+              <div className="mt-6">
+                <h4 className="text-sm font-semibold mb-3">Archetype Decay Rates</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow className="data-table-header">
+                      <TableHead>Archetype</TableHead>
+                      <TableHead className="text-right">Decay Rate</TableHead>
+                      <TableHead className="text-right">Assessment</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {behavioralSimulation.archetypes.map((a, i) => (
+                      <TableRow key={i}>
+                        <TableCell className="font-medium">{a.name}</TableCell>
+                        <TableCell className="text-right font-mono font-semibold">{a.decayRate.toFixed(3)}</TableCell>
+                        <TableCell className="text-right">
+                          <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
+                            a.decayRate > 0.7
+                              ? "bg-destructive/10 text-destructive"
+                              : a.decayRate > 0.5
+                              ? "bg-[hsl(var(--badge-warning-bg))] text-[hsl(var(--badge-warning-text))]"
+                              : "bg-[hsl(var(--badge-success-bg))] text-[hsl(var(--badge-success-text))]"
+                          }`}>
+                            {a.label}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </SectionCard>
+
+            {/* Interpretation Panel */}
+            <SectionCard
+              title="Survival Interpretation"
+              icon={<TrendingUp className="h-5 w-5 text-primary" />}
+            >
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Fastest Drop-Off</p>
+                  <p className="text-sm font-semibold">{behavioralSimulation.interpretation.fastestDropOff}</p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Most Stable</p>
+                  <p className="text-sm font-semibold">{behavioralSimulation.interpretation.mostStable}</p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Early Session Risk (0–30 spins)</p>
+                  <p className="text-sm font-semibold">{behavioralSimulation.interpretation.earlySessionRisk}</p>
+                </div>
+                <div className="rounded-lg border p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Retention Driver</p>
+                  <p className="text-sm font-semibold">{behavioralSimulation.interpretation.retentionDriver}</p>
+                </div>
+              </div>
+            </SectionCard>
+          </>
+        )}
+
         <SectionCard
           title="Behavioral Interpretation"
           icon={<Info className="h-5 w-5 text-primary" />}
