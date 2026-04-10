@@ -697,5 +697,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     structuralStabilityScore,
     earlySessionRiskScore,
     featureDependencyLevel,
+    behavioralSimulation,
   };
 }
