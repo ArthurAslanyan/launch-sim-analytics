@@ -70,7 +70,7 @@ export default function SimulationResultsPage() {
     );
   }
 
-  const { inputMetrics, archetypeSelection, sessionBehavior, featureInteraction, economyBehavior, stopReasons, behavioralInsights, riskFlags, strengths, improvements, diagnosis } = results || {} as SimulationResults;
+  const { inputMetrics, archetypeSelection, sessionBehavior, featureInteraction, economyBehavior, stopReasons, behavioralInsights, riskFlags, strengths, improvements, diagnosis, behavioralSimulation } = results || {} as SimulationResults;
 
   return (
     <DashboardLayout
