@@ -478,6 +478,147 @@ export function generateDiagnosis(
 }
 
 // ============================================
+// BEHAVIORAL SIMULATION ENGINE
+// Archetype survival over spins via decay functions
+// ============================================
+
+export interface ArchetypeSurvivalRow {
+  spin: number;
+  casual_survival: number;
+  bonus_survival: number;
+  volatility_survival: number;
+}
+
+export interface ArchetypeDecayInfo {
+  name: string;
+  decayRate: number;
+  label: string;
+}
+
+export interface BehavioralSimulation {
+  survivalData: ArchetypeSurvivalRow[];
+  archetypes: ArchetypeDecayInfo[];
+  interpretation: {
+    fastestDropOff: string;
+    mostStable: string;
+    earlySessionRisk: string;
+    retentionDriver: string;
+  };
+}
+
+export function computeBehavioralSimulation(game: GameConcept): BehavioralSimulation {
+  // Derived game variables
+  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, "Medium-High": 0.65, High: 0.8 };
+  const hitScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, High: 0.7 };
+
+  const volatilityScore = volScoreMap[game.volatility] ?? 0.5;
+  const hitScore = hitScoreMap[game.baseHitFrequency] ?? 0.5;
+
+  // Feature frequency: derive from features array
+  const featureFreqCounts = { Low: 0, Medium: 0, High: 0 };
+  for (const f of game.features) {
+    if (f.triggerFrequency in featureFreqCounts) {
+      featureFreqCounts[f.triggerFrequency as keyof typeof featureFreqCounts]++;
+    }
+  }
+  let featureFreq: string;
+  if (game.features.length === 0) {
+    featureFreq = "Low";
+  } else {
+    const maxCount = Math.max(featureFreqCounts.Low, featureFreqCounts.Medium, featureFreqCounts.High);
+    featureFreq = featureFreqCounts.High === maxCount ? "High" : featureFreqCounts.Medium === maxCount ? "Medium" : "Low";
+  }
+  const featureScoreMap: Record<string, number> = { Low: 0.2, Medium: 0.5, High: 0.8 };
+  const featureScore = featureScoreMap[featureFreq] ?? 0.5;
+
+  // Pressure values
+  const baseRtp = game.rtpBreakdown.baseGameRtp / 100; // normalize to 0-1
+  const deadSpinPressure = 1 - hitScore;
+  const lossPressure = volatilityScore * (1 - baseRtp);
+  const featureAbsencePressure = 1 - featureScore;
+
+  // Archetype definitions
+  const archetypeDefs = [
+    { name: "Casual Player", key: "casual_survival" as const, lossSens: 0.9, deadSens: 1.0, featureSens: 0.6 },
+    { name: "Bonus-Seeking Player", key: "bonus_survival" as const, lossSens: 0.7, deadSens: 0.6, featureSens: 1.2 },
+    { name: "Volatility-Seeking Player", key: "volatility_survival" as const, lossSens: 0.4, deadSens: 0.3, featureSens: 0.5 },
+  ];
+
+  // Compute decay rates
+  const archetypes: ArchetypeDecayInfo[] = archetypeDefs.map(a => {
+    const decayRate = (
+      lossPressure * a.lossSens +
+      deadSpinPressure * a.deadSens +
+      featureAbsencePressure * a.featureSens
+    ) / 3;
+
+    let label: string;
+    if (decayRate > 0.7) label = "High early churn risk";
+    else if (decayRate > 0.5) label = "Moderate retention";
+    else if (decayRate > 0.3) label = "Good retention";
+    else label = "Strong retention";
+
+    return { name: a.name, decayRate, label };
+  });
+
+  // Survival curve
+  const spinSteps = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120];
+  const survivalData: ArchetypeSurvivalRow[] = spinSteps.map(spin => {
+    const row: ArchetypeSurvivalRow = { spin, casual_survival: 0, bonus_survival: 0, volatility_survival: 0 };
+    for (const a of archetypes) {
+      const raw = 100 * Math.exp(-a.decayRate * spin / 50);
+      const clamped = Math.max(5, Math.min(100, Math.round(raw * 10) / 10));
+      row[archetypeDefs.find(d => d.name === a.name)!.key] = clamped;
+    }
+    return row;
+  });
+
+  // Interpretation
+  const sorted = [...archetypes].sort((a, b) => b.decayRate - a.decayRate);
+  const fastestDropOff = sorted[0].name;
+  const mostStable = sorted[sorted.length - 1].name;
+
+  // Determine dominant pressure
+  const pressures = [
+    { name: "loss", value: lossPressure },
+    { name: "dead spin", value: deadSpinPressure },
+    { name: "feature absence", value: featureAbsencePressure },
+  ].sort((a, b) => b.value - a.value);
+
+  const dominantPressure = pressures[0].name;
+  let retentionDriver: string;
+  if (dominantPressure === "feature absence") {
+    retentionDriver = "Feature-dependent retention — players leave when features don't trigger";
+  } else if (dominantPressure === "dead spin") {
+    retentionDriver = "Dead spin pressure dominates — low hit frequency drives disengagement";
+  } else {
+    retentionDriver = "Loss pressure dominates — high volatility erodes bankroll confidence";
+  }
+
+  // Early session risk (0-30 spins) based on casual player
+  const casualAt30 = survivalData.find(r => r.spin === 30)?.casual_survival ?? 100;
+  let earlySessionRisk: string;
+  if (casualAt30 < 50) {
+    earlySessionRisk = "Critical — majority of casual players exit within 30 spins";
+  } else if (casualAt30 < 70) {
+    earlySessionRisk = "Elevated — significant casual player drop-off in first 30 spins";
+  } else {
+    earlySessionRisk = "Manageable — most players survive initial 30 spins";
+  }
+
+  return {
+    survivalData,
+    archetypes,
+    interpretation: {
+      fastestDropOff,
+      mostStable,
+      earlySessionRisk,
+      retentionDriver,
+    },
+  };
+}
+
+// ============================================
 // MAIN SIMULATION ENTRY POINT
 // ============================================
 
@@ -494,6 +635,7 @@ export interface SimulationResults {
   improvements: Improvement[];
   diagnosis: string;
   recommendation: string;
+  behavioralSimulation: BehavioralSimulation;
   // Legacy compat for charts
   structuralStabilityScore: number;
   earlySessionRiskScore: number;
@@ -501,6 +643,7 @@ export interface SimulationResults {
 }
 
 export function runSimulation(game: GameConcept): SimulationResults {
+  const behavioralSimulation = computeBehavioralSimulation(game);
   const inputMetrics = computeInputMetrics(game);
   const archetypeSelection = selectArchetype(game, inputMetrics);
   const sessionBehavior = computeSessionBehavior(game, inputMetrics);
@@ -554,5 +697,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     structuralStabilityScore,
     earlySessionRiskScore,
     featureDependencyLevel,
+    behavioralSimulation,
   };
 }
