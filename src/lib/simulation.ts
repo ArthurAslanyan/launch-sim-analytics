@@ -10,32 +10,62 @@ export interface RtpBreakdown {
   otherFeatureRtp: number;
 }
 
+export interface Feature {
+  id: string;
+  type: string;
+  name: string;
+  triggerCondition: string;
+  triggerFrequency: string;
+  averageValue: number;
+  maxValue: number;
+  featureVolatility: string;
+  // Legacy compat
+  visibility: string;
+  winImpact: string;
+  progressImpact: string;
+}
+
+export interface WinDistribution {
+  sub1x: number;
+  x1to5: number;
+  x5to20: number;
+  x20to100: number;
+  x100plus: number;
+}
+
 export interface GameConcept {
   gameName: string;
   targetMarkets: string[];
   playerFocus: string[];
   gridLayout: string;
+  gridRows: number;
+  gridColumns: number;
+  gameType: string;
+  waysOrLines: number;
   payStructure: string;
   cascades: string;
   baseHitFrequency: string;
+  baseHitFrequencyDetail: string;
+  featureTriggerFrequency: string;
   volatility: string;
   rtpTarget: number;
   topWin: number;
+  maxExposureCategory: string;
   rtpBreakdown: RtpBreakdown;
+  winDistribution: WinDistribution;
   features: Feature[];
+  baseGameStrength: string;
+  averageBaseWin: number;
+  deadSpinFrequency: string;
+  targetBankroll: string;
+  targetSessionLength: number;
+  specialMechanics: string[];
+  primaryGoal: string;
+  targetAudience: string;
   sessionLength: string;
   bonusImportance: string;
   earlyExcitement: string;
   referenceGames?: string;
-}
-
-export interface Feature {
-  id: string;
-  type: string;
-  triggerFrequency: string;
-  visibility: string;
-  winImpact: string;
-  progressImpact: string;
 }
 
 // ============================================
@@ -83,10 +113,10 @@ export function selectArchetype(game: GameConcept, metrics: ComputedInputMetrics
       reason: `Feature Dependency Index is ${(metrics.featureDependencyIndex * 100).toFixed(1)}% (> 45%), indicating heavy reliance on bonus features for RTP delivery.`,
     };
   }
-  if (game.volatility === "High" && game.topWin > 2000) {
+  if ((game.volatility === "High" || game.volatility === "Very High") && game.topWin > 2000) {
     return {
       archetype: "Volatility-Seeking Player",
-      reason: `High volatility combined with top win of ${game.topWin}x (> 2000x) appeals to risk-tolerant, high-reward seekers.`,
+      reason: `${game.volatility} volatility combined with top win of ${game.topWin}x (> 2000x) appeals to risk-tolerant, high-reward seekers.`,
     };
   }
   if (metrics.baseRtpRatio > 0.60) {
@@ -115,12 +145,12 @@ export interface SessionBehavior {
 }
 
 export function computeSessionBehavior(game: GameConcept, metrics: ComputedInputMetrics): SessionBehavior {
-  // Base session length
   const baseMap: Record<string, number> = {
     Low: 5,
     Medium: 6,
     "Medium-High": 7,
     High: 8.5,
+    "Very High": 9,
   };
   let baseSessionLength = baseMap[game.volatility] ?? 6;
 
@@ -128,17 +158,15 @@ export function computeSessionBehavior(game: GameConcept, metrics: ComputedInput
   if (metrics.featureDependencyIndex > 0.5) adjustedSessionLength += 1;
   if (metrics.baseRtpRatio < 0.45) adjustedSessionLength -= 1;
 
-  // Early exit probability
   let earlyExit = 20;
-  // Feature trigger probability is "low" if average feature trigger freq is Low
   const avgFeatureFreqIsLow = game.features.length === 0 || 
-    game.features.filter(f => f.triggerFrequency === "Low").length > game.features.length / 2;
+    game.features.filter(f => f.triggerFrequency === "Low" || f.triggerFrequency === "1 in 200").length > game.features.length / 2;
   if (avgFeatureFreqIsLow) earlyExit += 15;
   if (metrics.baseRtpRatio < 0.45) earlyExit += 10;
   if (metrics.jackpotWeight > 0.08) earlyExit += 10;
+  if (game.deadSpinFrequency === "High") earlyExit += 5;
   earlyExit = Math.min(60, earlyExit);
 
-  // Survival curve
   const survivalAt30 = 100 - earlyExit / 2;
   const survivalAt60 = 100 - earlyExit;
   const remaining = survivalAt60;
@@ -167,16 +195,16 @@ export interface FeatureInteraction {
 export function computeFeatureInteraction(game: GameConcept, metrics: ComputedInputMetrics): FeatureInteraction {
   let sessionsReachingFeature = 50;
   const featureFreqIsLow = game.features.length === 0 || 
-    game.features.filter(f => f.triggerFrequency === "Low").length > game.features.length / 2;
+    game.features.filter(f => f.triggerFrequency === "Low" || f.triggerFrequency === "1 in 200").length > game.features.length / 2;
   if (featureFreqIsLow) sessionsReachingFeature -= 10;
   if (game.baseHitFrequency === "High") sessionsReachingFeature += 10;
   sessionsReachingFeature = Math.max(10, Math.min(90, sessionsReachingFeature));
 
   let sessionsReachingJackpot: number;
   if (metrics.jackpotWeight > 0.08) {
-    sessionsReachingJackpot = 5; // 4-6% range, use midpoint
+    sessionsReachingJackpot = 5;
   } else {
-    sessionsReachingJackpot = 2.5; // 2-3% range, use midpoint
+    sessionsReachingJackpot = 2.5;
   }
 
   const sessionsEndingBeforeFeature = 100 - sessionsReachingFeature;
@@ -199,8 +227,9 @@ export interface EconomyBehavior {
 
 export function computeEconomyBehavior(game: GameConcept, metrics: ComputedInputMetrics): EconomyBehavior {
   let bankrollDepletion = 35;
-  if (game.volatility === "Medium-High" || game.volatility === "High") bankrollDepletion += 10;
+  if (game.volatility === "High" || game.volatility === "Very High") bankrollDepletion += 10;
   if (metrics.baseRtpRatio < 0.45) bankrollDepletion += 10;
+  if (game.targetBankroll === "Low") bankrollDepletion += 5;
 
   let lossDrivenExits = 25;
   if (bankrollDepletion > 40) lossDrivenExits += 10;
@@ -232,11 +261,10 @@ export function computeStopReasons(game: GameConcept, metrics: ComputedInputMetr
   if (metrics.featureDependencyIndex > 0.45) {
     noFeature = Math.max(noFeature, 25);
   }
-  if (game.volatility === "High") {
+  if (game.volatility === "High" || game.volatility === "Very High") {
     bigWin = Math.max(bigWin, 15);
   }
 
-  // Normalize to 100
   const total = lossTolerance + noFeature + bigWin + timeLimit;
   return {
     lossToleranceExceeded: Math.round(lossTolerance / total * 100),
@@ -263,7 +291,6 @@ export function generateBehavioralInsights(
 ): BehavioralInsight[] {
   const insights: BehavioralInsight[] = [];
 
-  // Hope vs Delivery
   if (metrics.featureDependencyIndex > 0.50 && featureInteraction.sessionsReachingFeature < 50) {
     insights.push({
       title: "Hope vs Delivery Mismatch",
@@ -272,7 +299,6 @@ export function generateBehavioralInsights(
     });
   }
 
-  // Mid-layer weakness
   if (metrics.baseRtpRatio < 0.45) {
     insights.push({
       title: "Base Game Reward Gap",
@@ -281,7 +307,6 @@ export function generateBehavioralInsights(
     });
   }
 
-  // Jackpot distortion
   if (metrics.jackpotWeight > 0.08) {
     insights.push({
       title: "Jackpot Perception Distortion",
@@ -290,7 +315,6 @@ export function generateBehavioralInsights(
     });
   }
 
-  // If no issues detected
   if (insights.length === 0) {
     insights.push({
       title: "Balanced Reward Distribution",
@@ -343,6 +367,15 @@ export function computeRiskFlags(
     });
   }
 
+  // Early session risk from derived logic
+  if (game.baseHitFrequency === "Low" && game.featureTriggerFrequency === "1 in 200") {
+    flags.push({
+      flag: "CRITICAL EARLY SESSION RISK",
+      description: "Low hit frequency combined with very low feature trigger frequency creates high risk of early player disengagement.",
+      severity: "high",
+    });
+  }
+
   return flags;
 }
 
@@ -383,6 +416,13 @@ export function computeStrengths(game: GameConcept, metrics: ComputedInputMetric
     strengths.push({
       title: "High Hit Frequency",
       description: "Frequent base game wins maintain player engagement and reduce perceived volatility during extended sessions.",
+    });
+  }
+
+  if (game.specialMechanics?.includes("Cascades")) {
+    strengths.push({
+      title: "Cascade Mechanic",
+      description: "Cascade wins create chain reactions that increase perceived activity and excitement during base game.",
     });
   }
 
@@ -507,14 +547,12 @@ export interface BehavioralSimulation {
 }
 
 export function computeBehavioralSimulation(game: GameConcept): BehavioralSimulation {
-  // Derived game variables
-  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, "Medium-High": 0.65, High: 0.8 };
+  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, "Medium-High": 0.65, High: 0.8, "Very High": 1.0 };
   const hitScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, High: 0.7 };
 
   const volatilityScore = volScoreMap[game.volatility] ?? 0.5;
   const hitScore = hitScoreMap[game.baseHitFrequency] ?? 0.5;
 
-  // Feature frequency: derive from features array
   const featureFreqCounts = { Low: 0, Medium: 0, High: 0 };
   for (const f of game.features) {
     if (f.triggerFrequency in featureFreqCounts) {
@@ -531,20 +569,17 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
   const featureScoreMap: Record<string, number> = { Low: 0.2, Medium: 0.5, High: 0.8 };
   const featureScore = featureScoreMap[featureFreq] ?? 0.5;
 
-  // Pressure values
-  const baseRtp = game.rtpBreakdown.baseGameRtp / 100; // normalize to 0-1
+  const baseRtp = game.rtpBreakdown.baseGameRtp / 100;
   const deadSpinPressure = 1 - hitScore;
   const lossPressure = volatilityScore * (1 - baseRtp);
   const featureAbsencePressure = 1 - featureScore;
 
-  // Archetype definitions
   const archetypeDefs = [
     { name: "Casual Player", key: "casual_survival" as const, lossSens: 0.9, deadSens: 1.0, featureSens: 0.6 },
     { name: "Bonus-Seeking Player", key: "bonus_survival" as const, lossSens: 0.7, deadSens: 0.6, featureSens: 1.2 },
     { name: "Volatility-Seeking Player", key: "volatility_survival" as const, lossSens: 0.4, deadSens: 0.3, featureSens: 0.5 },
   ];
 
-  // Compute decay rates
   const archetypes: ArchetypeDecayInfo[] = archetypeDefs.map(a => {
     const decayRate = (
       lossPressure * a.lossSens +
@@ -561,7 +596,6 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
     return { name: a.name, decayRate, label };
   });
 
-  // Survival curve
   const spinSteps = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120];
   const survivalData: ArchetypeSurvivalRow[] = spinSteps.map(spin => {
     const row: ArchetypeSurvivalRow = { spin, casual_survival: 0, bonus_survival: 0, volatility_survival: 0 };
@@ -573,12 +607,10 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
     return row;
   });
 
-  // Interpretation
   const sorted = [...archetypes].sort((a, b) => b.decayRate - a.decayRate);
   const fastestDropOff = sorted[0].name;
   const mostStable = sorted[sorted.length - 1].name;
 
-  // Determine dominant pressure
   const pressures = [
     { name: "loss", value: lossPressure },
     { name: "dead spin", value: deadSpinPressure },
@@ -595,7 +627,6 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
     retentionDriver = "Loss pressure dominates — high volatility erodes bankroll confidence";
   }
 
-  // Early session risk (0-30 spins) based on casual player
   const casualAt30 = survivalData.find(r => r.spin === 30)?.casual_survival ?? 100;
   let earlySessionRisk: string;
   if (casualAt30 < 50) {
@@ -636,7 +667,6 @@ export interface SimulationResults {
   diagnosis: string;
   recommendation: string;
   behavioralSimulation: BehavioralSimulation;
-  // Legacy compat for charts
   structuralStabilityScore: number;
   earlySessionRiskScore: number;
   featureDependencyLevel: "Low" | "Medium" | "High";
@@ -656,20 +686,16 @@ export function runSimulation(game: GameConcept): SimulationResults {
   const improvements = generateImprovements(game, inputMetrics, sessionBehavior);
   const diagnosis = generateDiagnosis(inputMetrics, sessionBehavior, riskFlags);
 
-  // Structural Stability Score
   const stabilityBase = 70;
   const stabilityPenalties = riskFlags.length * 15 + (sessionBehavior.earlyExitProbability > 40 ? 10 : 0);
   const structuralStabilityScore = Math.max(0, Math.min(100, stabilityBase - stabilityPenalties));
 
-  // Early Session Risk Score
   const earlySessionRiskScore = Math.min(100, Math.max(0, sessionBehavior.earlyExitProbability));
 
-  // Feature dependency level
   const featureDependencyLevel: "Low" | "Medium" | "High" =
     inputMetrics.featureDependencyIndex > 0.50 ? "High" :
     inputMetrics.featureDependencyIndex > 0.30 ? "Medium" : "Low";
 
-  // Recommendation
   let recommendation: string;
   if (structuralStabilityScore >= 70 && earlySessionRiskScore <= 30) {
     recommendation = "Ready to Launch";
