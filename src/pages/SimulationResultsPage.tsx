@@ -37,6 +37,8 @@ import {
   GameConcept,
   SimulationResults,
 } from "@/lib/simulation";
+import { MarketIntelligence } from "@/components/MarketIntelligence";
+import { MatchInput } from "@/lib/referenceGames";
 
 export default function SimulationResultsPage() {
   const navigate = useNavigate();
