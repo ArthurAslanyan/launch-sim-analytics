@@ -37,6 +37,8 @@ import {
   GameConcept,
   SimulationResults,
 } from "@/lib/simulation";
+import { MarketIntelligence } from "@/components/MarketIntelligence";
+import { MatchInput } from "@/lib/referenceGames";
 
 export default function SimulationResultsPage() {
   const navigate = useNavigate();
@@ -442,6 +444,18 @@ export default function SimulationResultsPage() {
             </div>
           )}
         </SectionCard>
+
+        {/* Reference Games & Market Intelligence */}
+        {(() => {
+          const matchInput: MatchInput = {
+            gameType: game.gameType || "Paylines",
+            theme: game.gameName || "",
+            volatility: game.volatility || "Medium",
+            features: game.specialMechanics || [],
+            targetMarkets: game.targetMarkets || [],
+          };
+          return <MarketIntelligence input={matchInput} conceptName={game.gameName} />;
+        })()}
 
         {/* 10. One-Line Diagnosis */}
         <div className="rounded-xl border-2 border-primary/20 bg-primary/5 p-6 text-center shadow-sm">
