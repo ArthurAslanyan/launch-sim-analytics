@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   Info,
   Grid3X3,
@@ -306,6 +306,11 @@ export default function NewEvaluationPage() {
       title="Game Math & Economy Input"
       subtitle="Define the structural math profile of your slot game"
     >
+      <div className="mx-auto max-w-4xl mb-4 flex justify-end">
+        <Link to="/evaluate/advanced" className="inline-flex items-center gap-1 text-sm text-primary hover:underline font-medium transition-colors">
+          Switch to Advanced Math Input →
+        </Link>
+      </div>
       <form onSubmit={handleSubmit} className="mx-auto max-w-4xl space-y-4">
         {/* Upload */}
         <CollapsibleSection title="Upload Game Brief (Auto-Fill)" icon={<FileUp className="h-5 w-5" />} description="Upload a game design document to auto-fill the form below" defaultOpen={false}>
