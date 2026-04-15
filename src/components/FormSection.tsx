@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 interface FormSectionProps {
@@ -25,7 +25,7 @@ export function FormSection({ title, description, icon, children, className }: F
 }
 
 interface FormFieldProps {
-  label: string;
+  label: React.ReactNode;
   required?: boolean;
   children: ReactNode;
   className?: string;
