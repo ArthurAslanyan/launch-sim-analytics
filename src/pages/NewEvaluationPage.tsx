@@ -28,6 +28,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { PlayerArchetypeConfig } from "@/components/PlayerArchetypeConfig";
 
 const TARGET_MARKETS = ["UK", "Nordics", "EU", "LATAM", "Global"];
 const PLAYER_FOCUS = ["Casual", "Bonus-Seeking", "Volatility-Seeking", "Budget-Constrained", "Progress-Oriented"];
@@ -585,6 +586,9 @@ export default function NewEvaluationPage() {
             <Input value={referenceGames} onChange={e => setReferenceGames(e.target.value)} placeholder="e.g., Book of Dead, Sweet Bonanza" className="max-w-lg" />
           </FormField>
         </CollapsibleSection>
+
+        {/* Player Archetype Configuration */}
+        <PlayerArchetypeConfig />
 
         {/* Derived Logic Summary */}
         {(overallHitFreq || volatility || rtpTarget) && (

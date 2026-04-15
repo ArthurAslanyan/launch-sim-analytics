@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { PlayerArchetypeConfig } from "@/components/PlayerArchetypeConfig";
 
 const GAME_TYPES = ["Paylines", "Payways", "Cluster Pays", "Megaways"];
 const TARGET_MARKETS = ["UK", "EU", "LATAM", "Global"];
@@ -572,6 +573,9 @@ export default function AdvancedEvaluationPage() {
             <Input type="number" step="0.1" value={avgMultiplier} onChange={e => setAvgMultiplier(e.target.value)} placeholder="2.5" className="max-w-32" />
           </FormField>
         </Section>
+
+        {/* Player Archetype Configuration */}
+        <PlayerArchetypeConfig />
 
         {/* Validation & Summary */}
         <div className="form-section animate-fade-in">
