@@ -16,6 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { PlayerArchetypeConfig } from "@/components/PlayerArchetypeConfig";
 
 const GAME_TYPES = ["Paylines", "Payways", "Cluster Pays", "Megaways"];
 const TARGET_MARKETS = ["UK", "EU", "LATAM", "Global"];
