@@ -573,6 +573,9 @@ export default function AdvancedEvaluationPage() {
           </FormField>
         </Section>
 
+        {/* Player Archetype Configuration */}
+        <PlayerArchetypeConfig />
+
         {/* Validation & Summary */}
         <div className="form-section animate-fade-in">
           <div className="form-section-title">Validation & Summary</div>

@@ -586,6 +586,9 @@ export default function NewEvaluationPage() {
           </FormField>
         </CollapsibleSection>
 
+        {/* Player Archetype Configuration */}
+        <PlayerArchetypeConfig />
+
         {/* Derived Logic Summary */}
         {(overallHitFreq || volatility || rtpTarget) && (
           <div className="rounded-xl border bg-card p-5 shadow-sm">
