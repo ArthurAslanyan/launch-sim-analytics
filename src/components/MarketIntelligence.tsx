@@ -31,10 +31,9 @@ import {
 import { Progress } from "@/components/ui/progress";
 import {
   MatchInput,
-  MatchedGame,
-  SaturationResult,
+  MatchedGameLegacy as MatchedGame,
   MarketInsight,
-  findSimilarGames,
+  findSimilarGamesLegacy as findSimilarGames,
   computeSaturation,
   generateMarketInsights,
 } from "@/lib/referenceGames";
