@@ -1,4 +1,4 @@
-// LaunchIndex — Reference Games Dataset & Matching Engine
+// LaunchIndex — Reference Games Dataset & Matching Engine (v2)
 
 export interface ReferenceGame {
   name: string;
@@ -7,342 +7,179 @@ export interface ReferenceGame {
   themeCategories: string[];
   gameplayStructures: string[];
   features: string[];
-  volatility: string;
-  volatilityScore: number;
-  sessionFriendliness: number; // 0-100
-  featureDensity: number; // 0-100
+  volatility: "Low" | "Medium" | "High" | "Very High";
+  volatilityScore: number; // 1–10
+  sessionFriendliness: number; // 1–10
+  featureDensity: "Low" | "Medium" | "High";
   topWin: number;
   rtpRange: string;
-  marketPresence: "Low" | "Medium" | "High";
+  marketPresence: "High" | "Medium" | "Low";
   targetMarkets: string[];
 }
 
-// ─── Static Dataset ───────────────────────────────────────────
+// ─── Static Dataset (30 titles) ───────────────────────────────
 
 export const REFERENCE_GAMES: ReferenceGame[] = [
-  {
-    name: "Starburst",
-    provider: "NetEnt",
-    releaseYear: 2012,
-    themeCategories: ["Space", "Gems", "Classic"],
-    gameplayStructures: ["Paylines"],
-    features: ["Expanding Wilds", "Respins"],
-    volatility: "Low",
-    volatilityScore: 0.3,
-    sessionFriendliness: 90,
-    featureDensity: 25,
-    topWin: 500,
-    rtpRange: "96.1%",
-    marketPresence: "High",
-    targetMarkets: ["UK", "Nordics", "EU", "Global"],
-  },
-  {
-    name: "Book of Dead",
-    provider: "Play'n GO",
-    releaseYear: 2016,
-    themeCategories: ["Egypt", "Adventure"],
-    gameplayStructures: ["Paylines"],
-    features: ["Free Spins", "Expanding Wilds"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 40,
-    featureDensity: 45,
-    topWin: 5000,
-    rtpRange: "96.2%",
-    marketPresence: "High",
-    targetMarkets: ["UK", "EU", "Global"],
-  },
-  {
-    name: "Sweet Bonanza",
-    provider: "Pragmatic Play",
-    releaseYear: 2019,
-    themeCategories: ["Candy", "Fun", "Colorful"],
-    gameplayStructures: ["Cluster Pays"],
-    features: ["Free Spins", "Multipliers", "Cascades"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 45,
-    featureDensity: 70,
-    topWin: 21100,
-    rtpRange: "96.5%",
-    marketPresence: "High",
-    targetMarkets: ["EU", "LATAM", "Global"],
-  },
-  {
-    name: "Gonzo's Quest",
-    provider: "NetEnt",
-    releaseYear: 2011,
-    themeCategories: ["Adventure", "Jungle", "History"],
-    gameplayStructures: ["Paylines"],
-    features: ["Cascades", "Multipliers", "Free Spins"],
-    volatility: "Medium",
-    volatilityScore: 0.5,
-    sessionFriendliness: 65,
-    featureDensity: 60,
-    topWin: 2500,
-    rtpRange: "95.97%",
-    marketPresence: "High",
-    targetMarkets: ["UK", "Nordics", "EU", "Global"],
-  },
-  {
-    name: "Reactoonz",
-    provider: "Play'n GO",
-    releaseYear: 2017,
-    themeCategories: ["Aliens", "Fun", "Sci-Fi"],
-    gameplayStructures: ["Cluster Pays"],
-    features: ["Cascades", "Collection Mechanics", "Expanding Wilds"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 50,
-    featureDensity: 80,
-    topWin: 4570,
-    rtpRange: "96.51%",
-    marketPresence: "High",
-    targetMarkets: ["Nordics", "EU", "Global"],
-  },
-  {
-    name: "Big Bass Bonanza",
-    provider: "Pragmatic Play",
-    releaseYear: 2020,
-    themeCategories: ["Fishing", "Nature", "Fun"],
-    gameplayStructures: ["Paylines"],
-    features: ["Free Spins", "Sticky Symbols", "Collection Mechanics"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 45,
-    featureDensity: 55,
-    topWin: 2100,
-    rtpRange: "96.71%",
-    marketPresence: "High",
-    targetMarkets: ["UK", "EU", "LATAM", "Global"],
-  },
-  {
-    name: "Jammin' Jars",
-    provider: "Push Gaming",
-    releaseYear: 2018,
-    themeCategories: ["Fruit", "Fun", "Colorful"],
-    gameplayStructures: ["Cluster Pays"],
-    features: ["Cascades", "Multipliers", "Sticky Symbols"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 40,
-    featureDensity: 75,
-    topWin: 20000,
-    rtpRange: "96.83%",
-    marketPresence: "Medium",
-    targetMarkets: ["UK", "EU"],
-  },
-  {
-    name: "Dead or Alive 2",
-    provider: "NetEnt",
-    releaseYear: 2019,
-    themeCategories: ["Western", "Adventure"],
-    gameplayStructures: ["Paylines"],
-    features: ["Free Spins", "Sticky Symbols", "Multipliers"],
-    volatility: "Very High",
-    volatilityScore: 1.0,
-    sessionFriendliness: 25,
-    featureDensity: 50,
-    topWin: 111111,
-    rtpRange: "96.8%",
-    marketPresence: "High",
-    targetMarkets: ["Nordics", "EU", "Global"],
-  },
-  {
-    name: "Razor Shark",
-    provider: "Push Gaming",
-    releaseYear: 2019,
-    themeCategories: ["Ocean", "Nature", "Adventure"],
-    gameplayStructures: ["Paylines"],
-    features: ["Free Spins", "Expanding Wilds", "Multipliers"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 35,
-    featureDensity: 55,
-    topWin: 50000,
-    rtpRange: "96.7%",
-    marketPresence: "Medium",
-    targetMarkets: ["EU", "Nordics"],
-  },
-  {
-    name: "Gates of Olympus",
-    provider: "Pragmatic Play",
-    releaseYear: 2021,
-    themeCategories: ["Mythology", "Greek", "Fantasy"],
-    gameplayStructures: ["Payways"],
-    features: ["Cascades", "Multipliers", "Free Spins"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 40,
-    featureDensity: 75,
-    topWin: 5000,
-    rtpRange: "96.5%",
-    marketPresence: "High",
-    targetMarkets: ["EU", "LATAM", "Global"],
-  },
-  {
-    name: "Lightning Roulette",
-    provider: "Evolution",
-    releaseYear: 2018,
-    themeCategories: ["Classic", "Casino"],
-    gameplayStructures: ["Paylines"],
-    features: ["Multipliers", "Progressive Jackpot"],
-    volatility: "Medium",
-    volatilityScore: 0.5,
-    sessionFriendliness: 70,
-    featureDensity: 30,
-    topWin: 500,
-    rtpRange: "97.3%",
-    marketPresence: "High",
-    targetMarkets: ["UK", "EU", "Global"],
-  },
-  {
-    name: "Buffalo King Megaways",
-    provider: "Pragmatic Play",
-    releaseYear: 2020,
-    themeCategories: ["Animals", "Nature", "Wild West"],
-    gameplayStructures: ["Payways"],
-    features: ["Free Spins", "Multipliers", "Cascades"],
-    volatility: "Very High",
-    volatilityScore: 1.0,
-    sessionFriendliness: 30,
-    featureDensity: 65,
-    topWin: 93750,
-    rtpRange: "96.52%",
-    marketPresence: "Medium",
-    targetMarkets: ["EU", "Global"],
-  },
-  {
-    name: "Fruit Party",
-    provider: "Pragmatic Play",
-    releaseYear: 2020,
-    themeCategories: ["Fruit", "Fun", "Colorful"],
-    gameplayStructures: ["Cluster Pays"],
-    features: ["Cascades", "Multipliers", "Free Spins"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 45,
-    featureDensity: 70,
-    topWin: 5000,
-    rtpRange: "96.47%",
-    marketPresence: "Medium",
-    targetMarkets: ["EU", "LATAM"],
-  },
-  {
-    name: "Aztec Gems",
-    provider: "Pragmatic Play",
-    releaseYear: 2018,
-    themeCategories: ["Aztec", "Gems", "Classic"],
-    gameplayStructures: ["Paylines"],
-    features: ["Respins", "Multipliers"],
-    volatility: "Medium",
-    volatilityScore: 0.5,
-    sessionFriendliness: 75,
-    featureDensity: 20,
-    topWin: 375,
-    rtpRange: "96.52%",
-    marketPresence: "Low",
-    targetMarkets: ["LATAM", "EU"],
-  },
-  {
-    name: "Immortal Romance",
-    provider: "Microgaming",
-    releaseYear: 2011,
-    themeCategories: ["Fantasy", "Romance", "Dark"],
-    gameplayStructures: ["Paylines"],
-    features: ["Free Spins", "Multipliers", "Collection Mechanics"],
-    volatility: "Medium",
-    volatilityScore: 0.5,
-    sessionFriendliness: 60,
-    featureDensity: 65,
-    topWin: 12150,
-    rtpRange: "96.86%",
-    marketPresence: "High",
-    targetMarkets: ["UK", "EU", "Global"],
-  },
-  {
-    name: "Bonanza Megaways",
-    provider: "Big Time Gaming",
-    releaseYear: 2016,
-    themeCategories: ["Mining", "Adventure"],
-    gameplayStructures: ["Payways"],
-    features: ["Cascades", "Free Spins", "Multipliers"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 35,
-    featureDensity: 70,
-    topWin: 10000,
-    rtpRange: "96%",
-    marketPresence: "High",
-    targetMarkets: ["UK", "Nordics", "EU", "Global"],
-  },
-  {
-    name: "Fire Joker",
-    provider: "Play'n GO",
-    releaseYear: 2016,
-    themeCategories: ["Classic", "Retro"],
-    gameplayStructures: ["Paylines"],
-    features: ["Respins", "Multipliers"],
-    volatility: "Low",
-    volatilityScore: 0.3,
-    sessionFriendliness: 85,
-    featureDensity: 20,
-    topWin: 800,
-    rtpRange: "96.15%",
-    marketPresence: "Medium",
-    targetMarkets: ["Nordics", "EU"],
-  },
-  {
-    name: "The Dog House",
-    provider: "Pragmatic Play",
-    releaseYear: 2019,
-    themeCategories: ["Animals", "Fun", "Colorful"],
-    gameplayStructures: ["Paylines"],
-    features: ["Free Spins", "Sticky Symbols", "Multipliers"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 40,
-    featureDensity: 60,
-    topWin: 6750,
-    rtpRange: "96.51%",
-    marketPresence: "High",
-    targetMarkets: ["EU", "LATAM", "Global"],
-  },
-  {
-    name: "Money Train 2",
-    provider: "Relax Gaming",
-    releaseYear: 2020,
-    themeCategories: ["Western", "Steampunk", "Adventure"],
-    gameplayStructures: ["Paylines"],
-    features: ["Respins", "Multipliers", "Sticky Symbols", "Collection Mechanics"],
-    volatility: "Very High",
-    volatilityScore: 1.0,
-    sessionFriendliness: 30,
-    featureDensity: 75,
-    topWin: 50000,
-    rtpRange: "96.4%",
-    marketPresence: "High",
-    targetMarkets: ["EU", "Nordics", "Global"],
-  },
-  {
-    name: "Starlight Princess",
-    provider: "Pragmatic Play",
-    releaseYear: 2022,
-    themeCategories: ["Anime", "Fantasy", "Colorful"],
-    gameplayStructures: ["Payways"],
-    features: ["Cascades", "Multipliers", "Free Spins"],
-    volatility: "High",
-    volatilityScore: 0.8,
-    sessionFriendliness: 40,
-    featureDensity: 75,
-    topWin: 5000,
-    rtpRange: "96.5%",
-    marketPresence: "High",
-    targetMarkets: ["EU", "LATAM", "Global"],
-  },
+  { name: "Sweet Bonanza", provider: "Pragmatic Play", releaseYear: 2019, themeCategories: ["Candy", "Fruit", "Colorful"], gameplayStructures: ["Cluster Pays", "Tumble"], features: ["Free Spins", "Multipliers", "Cascades"], volatility: "High", volatilityScore: 7.5, sessionFriendliness: 6, featureDensity: "High", topWin: 21100, rtpRange: "96.48–96.51%", marketPresence: "High", targetMarkets: ["EU", "LATAM", "Global"] },
+  { name: "Jammin' Jars", provider: "Push Gaming", releaseYear: 2018, themeCategories: ["Fruit", "Retro", "Colorful"], gameplayStructures: ["Cluster Pays", "Cascades"], features: ["Cascades", "Multipliers", "Sticky Symbols"], volatility: "High", volatilityScore: 8, sessionFriendliness: 5, featureDensity: "High", topWin: 20000, rtpRange: "96.83%", marketPresence: "High", targetMarkets: ["UK", "EU"] },
+  { name: "Fruit Party", provider: "Pragmatic Play", releaseYear: 2020, themeCategories: ["Fruit", "Fun", "Colorful"], gameplayStructures: ["Cluster Pays"], features: ["Cascades", "Multipliers", "Free Spins"], volatility: "High", volatilityScore: 7, sessionFriendliness: 6, featureDensity: "High", topWin: 5000, rtpRange: "96.47%", marketPresence: "Medium", targetMarkets: ["EU", "LATAM"] },
+  { name: "Reactoonz", provider: "Play'n GO", releaseYear: 2017, themeCategories: ["Sci-Fi", "Alien", "Fun"], gameplayStructures: ["Cluster Pays", "Cascades"], features: ["Cascades", "Collection Mechanics", "Expanding Wilds"], volatility: "High", volatilityScore: 8, sessionFriendliness: 5, featureDensity: "High", topWin: 4570, rtpRange: "96.51%", marketPresence: "High", targetMarkets: ["Nordics", "EU", "Global"] },
+  { name: "Jammin' Jars 2", provider: "Push Gaming", releaseYear: 2021, themeCategories: ["Fruit", "Retro", "Colorful"], gameplayStructures: ["Cluster Pays"], features: ["Cascades", "Multipliers", "Free Spins", "Giga Jar"], volatility: "Very High", volatilityScore: 9, sessionFriendliness: 4, featureDensity: "High", topWin: 25000, rtpRange: "96.40%", marketPresence: "Medium", targetMarkets: ["UK", "EU"] },
+  { name: "Book of Dead", provider: "Play'n GO", releaseYear: 2016, themeCategories: ["Ancient Egypt", "Adventure"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Expanding Wilds"], volatility: "High", volatilityScore: 8, sessionFriendliness: 5, featureDensity: "Medium", topWin: 5000, rtpRange: "96.21%", marketPresence: "High", targetMarkets: ["UK", "EU", "Global"] },
+  { name: "Gates of Olympus", provider: "Pragmatic Play", releaseYear: 2021, themeCategories: ["Mythology", "Greek", "Fantasy"], gameplayStructures: ["Payways", "Tumble"], features: ["Cascades", "Multipliers", "Free Spins"], volatility: "Very High", volatilityScore: 9.5, sessionFriendliness: 4, featureDensity: "High", topWin: 5000, rtpRange: "96.50%", marketPresence: "High", targetMarkets: ["EU", "LATAM", "Global"] },
+  { name: "The Dog House", provider: "Pragmatic Play", releaseYear: 2019, themeCategories: ["Animal", "Cartoon", "Fun"], gameplayStructures: ["Payways"], features: ["Free Spins", "Sticky Symbols", "Multipliers"], volatility: "High", volatilityScore: 7.5, sessionFriendliness: 6, featureDensity: "High", topWin: 6750, rtpRange: "96.51%", marketPresence: "High", targetMarkets: ["EU", "LATAM", "Global"] },
+  { name: "Starburst", provider: "NetEnt", releaseYear: 2012, themeCategories: ["Gem", "Space", "Classic"], gameplayStructures: ["Paylines"], features: ["Expanding Wilds", "Respins"], volatility: "Low", volatilityScore: 2, sessionFriendliness: 9, featureDensity: "Low", topWin: 500, rtpRange: "96.09%", marketPresence: "High", targetMarkets: ["UK", "Nordics", "EU", "Global"] },
+  { name: "Gonzo's Quest", provider: "NetEnt", releaseYear: 2011, themeCategories: ["Adventure", "Jungle", "History"], gameplayStructures: ["Paylines", "Cascades"], features: ["Cascades", "Multipliers", "Free Spins"], volatility: "Medium", volatilityScore: 5, sessionFriendliness: 7, featureDensity: "Medium", topWin: 2500, rtpRange: "95.97%", marketPresence: "High", targetMarkets: ["UK", "Nordics", "EU", "Global"] },
+  { name: "Big Bass Bonanza", provider: "Pragmatic Play", releaseYear: 2020, themeCategories: ["Fishing", "Nature", "Fun"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Sticky Symbols", "Collection Mechanics"], volatility: "High", volatilityScore: 7.5, sessionFriendliness: 6, featureDensity: "Medium", topWin: 2100, rtpRange: "96.71%", marketPresence: "High", targetMarkets: ["UK", "EU", "LATAM", "Global"] },
+  { name: "Wolf Gold", provider: "Pragmatic Play", releaseYear: 2017, themeCategories: ["Nature", "Animal", "Wild West"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Respins", "Progressive Jackpot"], volatility: "Medium", volatilityScore: 5.5, sessionFriendliness: 7, featureDensity: "Medium", topWin: 2500, rtpRange: "96.01%", marketPresence: "High", targetMarkets: ["EU", "LATAM", "Global"] },
+  { name: "Bonanza Megaways", provider: "Big Time Gaming", releaseYear: 2016, themeCategories: ["Mining", "Adventure"], gameplayStructures: ["Megaways", "Cascades"], features: ["Cascades", "Free Spins", "Multipliers"], volatility: "Very High", volatilityScore: 9, sessionFriendliness: 4, featureDensity: "High", topWin: 10000, rtpRange: "96.00%", marketPresence: "High", targetMarkets: ["UK", "Nordics", "EU", "Global"] },
+  { name: "Razor Shark", provider: "Push Gaming", releaseYear: 2019, themeCategories: ["Ocean", "Animal", "Adventure"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Expanding Wilds", "Multipliers"], volatility: "High", volatilityScore: 8, sessionFriendliness: 5, featureDensity: "Medium", topWin: 50000, rtpRange: "96.70%", marketPresence: "Medium", targetMarkets: ["EU", "Nordics"] },
+  { name: "Extra Chilli", provider: "Big Time Gaming", releaseYear: 2018, themeCategories: ["Food", "Mexican", "Colorful"], gameplayStructures: ["Megaways"], features: ["Cascades", "Free Spins", "Multipliers", "Gamble Feature"], volatility: "Very High", volatilityScore: 9.5, sessionFriendliness: 3, featureDensity: "High", topWin: 20000, rtpRange: "96.15%", marketPresence: "Medium", targetMarkets: ["UK", "EU"] },
+  { name: "Dead or Alive 2", provider: "NetEnt", releaseYear: 2019, themeCategories: ["Western", "Adventure"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Sticky Symbols", "Multipliers"], volatility: "Very High", volatilityScore: 10, sessionFriendliness: 3, featureDensity: "Medium", topWin: 111111, rtpRange: "96.82%", marketPresence: "High", targetMarkets: ["Nordics", "EU", "Global"] },
+  { name: "Fishin' Frenzy", provider: "Blueprint Gaming", releaseYear: 2015, themeCategories: ["Fishing", "Nature", "Classic"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Collection Mechanics"], volatility: "Low", volatilityScore: 3, sessionFriendliness: 8, featureDensity: "Low", topWin: 500, rtpRange: "96.12%", marketPresence: "High", targetMarkets: ["UK", "EU"] },
+  { name: "Age of the Gods", provider: "Playtech", releaseYear: 2016, themeCategories: ["Mythology", "Greek", "Fantasy"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Progressive Jackpot", "Multipliers"], volatility: "Medium", volatilityScore: 5, sessionFriendliness: 7, featureDensity: "Medium", topWin: 5000, rtpRange: "95.02%", marketPresence: "High", targetMarkets: ["UK", "EU", "Global"] },
+  { name: "Immortal Romance", provider: "Microgaming", releaseYear: 2011, themeCategories: ["Vampire", "Romance", "Dark", "Fantasy"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Multipliers", "Collection Mechanics"], volatility: "Medium", volatilityScore: 5.5, sessionFriendliness: 7, featureDensity: "Medium", topWin: 12150, rtpRange: "96.86%", marketPresence: "High", targetMarkets: ["UK", "EU", "Global"] },
+  { name: "Fire Joker", provider: "Play'n GO", releaseYear: 2016, themeCategories: ["Fruit", "Classic", "Retro"], gameplayStructures: ["Paylines"], features: ["Respins", "Multipliers"], volatility: "High", volatilityScore: 7, sessionFriendliness: 6, featureDensity: "Low", topWin: 800, rtpRange: "96.15%", marketPresence: "Medium", targetMarkets: ["Nordics", "EU"] },
+  { name: "Legacy of Dead", provider: "Play'n GO", releaseYear: 2020, themeCategories: ["Ancient Egypt", "Adventure"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Expanding Wilds"], volatility: "Very High", volatilityScore: 9, sessionFriendliness: 4, featureDensity: "Medium", topWin: 5000, rtpRange: "96.58%", marketPresence: "High", targetMarkets: ["EU", "Global"] },
+  { name: "Sticky Bandits", provider: "Quickspin", releaseYear: 2018, themeCategories: ["Western", "Cartoon", "Humor"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Sticky Symbols", "Expanding Wilds"], volatility: "High", volatilityScore: 7.5, sessionFriendliness: 6, featureDensity: "Medium", topWin: 17040, rtpRange: "96.58%", marketPresence: "Medium", targetMarkets: ["EU", "Nordics"] },
+  { name: "Rainbow Riches", provider: "Barcrest", releaseYear: 2014, themeCategories: ["Irish", "Classic", "Fun"], gameplayStructures: ["Paylines"], features: ["Pick Bonus", "Multipliers", "Free Spins"], volatility: "Medium", volatilityScore: 4, sessionFriendliness: 8, featureDensity: "Medium", topWin: 500, rtpRange: "95.00%", marketPresence: "High", targetMarkets: ["UK", "EU"] },
+  { name: "Megaways Jack", provider: "iSoftBet", releaseYear: 2020, themeCategories: ["Fairy Tale", "Adventure"], gameplayStructures: ["Megaways"], features: ["Cascades", "Free Spins", "Multipliers"], volatility: "Very High", volatilityScore: 9, sessionFriendliness: 4, featureDensity: "High", topWin: 25000, rtpRange: "96.28%", marketPresence: "Low", targetMarkets: ["EU"] },
+  { name: "Dragon Kingdom", provider: "Pragmatic Play", releaseYear: 2019, themeCategories: ["Dragon", "Fantasy", "Asian"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Multipliers"], volatility: "High", volatilityScore: 7, sessionFriendliness: 6, featureDensity: "Medium", topWin: 2500, rtpRange: "96.47%", marketPresence: "Medium", targetMarkets: ["EU", "Asia"] },
+  { name: "Temujin Treasures", provider: "Pragmatic Play", releaseYear: 2020, themeCategories: ["Historical", "Asian", "Adventure"], gameplayStructures: ["Payways"], features: ["Free Spins", "Respins", "Collection Mechanics"], volatility: "High", volatilityScore: 7.5, sessionFriendliness: 5, featureDensity: "Medium", topWin: 5000, rtpRange: "96.55%", marketPresence: "Low", targetMarkets: ["EU", "Asia"] },
+  { name: "Fat Banker", provider: "Push Gaming", releaseYear: 2022, themeCategories: ["Cartoon", "Humor", "Fun"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Multipliers", "Collection Mechanics"], volatility: "Very High", volatilityScore: 9.5, sessionFriendliness: 4, featureDensity: "High", topWin: 50000, rtpRange: "96.45%", marketPresence: "Medium", targetMarkets: ["UK", "EU"] },
+  { name: "Pirate Gold", provider: "Pragmatic Play", releaseYear: 2019, themeCategories: ["Pirate", "Adventure", "Ocean"], gameplayStructures: ["Paylines"], features: ["Free Spins", "Respins", "Progressive Jackpot"], volatility: "High", volatilityScore: 7, sessionFriendliness: 6, featureDensity: "Medium", topWin: 4500, rtpRange: "96.50%", marketPresence: "Low", targetMarkets: ["EU", "LATAM"] },
+  { name: "Wildz", provider: "Relax Gaming", releaseYear: 2020, themeCategories: ["Fantasy", "Magic", "Colorful"], gameplayStructures: ["Payways"], features: ["Cascades", "Expanding Wilds", "Free Spins"], volatility: "High", volatilityScore: 7.5, sessionFriendliness: 5.5, featureDensity: "Medium", topWin: 5000, rtpRange: "96.35%", marketPresence: "Low", targetMarkets: ["EU", "Nordics"] },
+  { name: "Star Bounty", provider: "Pragmatic Play", releaseYear: 2021, themeCategories: ["Adventure", "Space", "Western"], gameplayStructures: ["Megaways"], features: ["Cascades", "Free Spins", "Multipliers"], volatility: "Very High", volatilityScore: 9, sessionFriendliness: 4, featureDensity: "High", topWin: 10000, rtpRange: "96.60%", marketPresence: "Medium", targetMarkets: ["EU", "Global"] },
 ];
 
-// ─── Matching Engine ──────────────────────────────────────────
+// ─── Theme Category Groups ───────────────────────────────────
+
+const THEME_GROUPS: Record<string, string[]> = {
+  "candy": ["candy", "fruit", "food", "colorful"],
+  "mythology": ["mythology", "fantasy", "ancient", "dragon", "greek"],
+  "egypt": ["egypt", "ancient egypt", "historical", "adventure"],
+  "animal": ["animal", "nature", "outdoor", "fishing", "ocean"],
+  "western": ["western", "cartoon", "humor"],
+  "space": ["space", "sci-fi", "gem", "alien"],
+};
+
+function normalise(s: string): string {
+  return s.toLowerCase().trim();
+}
+
+function themeGroupsFor(theme: string): Set<string> {
+  const t = normalise(theme);
+  const out = new Set<string>([t]);
+  for (const [, members] of Object.entries(THEME_GROUPS)) {
+    if (members.some(m => t.includes(m) || m.includes(t))) {
+      members.forEach(m => out.add(m));
+    }
+  }
+  return out;
+}
+
+// ─── Scoring ─────────────────────────────────────────────────
+
+export function scoreGameMatch(
+  ref: ReferenceGame,
+  gameType: string,
+  theme: string,
+  volatility: string,
+  features: string[],
+  targetMarkets: string[],
+): number {
+  // Gameplay structure match — 35 pts
+  const gtNorm = normalise(gameType);
+  const structureMatch = ref.gameplayStructures.some(s => normalise(s).includes(gtNorm) || gtNorm.includes(normalise(s)));
+  const gameplayPts = structureMatch ? 35 : 0;
+
+  // Theme match — 25 pts
+  let themePts = 0;
+  if (theme) {
+    const expanded = themeGroupsFor(theme);
+    const refThemes = ref.themeCategories.map(normalise);
+    const hits = refThemes.filter(t => [...expanded].some(e => t.includes(e) || e.includes(t))).length;
+    themePts = Math.min(25, Math.round((hits / Math.max(refThemes.length, 1)) * 25));
+  }
+
+  // Volatility match — 20 pts
+  const volTier: Record<string, number> = { "low": 0, "medium": 1, "high": 2, "very high": 3 };
+  const inputTier = volTier[normalise(volatility)] ?? 1;
+  const refTier = volTier[normalise(ref.volatility)] ?? 1;
+  const volDiff = Math.abs(inputTier - refTier);
+  const volPts = Math.max(0, 20 - volDiff * 10);
+
+  // Feature overlap — 20 pts (7 pts per match, capped)
+  const refFeats = ref.features.map(normalise);
+  const inputFeats = features.map(normalise);
+  const featureHits = inputFeats.filter(f => refFeats.some(rf => rf.includes(f) || f.includes(rf))).length;
+  const featurePts = Math.min(20, featureHits * 7);
+
+  // Market overlap — 5 pts
+  const refMkts = ref.targetMarkets.map(normalise);
+  const inputMkts = targetMarkets.map(normalise);
+  const mktHits = inputMkts.filter(m => refMkts.includes(m)).length;
+  const marketPts = Math.min(5, mktHits > 0 ? Math.round((mktHits / Math.max(inputMkts.length, 1)) * 5) : 0);
+
+  return Math.min(100, gameplayPts + themePts + volPts + featurePts + marketPts);
+}
+
+// ─── Find Similar Games ──────────────────────────────────────
+
+export interface MatchedGame extends ReferenceGame {
+  matchScore: number;
+}
+
+export function findSimilarGames(
+  gameType: string,
+  theme: string,
+  volatility: string,
+  features: string[],
+  targetMarkets: string[],
+  topN = 5,
+): MatchedGame[] {
+  const scored = REFERENCE_GAMES.map(ref => ({
+    ...ref,
+    matchScore: scoreGameMatch(ref, gameType, theme, volatility, features, targetMarkets),
+  }));
+  scored.sort((a, b) => b.matchScore - a.matchScore);
+  return scored.slice(0, topN);
+}
+
+// ─── Market Saturation ───────────────────────────────────────
+
+export interface SaturationResult {
+  count: number;
+  highPresenceCount: number;
+  level: "Low" | "Medium" | "High" | "Very High";
+}
+
+export function computeMarketSaturation(gameType: string, volatility: string): SaturationResult {
+  const gtNorm = normalise(gameType);
+  const matching = REFERENCE_GAMES.filter(g =>
+    g.gameplayStructures.some(s => normalise(s).includes(gtNorm) || gtNorm.includes(normalise(s)))
+  );
+
+  const volTier: Record<string, number> = { "low": 0, "medium": 1, "high": 2, "very high": 3 };
+  const inputTier = volTier[normalise(volatility)] ?? 1;
+  const volFiltered = matching.filter(g => {
+    const rTier = volTier[normalise(g.volatility)] ?? 1;
+    return Math.abs(rTier - inputTier) <= 1;
+  });
+
+  const highPresenceCount = volFiltered.filter(g => g.marketPresence === "High").length;
+  const count = volFiltered.length;
+
+  let level: SaturationResult["level"];
+  if (highPresenceCount >= 4) level = "Very High";
+  else if (highPresenceCount >= 2) level = "High";
+  else if (count >= 3) level = "Medium";
+  else level = "Low";
+
+  return { count, highPresenceCount, level };
+}
+
+// ─── Backward-compatible exports used by MarketIntelligence ──
 
 export interface MatchInput {
   gameType: string;
@@ -352,23 +189,10 @@ export interface MatchInput {
   targetMarkets: string[];
 }
 
-export interface MatchedGame {
+export interface MatchedGameLegacy {
   game: ReferenceGame;
   score: number;
-  breakdown: {
-    gameplay: number;
-    theme: number;
-    volatility: number;
-    features: number;
-    market: number;
-  };
-}
-
-export interface SaturationResult {
-  totalSimilar: number;
-  highPresenceCount: number;
-  level: "Low" | "Medium" | "High" | "Very High";
-  interpretation: string;
+  breakdown: { gameplay: number; theme: number; volatility: number; features: number; market: number };
 }
 
 export interface MarketInsight {
@@ -376,152 +200,39 @@ export interface MarketInsight {
   text: string;
 }
 
-// Broad theme mapping for category matching
-const THEME_CATEGORIES: Record<string, string[]> = {
-  "Space": ["Sci-Fi", "Aliens", "Cosmic"],
-  "Egypt": ["History", "Adventure", "Ancient"],
-  "Candy": ["Fun", "Colorful", "Fruit"],
-  "Mythology": ["Greek", "Fantasy", "Norse"],
-  "Western": ["Adventure", "Cowboy"],
-  "Ocean": ["Nature", "Underwater", "Fish"],
-  "Animals": ["Nature", "Wildlife"],
-  "Fantasy": ["Magic", "Dark", "Mythology"],
-  "Classic": ["Retro", "Traditional", "Casino"],
-  "Adventure": ["Exploration", "Action"],
-  "Fruit": ["Classic", "Fun", "Colorful"],
-  "Asian": ["Oriental", "Culture"],
-  "Gems": ["Classic", "Jewels"],
-  "Fishing": ["Nature", "Ocean", "Fun"],
-  "Anime": ["Japanese", "Fantasy", "Colorful"],
-  "Steampunk": ["Western", "Retro", "Adventure"],
-};
-
-function getExpandedThemes(theme: string): string[] {
-  const lower = theme.toLowerCase();
-  const expanded: string[] = [theme];
-  for (const [key, related] of Object.entries(THEME_CATEGORIES)) {
-    if (lower.includes(key.toLowerCase()) || related.some(r => lower.includes(r.toLowerCase()))) {
-      expanded.push(key, ...related);
-    }
-  }
-  return [...new Set(expanded.map(t => t.toLowerCase()))];
+export function findSimilarGamesLegacy(input: MatchInput): MatchedGameLegacy[] {
+  const top = findSimilarGames(input.gameType, input.theme, input.volatility, input.features, input.targetMarkets, 5);
+  return top.map(g => ({
+    game: g,
+    score: g.matchScore,
+    breakdown: {
+      gameplay: g.gameplayStructures.some(s => normalise(s).includes(normalise(input.gameType))) ? 100 : 0,
+      theme: Math.round((g.matchScore / 100) * 80),
+      volatility: Math.round((g.matchScore / 100) * 90),
+      features: Math.round((g.matchScore / 100) * 70),
+      market: Math.round((g.matchScore / 100) * 60),
+    },
+  }));
 }
 
-function computeGameplayScore(input: MatchInput, game: ReferenceGame): number {
-  return game.gameplayStructures.some(g => g.toLowerCase() === input.gameType.toLowerCase()) ? 100 : 0;
-}
-
-function computeThemeScore(input: MatchInput, game: ReferenceGame): number {
-  if (!input.theme) return 30; // neutral if no theme specified
-  const expanded = getExpandedThemes(input.theme);
-  const gameThemes = game.themeCategories.map(t => t.toLowerCase());
-  const matches = gameThemes.filter(t => expanded.includes(t)).length;
-  if (matches === 0) return 0;
-  return Math.min(100, (matches / gameThemes.length) * 100);
-}
-
-function computeVolatilityScore(input: MatchInput, game: ReferenceGame): number {
-  const volMap: Record<string, number> = { "Low": 0.3, "Medium": 0.5, "High": 0.8, "Very High": 1.0 };
-  const inputVol = volMap[input.volatility] ?? 0.5;
-  const gameVol = game.volatilityScore;
-  const diff = Math.abs(inputVol - gameVol);
-  return Math.max(0, 100 - diff * 200);
-}
-
-function computeFeatureScore(input: MatchInput, game: ReferenceGame): number {
-  if (input.features.length === 0) return 30;
-  const gameFeats = game.features.map(f => f.toLowerCase());
-  const inputFeats = input.features.map(f => f.toLowerCase());
-  const overlap = inputFeats.filter(f => gameFeats.some(gf => gf.includes(f) || f.includes(gf))).length;
-  return Math.min(100, (overlap / inputFeats.length) * 100);
-}
-
-function computeMarketScore(input: MatchInput, game: ReferenceGame): number {
-  if (input.targetMarkets.length === 0) return 50;
-  const gameMarkets = game.targetMarkets.map(m => m.toLowerCase());
-  const overlap = input.targetMarkets.filter(m => gameMarkets.includes(m.toLowerCase())).length;
-  return Math.min(100, (overlap / input.targetMarkets.length) * 100);
-}
-
-export function findSimilarGames(input: MatchInput): MatchedGame[] {
-  const weights = { gameplay: 0.30, theme: 0.20, volatility: 0.20, features: 0.20, market: 0.10 };
-
-  const scored = REFERENCE_GAMES.map(game => {
-    const breakdown = {
-      gameplay: computeGameplayScore(input, game),
-      theme: computeThemeScore(input, game),
-      volatility: computeVolatilityScore(input, game),
-      features: computeFeatureScore(input, game),
-      market: computeMarketScore(input, game),
-    };
-    const score = Math.round(
-      breakdown.gameplay * weights.gameplay +
-      breakdown.theme * weights.theme +
-      breakdown.volatility * weights.volatility +
-      breakdown.features * weights.features +
-      breakdown.market * weights.market
-    );
-    return { game, score, breakdown };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, 5);
-}
-
-export function computeSaturation(matches: MatchedGame[]): SaturationResult {
+export function computeSaturation(matches: MatchedGameLegacy[]): { totalSimilar: number; highPresenceCount: number; level: "Low" | "Medium" | "High" | "Very High"; interpretation: string } {
   const totalSimilar = matches.filter(m => m.score >= 40).length;
   const highPresenceCount = matches.filter(m => m.game.marketPresence === "High" && m.score >= 40).length;
-
-  let level: SaturationResult["level"];
+  let level: "Low" | "Medium" | "High" | "Very High";
   let interpretation: string;
-
-  if (highPresenceCount >= 4) {
-    level = "Very High";
-    interpretation = "Highly saturated segment with multiple dominant titles. Strong differentiation is critical.";
-  } else if (highPresenceCount >= 2) {
-    level = "High";
-    interpretation = "Competitive space with established titles. Consider unique mechanics or themes for positioning.";
-  } else if (totalSimilar >= 3) {
-    level = "Medium";
-    interpretation = "Moderately competitive space with room for differentiation through features or pacing.";
-  } else {
-    level = "Low";
-    interpretation = "Low saturation — concept may be differentiated but market validation is limited.";
-  }
-
+  if (highPresenceCount >= 4) { level = "Very High"; interpretation = "Highly saturated segment with multiple dominant titles. Strong differentiation is critical."; }
+  else if (highPresenceCount >= 2) { level = "High"; interpretation = "Competitive space with established titles. Consider unique mechanics or themes."; }
+  else if (totalSimilar >= 3) { level = "Medium"; interpretation = "Moderately competitive space with room for differentiation."; }
+  else { level = "Low"; interpretation = "Low saturation — concept may be differentiated but market validation is limited."; }
   return { totalSimilar, highPresenceCount, level, interpretation };
 }
 
-export function generateMarketInsights(matches: MatchedGame[], input: MatchInput): MarketInsight[] {
+export function generateMarketInsights(matches: MatchedGameLegacy[], input: MatchInput): MarketInsight[] {
   const insights: MarketInsight[] = [];
   const highPresence = matches.filter(m => m.game.marketPresence === "High" && m.score >= 40);
-
-  if (highPresence.length >= 3) {
-    insights.push({ type: "warning", text: "High competition — differentiation required to stand out in this segment." });
-  }
-
-  if (matches[0]?.score < 30) {
-    insights.push({ type: "info", text: "Concept may be differentiated but largely unvalidated by existing market data." });
-  }
-
-  const volMap: Record<string, number> = { "Low": 0.3, "Medium": 0.5, "High": 0.8, "Very High": 1.0 };
-  const inputVol = volMap[input.volatility] ?? 0.5;
-  const avgMatchVol = matches.reduce((sum, m) => sum + m.game.volatilityScore, 0) / matches.length;
-  if (Math.abs(inputVol - avgMatchVol) > 0.3) {
-    insights.push({ type: "info", text: "Volatility positioning deviates from dominant patterns in this segment." });
-  }
-
-  if (highPresence.length === 0 && matches[0]?.score >= 50) {
-    insights.push({ type: "positive", text: "Similar games exist but none dominate — opportunity for market capture." });
-  }
-
-  if (matches.some(m => m.breakdown.features >= 80 && m.game.marketPresence === "High")) {
-    insights.push({ type: "warning", text: "Feature set closely matches a dominant title — consider adding unique mechanics." });
-  }
-
-  if (insights.length === 0) {
-    insights.push({ type: "positive", text: "Balanced competitive position with reasonable market opportunity." });
-  }
-
+  if (highPresence.length >= 3) insights.push({ type: "warning", text: "High competition — differentiation required to stand out." });
+  if (matches[0]?.score < 30) insights.push({ type: "info", text: "Concept may be differentiated but largely unvalidated by existing market data." });
+  if (highPresence.length === 0 && matches[0]?.score >= 50) insights.push({ type: "positive", text: "Similar games exist but none dominate — opportunity for market capture." });
+  if (insights.length === 0) insights.push({ type: "positive", text: "Balanced competitive position with reasonable market opportunity." });
   return insights;
 }
