@@ -124,19 +124,18 @@ export function MarketIntelligence({ input, conceptName }: MarketIntelligencePro
   const volLabelMap: Record<number, string> = { 1: "Low", 2: "Medium", 3: "High", 4: "Very High" };
 
   const scatterData = useMemo(() => {
-    const points = matches.map(m => ({
+    const points: Array<{ x: number; y: number; name: string; volatilityLabel: string; isConcept: boolean }> = matches.map(m => ({
       x: volMap[m.game.volatility] ?? 2,
       y: m.game.sessionFriendliness,
       name: m.game.name,
-      volatilityLabel: m.game.volatility,
+      volatilityLabel: m.game.volatility as string,
       isConcept: false,
     }));
-    // Add user concept
     points.push({
       x: volMap[input.volatility] ?? 2,
-      y: 50, // neutral estimate
+      y: 50,
       name: conceptName || "Your Concept",
-      volatilityLabel: input.volatility,
+      volatilityLabel: input.volatility as string,
       isConcept: true,
     });
     return points;
