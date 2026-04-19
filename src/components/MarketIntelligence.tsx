@@ -1,3 +1,4 @@
+// NOTE: This component is currently unused. Kept for future integration.
 import { useMemo } from "react";
 import {
   AlertTriangle,

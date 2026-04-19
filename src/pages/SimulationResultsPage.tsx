@@ -179,6 +179,8 @@ export default function SimulationResultsPage() {
         </div>
 
         {/* ────── Section 1 — Concept & Market Position ────── */}
+        {marketLoading && <MarketLoadingSkeleton />}
+        {!marketLoading && (
         <div className="grid gap-6 lg:grid-cols-2">
           <SectionCard title="Concept Classification" icon={<Target className="h-5 w-5 text-primary" />}>
             {market ? (
@@ -221,6 +223,7 @@ export default function SimulationResultsPage() {
             ) : <Skeleton className="h-24 w-full" />}
           </SectionCard>
         </div>
+        )}
 
         {/* ────── Section 2 — Similar Games Benchmark ────── */}
         {market && (

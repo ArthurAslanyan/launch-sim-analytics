@@ -53,6 +53,7 @@ export interface ImprovementCard {
 }
 
 export interface FinalVerdict {
+  greenlightScore: number;
   conceptRiskIndex: number;
   marketDifferentiationScore: number;
   structuralRobustnessScore: number;
@@ -175,6 +176,7 @@ function buildStaticAnalysis(game: GameConcept, matches: MatchedGame[], saturati
   const diffScore = Math.max(20, Math.min(90, matches[0]?.matchScore > 80 ? 30 : matches[0]?.matchScore > 60 ? 50 : 75));
 
   const finalVerdict: FinalVerdict = {
+    greenlightScore: Math.round(stabilityScore * 0.4 + diffScore * 0.35 + (100 - Math.round(100 - stabilityScore)) * 0.25),
     conceptRiskIndex: Math.round(100 - stabilityScore),
     marketDifferentiationScore: diffScore,
     structuralRobustnessScore: stabilityScore,

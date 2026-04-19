@@ -242,6 +242,16 @@ export default function AdvancedEvaluationPage() {
       sessionLength: "Medium",
       bonusImportance: featureDependency > 0.5 ? "Core" : featureDependency > 0.3 ? "Important" : "Decorative",
       earlyExcitement: hitFreqNum > 35 ? "High" : hitFreqNum < 20 ? "Low" : "Moderate",
+      reelType: "Video" as const,
+      hasWild: true,
+      hasScatter: true,
+      scatterThreshold: 3,
+      hasRetrigger: false,
+      freeSpinCount: 10,
+      hasMultiplierSymbol: false,
+      bonusBuyAvailable: false,
+      anteBetAvailable: false,
+      requiresSimulation: specialMechanics.includes("Cascades") && ["Megaways", "Cluster Pays"].includes(gameType),
     };
 
     const results = runSimulation(gameConcept);

@@ -65,7 +65,6 @@ export interface GameConcept {
   sessionLength: string;
   bonusImportance: string;
   earlyExcitement: string;
-  referenceGames?: string;
 
   // Structure
   reelType?: "Classic" | "Video";
