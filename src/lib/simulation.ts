@@ -66,6 +66,47 @@ export interface GameConcept {
   bonusImportance: string;
   earlyExcitement: string;
   referenceGames?: string;
+
+  // Structure
+  reelType?: "Classic" | "Video";
+  paylineCount?: number;
+  waysConstant?: number;
+  irregularWindow?: boolean;
+  megawaysMaxWays?: number;
+  minClusterSize?: number;
+
+  // Wild
+  hasWild?: boolean;
+  wildType?: "Standard" | "Expanding" | "Sticky" | "Multiplier" | "Expanding + Multiplier" | "Sticky + Multiplier";
+  expandingWildScope?: "All reels" | "Middle reel only" | "Free game only";
+  stickyWildMode?: "Until end of feature" | "Moves each spin" | "Until win";
+  multiplierWildValueType?: "Fixed" | "Random";
+
+  // Scatter & free game
+  hasScatter?: boolean;
+  scatterThreshold?: number;
+  scatterMultiplePerReel?: boolean;
+  hasRetrigger?: boolean;
+  retriggerFrequency?: string;
+  freeSpinCount?: number;
+  freeGameReels?: "Same as base game" | "Different reels";
+
+  // Multiplier symbol
+  hasMultiplierSymbol?: boolean;
+  multiplierSymbolType?: "Spin multiplier" | "Win multiplier" | "Progressive (adds each cascade)";
+
+  // RTP detail
+  respinsRtp?: number;
+  wildContributionRtp?: number;
+
+  // Feature options
+  bonusBuyAvailable?: boolean;
+  anteBetAvailable?: boolean;
+
+  // Session
+  winPacing?: "Front-loaded" | "Even" | "Bonus-dependent";
+  requiresSimulation?: boolean;
+  referenceGame?: string;
 }
 
 // ============================================
