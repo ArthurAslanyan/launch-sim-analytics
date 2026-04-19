@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   Info,
@@ -337,6 +337,14 @@ export default function NewEvaluationPage() {
 
     const rtpBreakdown: RtpBreakdown = {
       baseGameRtp: baseRtpNum,
+      wildRtp: parseFloat(wildContributionRtp) || 0,
+      respinRtp: parseFloat(respinsRtp) || 0,
+      freeSpinsRtp: advFreeSpins,
+      jackpotRtp: advJackpot,
+      otherFeatureRtp: (parseFloat(bonusRtp) || 0) + (parseFloat(holdSpinRtp) || 0),
+    };
+    // legacy placeholder removed below
+    const _unusedOriginalRtp = {
       wildRtp: parseFloat(wildContributionRtp) || 0,
       respinRtp: parseFloat(respinsRtp) || 0,
       freeSpinsRtp: advFreeSpins,
@@ -782,7 +790,9 @@ export default function NewEvaluationPage() {
                 </FormField>
               </FormRow>
               {!advSumValid && (
-                <p className="text-xs text-destructive">Sum of all 6 sub-values must equal Feature RTP ({featureRtpNum.toFixed(1)}%). Currently: {advSum.toFixed(1)}%</p>
+                <p className="text-xs text-destructive">
+                  All sub-values (Free Spins + Respins + Hold & Spin + Wild + Bonus + Jackpot) must sum to Feature RTP ({featureRtpNum.toFixed(1)}%). Currently: {advSum.toFixed(1)}%
+                </p>
               )}
             </div>
           )}
