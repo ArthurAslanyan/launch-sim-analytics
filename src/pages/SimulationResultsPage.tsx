@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   AlertCircle,
@@ -24,6 +24,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
   ScatterChart,
   Scatter,
   ZAxis,
@@ -157,7 +158,14 @@ export default function SimulationResultsPage() {
     );
   }
 
-  const { inputMetrics, sessionBehavior, stopReasons, behavioralInsights, riskFlags, behavioralSimulation } = results;
+  const {
+    inputMetrics,
+    sessionBehavior,
+    stopReasons,
+    behavioralSimulation,
+  } = results;
+  const behavioralInsights = results.behavioralInsights ?? [];
+  const riskFlags = results.riskFlags ?? [];
 
   return (
     <DashboardLayout title="Behavioral Simulation Report" subtitle={`Analysis for "${game.gameName}"`}>
@@ -204,18 +212,24 @@ export default function SimulationResultsPage() {
             {market ? (
               <div className="flex items-center gap-6">
                 <div className="flex-1">
-                  <div className="flex items-end gap-1" style={{ height: 96 }}>
-                    {Array.from({ length: 7 }).map((_, i) => {
-                      const isHighlight = i === 4;
-                      const h = 30 + Math.random() * 55;
-                      return (
-                        <div key={i} className="flex-1 rounded-t" style={{
-                          height: `${isHighlight ? 90 : h}%`,
-                          backgroundColor: isHighlight ? "hsl(var(--primary))" : "hsl(var(--border))",
-                        }} />
-                      );
-                    })}
-                  </div>
+                  {(() => {
+                    const gaugeVal = market.marketSaturation.gaugeValue;
+                    const heights = [40, 55, 70, 80, gaugeVal, 50, 35];
+                    return (
+                      <div className="flex items-end gap-1" style={{ height: 96 }}>
+                        {heights.map((h, i) => (
+                          <div
+                            key={i}
+                            className="flex-1 rounded-t transition-all"
+                            style={{
+                              height: `${h}%`,
+                              backgroundColor: i === 4 ? "hsl(var(--primary))" : "hsl(var(--border))",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
                   <p className="mt-2 text-xs text-muted-foreground">{market.marketSaturation.narrative}</p>
                 </div>
                 <SemiGauge value={market.marketSaturation.gaugeValue} label={market.marketSaturation.level} size={100} />
@@ -226,7 +240,19 @@ export default function SimulationResultsPage() {
         )}
 
         {/* ────── Section 2 — Similar Games Benchmark ────── */}
-        {market && (
+        {marketLoading && (
+          <div className="space-y-6">
+            <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-40 w-full" />
+            </div>
+            <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
+              <Skeleton className="h-6 w-48" />
+              <Skeleton className="h-28 w-full" />
+            </div>
+          </div>
+        )}
+        {!marketLoading && market && (
           <>
             <SectionCard title="Similar Games Identified" icon={<Users className="h-5 w-5 text-primary" />}>
               <Table>
@@ -264,8 +290,8 @@ export default function SimulationResultsPage() {
                       </div>
                     ))}
                     {(["Theme", "Mechanics", "Features"] as const).map(dim => (
-                      <>
-                        <div key={dim} className="text-xs font-medium py-2">{dim}</div>
+                      <React.Fragment key={dim}>
+                        <div className="text-xs font-medium py-2">{dim}</div>
                         {market.similarityMatrix.games.map((g, i) => {
                           const score = dim === "Theme" ? g.themeScore : dim === "Mechanics" ? g.mechanicsScore : g.featureScore;
                           const alpha = 0.12 + (score / 100) * 0.72;
@@ -282,7 +308,7 @@ export default function SimulationResultsPage() {
                             </div>
                           );
                         })}
-                      </>
+                      </React.Fragment>
                     ))}
                   </div>
                 </div>
@@ -321,7 +347,7 @@ export default function SimulationResultsPage() {
                     { label: "No Bonus", value: stopReasons.timeLimit, color: "hsl(160,35%,65%)" },
                     { label: "Time Limit", value: stopReasons.bigWinExit, color: "hsl(160,30%,80%)" },
                   ];
-                  const total = segments.reduce((s, seg) => s + seg.value, 0);
+                  const total = segments.reduce((s, seg) => s + seg.value, 0) || 100;
                   return (
                     <div>
                       <div className="flex h-8 w-full overflow-hidden rounded-lg">
@@ -362,7 +388,17 @@ export default function SimulationResultsPage() {
         )}
 
         {/* ────── Section 4 — Market & Reference Comparison ────── */}
-        {market && (
+        {marketLoading && (
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
+              <Skeleton className="h-6 w-48" /><Skeleton className="h-48 w-full" />
+            </div>
+            <div className="rounded-xl border bg-card p-6 shadow-sm space-y-4">
+              <Skeleton className="h-6 w-48" /><Skeleton className="h-48 w-full" />
+            </div>
+          </div>
+        )}
+        {!marketLoading && market && (
           <div className="grid gap-6 lg:grid-cols-2">
             <SectionCard title="Session Duration vs Market" icon={<BarChart3 className="h-5 w-5 text-primary" />}>
               <div className="h-[200px]">
@@ -376,9 +412,8 @@ export default function SimulationResultsPage() {
                     <YAxis label={{ value: "Minutes", angle: -90, position: "insideLeft", offset: 10, style: { fill: "hsl(var(--muted-foreground))", fontSize: 11 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                     <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
                     <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                      {[0, 1].map(i => (
-                        <rect key={i} fill={i === 0 ? "hsl(160,45%,35%)" : "hsl(160,35%,55%)"} />
-                      ))}
+                      <Cell fill="hsl(160,45%,35%)" />
+                      <Cell fill="hsl(160,35%,55%)" />
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -405,11 +440,17 @@ export default function SimulationResultsPage() {
                       fill="hsl(160,40%,50%)"
                       opacity={0.8}
                     />
-                    <Scatter
-                      name={market.competitivePositioning.thisGame.label}
-                      data={[{ x: market.competitivePositioning.thisGame.volatilityScore, y: market.competitivePositioning.thisGame.sessionFriendliness, name: market.competitivePositioning.thisGame.label }]}
-                      fill="hsl(160,45%,25%)"
-                    />
+                    {market.competitivePositioning.thisGame && (
+                      <Scatter
+                        name={market.competitivePositioning.thisGame.label ?? "Your Concept"}
+                        data={[{
+                          x: market.competitivePositioning.thisGame.volatilityScore ?? 5,
+                          y: market.competitivePositioning.thisGame.sessionFriendliness ?? 5,
+                          name: market.competitivePositioning.thisGame.label ?? "Your Concept",
+                        }]}
+                        fill="hsl(160,45%,25%)"
+                      />
+                    )}
                   </ScatterChart>
                 </ResponsiveContainer>
               </div>
@@ -421,7 +462,7 @@ export default function SimulationResultsPage() {
         {(market?.improvementCards || results.improvements) && (
           <SectionCard title="Insights & Improvement Suggestions" icon={<Lightbulb className="h-5 w-5 text-primary" />}>
             <div className="grid gap-4 sm:grid-cols-2">
-              {(market?.improvementCards ?? results.improvements.map(imp => ({
+              {(market?.improvementCards ?? (results.improvements ?? []).map(imp => ({
                 issue: imp.category,
                 rootCause: "Derived from simulation analysis",
                 suggestedImprovement: imp.suggestion,
@@ -446,19 +487,19 @@ export default function SimulationResultsPage() {
         {/* ────── Section 6 — Final Verdict ────── */}
         <SectionCard title="Final Verdict" icon={<Shield className="h-5 w-5 text-primary" />}>
           <div className="grid grid-cols-3 gap-6 mb-6">
-            <SemiGauge value={market?.finalVerdict.conceptRiskIndex ?? Math.round(100 - results.earlySessionRiskScore)} label="Concept Risk Index" />
-            <SemiGauge value={market?.finalVerdict.marketDifferentiationScore ?? 50} label="Market Differentiation" />
-            <SemiGauge value={market?.finalVerdict.structuralRobustnessScore ?? results.structuralStabilityScore} label="Structural Robustness" />
+            <SemiGauge value={market?.finalVerdict?.conceptRiskIndex ?? Math.round(100 - results.earlySessionRiskScore)} label="Concept Risk Index" />
+            <SemiGauge value={market?.finalVerdict?.marketDifferentiationScore ?? 50} label="Market Differentiation" />
+            <SemiGauge value={market?.finalVerdict?.structuralRobustnessScore ?? results.structuralStabilityScore} label="Structural Robustness" />
           </div>
           <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-5">
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
               <Badge className="bg-primary/15 text-primary border-primary/30 text-sm font-bold">
-                {market?.finalVerdict.recommendation ?? results.recommendation}
+                {market?.finalVerdict?.recommendation ?? results.recommendation}
               </Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              {market?.finalVerdict.recommendationRationale ?? results.diagnosis}
+              {market?.finalVerdict?.recommendationRationale ?? results.diagnosis}
             </p>
           </div>
         </SectionCard>
@@ -504,9 +545,6 @@ export default function SimulationResultsPage() {
             </div>
           )}
         </SectionCard>
-
-        {/* Market loading skeleton */}
-        {marketLoading && <MarketLoadingSkeleton />}
 
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 border-t pt-6">
