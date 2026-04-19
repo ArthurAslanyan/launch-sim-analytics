@@ -343,14 +343,6 @@ export default function NewEvaluationPage() {
       jackpotRtp: advJackpot,
       otherFeatureRtp: (parseFloat(bonusRtp) || 0) + (parseFloat(holdSpinRtp) || 0),
     };
-    // legacy placeholder removed below
-    const _unusedOriginalRtp = {
-      wildRtp: parseFloat(wildContributionRtp) || 0,
-      respinRtp: parseFloat(respinsRtp) || 0,
-      freeSpinsRtp: advFreeSpins,
-      jackpotRtp: advJackpot,
-      otherFeatureRtp: advBonus,
-    };
 
     const winDistribution: WinDistribution = {
       sub1x: parseFloat(winSub1x) || 0,
