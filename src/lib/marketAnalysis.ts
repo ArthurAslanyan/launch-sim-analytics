@@ -98,7 +98,11 @@ function buildStaticAnalysis(game: GameConcept, matches: MatchedGame[], saturati
   const top4 = matches.slice(0, 4);
 
   const conceptClassification: ConceptClassification = {
-    themeCategory: game.gameName || "Unknown",
+    themeCategory: (() => {
+      if (game.specialMechanics?.includes("Cascades")) return `${game.gameType} + Cascades`;
+      if (game.gameType) return game.gameType;
+      return "Unclassified";
+    })(),
     gameplayStructure: game.gameType || "Paylines",
     featureDensity: fNames.length >= 4 ? "High" : fNames.length >= 2 ? "Medium" : "Low",
     inferredVolatility: game.volatility || "Medium",
