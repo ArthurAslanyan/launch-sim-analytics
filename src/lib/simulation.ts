@@ -121,7 +121,7 @@ export interface ComputedInputMetrics {
 }
 
 export function computeInputMetrics(game: GameConcept): ComputedInputMetrics {
-  const bd = game.rtpBreakdown;
+  const bd = game.rtpBreakdown ?? { baseGameRtp: 0, wildRtp: 0, respinRtp: 0, freeSpinsRtp: 0, jackpotRtp: 0, otherFeatureRtp: 0 };
   const featureRtpTotal = bd.wildRtp + bd.respinRtp + bd.freeSpinsRtp + bd.jackpotRtp + bd.otherFeatureRtp;
   const totalRtp = game.rtpTarget || (bd.baseGameRtp + featureRtpTotal);
   const baseRtpRatio = totalRtp > 0 ? bd.baseGameRtp / totalRtp : 0;
@@ -177,7 +177,7 @@ export function selectArchetype(game: GameConcept, metrics: ComputedInputMetrics
   ) {
     return {
       archetype: "Progress-Oriented Player",
-      reason: `Collection mechanics combined with a ${game.baseGameStrength.toLowerCase()} base game creates a progress-loop structure. Players are motivated by visible advancement and disengage if momentum stalls.`,
+      reason: `Collection mechanics combined with a ${(game.baseGameStrength ?? "balanced").toLowerCase()} base game creates a progress-loop structure. Players are motivated by visible advancement and disengage if momentum stalls.`,
     };
   }
 
@@ -640,7 +640,8 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
   const hitScore = hitScoreMap[game.baseHitFrequency] ?? 0.5;
 
   const featureFreqCounts = { Low: 0, Medium: 0, High: 0 };
-  for (const f of game.features) {
+  const features = game.features ?? [];
+  for (const f of features) {
     if (f.triggerFrequency in featureFreqCounts) {
       featureFreqCounts[f.triggerFrequency as keyof typeof featureFreqCounts]++;
     }
@@ -653,7 +654,7 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
   const featureScoreMap: Record<string, number> = { Low: 0.2, Medium: 0.5, High: 0.8 };
   const featureScore = featureScoreMap[featureFreq] ?? 0.5;
 
-  const baseRtp = game.rtpBreakdown.baseGameRtp / 100;
+  const baseRtp = (game.rtpBreakdown?.baseGameRtp ?? 0) / 100;
   const deadSpinPressure = 1 - hitScore;
   const lossPressure = volatilityScore * (1 - baseRtp);
   const featureAbsencePressure = 1 - featureScore;
