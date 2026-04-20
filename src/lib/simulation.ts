@@ -647,7 +647,7 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
     }
   }
   let featureFreq = "Low";
-  if (game.features.length > 0) {
+  if (features.length > 0) {
     const maxCount = Math.max(featureFreqCounts.Low, featureFreqCounts.Medium, featureFreqCounts.High);
     featureFreq = featureFreqCounts.High === maxCount ? "High" : featureFreqCounts.Medium === maxCount ? "Medium" : "Low";
   }
