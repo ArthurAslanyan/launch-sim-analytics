@@ -149,11 +149,18 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
   const icon = ARCHETYPE_ICONS[name];
   const desc = ARCHETYPE_DESCRIPTIONS[name];
 
-  const update = (field: keyof ArchetypeParams, val: number) => {
-    onChange({ ...params, [field]: val });
+  // Defensive fallback — guard against missing archetype defaults
+  const safeParams: ArchetypeParams = params ?? {
+    bankrollMin: 10, bankrollMax: 20, lossTolerance: 50,
+    deadSpinTolerance: 10, featureExpectation: 80,
+    meaningfulWin: 2, continueAfterBigWin: 50, tiltSensitivity: 50,
   };
 
-  const tiltLabel = params.tiltSensitivity < 33 ? "Low" : params.tiltSensitivity < 66 ? "Medium" : "High";
+  const update = (field: keyof ArchetypeParams, val: number) => {
+    onChange({ ...safeParams, [field]: val });
+  };
+
+  const tiltLabel = safeParams.tiltSensitivity < 33 ? "Low" : safeParams.tiltSensitivity < 66 ? "Medium" : "High";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
