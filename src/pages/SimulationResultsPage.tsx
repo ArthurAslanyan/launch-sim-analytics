@@ -332,6 +332,8 @@ export default function SimulationResultsPage() {
                   <Line type="monotone" dataKey="casual_survival" name="Casual Player" stroke="hsl(160,45%,30%)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="bonus_survival" name="Bonus-Seeking Player" stroke="hsl(160,40%,50%)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="volatility_survival" name="Volatility-Seeking Player" stroke="hsl(155,35%,70%)" strokeWidth={2.5} dot={{ r: 3 }} />
+                  <Line type="monotone" dataKey="budget_survival" name="Budget-Constrained Player" stroke="hsl(40,80%,52%)" strokeWidth={2} strokeDasharray="4 2" dot={{ r: 2.5 }} />
+                  <Line type="monotone" dataKey="progress_survival" name="Progress-Oriented Player" stroke="hsl(200,60%,50%)" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 2.5 }} />
                 </LineChart>
               </ResponsiveContainer>
             </div>

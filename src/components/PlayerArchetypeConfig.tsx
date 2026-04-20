@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   Users, Zap, Target, Activity, Wallet, Sparkles,
-  ChevronDown, HelpCircle,
+  ChevronDown, HelpCircle, TrendingDown, Crosshair,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -41,50 +41,72 @@ export interface ArchetypeConfigOutput {
 }
 
 const ARCHETYPE_ICONS: Record<string, React.ReactNode> = {
-  "Casual Player": <Sparkles className="h-4 w-4" />,
-  "Bonus Seeker": <Target className="h-4 w-4" />,
-  "Volatility Seeker": <Zap className="h-4 w-4" />,
-  "Budget Player": <Wallet className="h-4 w-4" />,
-  "Engagement Seeker": <Activity className="h-4 w-4" />,
+  "Casual Player":            <Sparkles className="h-4 w-4" />,
+  "Bonus-Seeking Player":     <Target className="h-4 w-4" />,
+  "Volatility-Seeking Player": <Zap className="h-4 w-4" />,
+  "Budget-Constrained Player": <Wallet className="h-4 w-4" />,
+  "Progress-Oriented Player":  <Activity className="h-4 w-4" />,
+  "Loss-Chasing Player":       <TrendingDown className="h-4 w-4" />,
+  "Feature-Focused Player":    <Crosshair className="h-4 w-4" />,
 };
 
 const ARCHETYPE_DESCRIPTIONS: Record<string, string> = {
-  "Casual Player": "Seeks steady engagement and frequent small rewards. Sensitive to boredom and dead spins.",
-  "Bonus Seeker": "Focused on triggering features. High patience when rewards feel reachable, rapid churn otherwise.",
-  "Volatility Seeker": "Accepts long dry periods in pursuit of large wins. Ignores small rewards.",
-  "Budget Player": "Highly sensitive to loss rate and bankroll depletion. Exits early under pressure.",
-  "Engagement Seeker": "Responds to pacing and stimulation. Stays longer when the experience feels active.",
+  "Casual Player":
+    "Low risk tolerance. Exits quickly during losing streaks or dead spin runs. Driven by entertainment, light excitement, and comfort. Needs frequent small rewards to sustain engagement.",
+  "Bonus-Seeking Player":
+    "Tolerates base-game losses while hunting features. Measures session value by bonus frequency. Disengages if features feel too rare or disappointing. 'Just one more spin' mentality.",
+  "Volatility-Seeking Player":
+    "Ignores small wins entirely. Accepts extended losing streaks in pursuit of large, rare payouts. Low tilt sensitivity. Plays for the spike, not the average.",
+  "Budget-Constrained Player":
+    "Fixed bankroll mindset. Stops the moment losses exceed a preset threshold. Highly sensitive to perceived fairness. Prioritises control and predictability over excitement.",
+  "Progress-Oriented Player":
+    "Motivated by visible advancement — collection meters, unlock paths, milestone indicators. Tolerates moderate losses if progress continues. Disengages if momentum stalls.",
+  "Loss-Chasing Player":
+    "[Tier 3 — Advanced] Increases risk exposure after losses. Sensitive to near-miss patterns. Seeks recovery rather than entertainment. Risk escalation within session is the primary signal.",
+  "Feature-Focused Player":
+    "[Tier 3 — Advanced] Engages primarily with a single dominant mechanic. Other parts of the game are invisible to this player. Highly sensitive to that one feature's quality and frequency.",
 };
 
 const DEFAULT_VALUES: Record<string, ArchetypeParams> = {
   "Casual Player": {
-    bankrollMin: 10, bankrollMax: 20, lossTolerance: 47,
-    deadSpinTolerance: 12, featureExpectation: 80,
-    meaningfulWin: 2, continueAfterBigWin: 30, tiltSensitivity: 40,
-  },
-  "Bonus Seeker": {
-    bankrollMin: 15, bankrollMax: 30, lossTolerance: 62,
-    deadSpinTolerance: 20, featureExpectation: 50,
-    meaningfulWin: 3, continueAfterBigWin: 60, tiltSensitivity: 50,
-  },
-  "Volatility Seeker": {
-    bankrollMin: 20, bankrollMax: 50, lossTolerance: 80,
-    deadSpinTolerance: 30, featureExpectation: 120,
-    meaningfulWin: 5, continueAfterBigWin: 80, tiltSensitivity: 20,
-  },
-  "Budget Player": {
-    bankrollMin: 5, bankrollMax: 12, lossTolerance: 28,
+    bankrollMin: 10, bankrollMax: 20, lossTolerance: 40,
     deadSpinTolerance: 8, featureExpectation: 60,
-    meaningfulWin: 1.5, continueAfterBigWin: 20, tiltSensitivity: 85,
+    meaningfulWin: 1.5, continueAfterBigWin: 22, tiltSensitivity: 65,
   },
-  "Engagement Seeker": {
-    bankrollMin: 10, bankrollMax: 25, lossTolerance: 55,
-    deadSpinTolerance: 15, featureExpectation: 70,
-    meaningfulWin: 2.5, continueAfterBigWin: 50, tiltSensitivity: 45,
+  "Bonus-Seeking Player": {
+    bankrollMin: 15, bankrollMax: 35, lossTolerance: 68,
+    deadSpinTolerance: 22, featureExpectation: 45,
+    meaningfulWin: 5, continueAfterBigWin: 72, tiltSensitivity: 35,
+  },
+  "Volatility-Seeking Player": {
+    bankrollMin: 25, bankrollMax: 70, lossTolerance: 85,
+    deadSpinTolerance: 45, featureExpectation: 160,
+    meaningfulWin: 12, continueAfterBigWin: 88, tiltSensitivity: 10,
+  },
+  "Budget-Constrained Player": {
+    bankrollMin: 5, bankrollMax: 10, lossTolerance: 22,
+    deadSpinTolerance: 7, featureExpectation: 50,
+    meaningfulWin: 1, continueAfterBigWin: 12, tiltSensitivity: 92,
+  },
+  "Progress-Oriented Player": {
+    bankrollMin: 12, bankrollMax: 28, lossTolerance: 58,
+    deadSpinTolerance: 18, featureExpectation: 75,
+    meaningfulWin: 2, continueAfterBigWin: 55, tiltSensitivity: 42,
+  },
+  "Loss-Chasing Player": {
+    bankrollMin: 20, bankrollMax: 100, lossTolerance: 92,
+    deadSpinTolerance: 28, featureExpectation: 110,
+    meaningfulWin: 15, continueAfterBigWin: 35, tiltSensitivity: 98,
+  },
+  "Feature-Focused Player": {
+    bankrollMin: 15, bankrollMax: 38, lossTolerance: 72,
+    deadSpinTolerance: 28, featureExpectation: 35,
+    meaningfulWin: 8, continueAfterBigWin: 65, tiltSensitivity: 30,
   },
 };
 
 const ARCHETYPE_NAMES = Object.keys(DEFAULT_VALUES);
+const TIER_3_ARCHETYPES = ["Loss-Chasing Player", "Feature-Focused Player"];
 const PLAYERS_OPTIONS = ["50", "100", "200", "500"];
 const VARIATION_OPTIONS = ["Low", "Medium", "High"];
 
@@ -144,6 +166,11 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
               <p className="text-xs text-muted-foreground mt-0.5">{desc}</p>
             </div>
           </div>
+          {TIER_3_ARCHETYPES.includes(name) && (
+            <span className="ml-2 inline-flex rounded-full bg-[hsl(var(--badge-info-bg))] text-[hsl(var(--badge-info-text))] px-2 py-0.5 text-xs font-semibold shrink-0">
+              Tier 3
+            </span>
+          )}
           <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform shrink-0 ml-2", open && "rotate-180")} />
         </CollapsibleTrigger>
         <CollapsibleContent>
@@ -343,7 +370,7 @@ export function PlayerArchetypeConfig({ onChange }: PlayerArchetypeConfigProps) 
 
             {/* Archetype Cards */}
             <div className="space-y-3">
-              {ARCHETYPE_NAMES.map(name => (
+              {ARCHETYPE_NAMES.filter(n => !TIER_3_ARCHETYPES.includes(n)).map(name => (
                 <ArchetypeCard
                   key={name}
                   name={name}
@@ -352,6 +379,29 @@ export function PlayerArchetypeConfig({ onChange }: PlayerArchetypeConfigProps) 
                   onChange={params => handleArchetypeChange(name, params)}
                 />
               ))}
+
+              <div className="pt-2">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Tier 3 — Advanced Research Archetypes
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <p className="text-xs text-muted-foreground mb-3 px-1">
+                  These archetypes are excluded from standard survival curve simulation. They are included for research, responsible gambling analysis, and future premium features.
+                </p>
+                {TIER_3_ARCHETYPES.map(name => (
+                  <div key={name} className="mb-3">
+                    <ArchetypeCard
+                      name={name}
+                      params={archetypes[name]}
+                      disabled={useDefaults}
+                      onChange={params => handleArchetypeChange(name, params)}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </CollapsibleContent>

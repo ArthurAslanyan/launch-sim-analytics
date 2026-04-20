@@ -147,27 +147,71 @@ export interface ArchetypeSelection {
 }
 
 export function selectArchetype(game: GameConcept, metrics: ComputedInputMetrics): ArchetypeSelection {
+
+  // Feature-Focused: single dominant feature + very high feature dependency
+  if (
+    metrics.featureDependencyIndex > 0.65 &&
+    game.features.filter(f => f.type).length <= 1
+  ) {
+    return {
+      archetype: "Feature-Focused Player",
+      reason: `Feature Dependency Index is ${(metrics.featureDependencyIndex * 100).toFixed(1)}% with a single dominant mechanic. Players engage primarily with that feature and disengage if it disappoints.`,
+    };
+  }
+
+  // Budget-Constrained: low bankroll + low/medium volatility
+  if (
+    game.targetBankroll === "Low" &&
+    (game.volatility === "Low" || game.volatility === "Medium")
+  ) {
+    return {
+      archetype: "Budget-Constrained Player",
+      reason: `Low target bankroll combined with ${game.volatility} volatility indicates a budget-conscious profile. Players prioritise controlled play, perceived fairness, and stopping at a fixed loss threshold.`,
+    };
+  }
+
+  // Progress-Oriented: collection mechanics + functional base game
+  if (
+    game.specialMechanics?.includes("Collection Mechanics") &&
+    game.baseGameStrength !== "Weak (feature-driven)"
+  ) {
+    return {
+      archetype: "Progress-Oriented Player",
+      reason: `Collection mechanics combined with a ${game.baseGameStrength.toLowerCase()} base game creates a progress-loop structure. Players are motivated by visible advancement and disengage if momentum stalls.`,
+    };
+  }
+
+  // Bonus-Seeking: high feature dependency (broad)
   if (metrics.featureDependencyIndex > 0.45) {
     return {
       archetype: "Bonus-Seeking Player",
-      reason: `Feature Dependency Index is ${(metrics.featureDependencyIndex * 100).toFixed(1)}% (> 45%), indicating heavy reliance on bonus features for RTP delivery.`,
+      reason: `Feature Dependency Index is ${(metrics.featureDependencyIndex * 100).toFixed(1)}% (> 45%). Players tolerate base-game losses while waiting for feature triggers and measure session value by bonus frequency.`,
     };
   }
-  if ((game.volatility === "High" || game.volatility === "Very High") && game.topWin > 2000) {
+
+  // Volatility-Seeking: high/very high vol + large top win
+  if (
+    (game.volatility === "High" || game.volatility === "Very High") &&
+    game.topWin > 2000
+  ) {
     return {
       archetype: "Volatility-Seeking Player",
-      reason: `${game.volatility} volatility combined with top win of ${game.topWin}x (> 2000x) appeals to risk-tolerant, high-reward seekers.`,
+      reason: `${game.volatility} volatility with a ${game.topWin}× top win. Players ignore small wins, accept long losing streaks, and play for rare large payouts.`,
     };
   }
-  if (metrics.baseRtpRatio > 0.60) {
+
+  // Casual: strong base game returns
+  if (metrics.baseRtpRatio > 0.55) {
     return {
       archetype: "Casual Player",
-      reason: `Base RTP ratio is ${(metrics.baseRtpRatio * 100).toFixed(1)}% (> 60%), suggesting consistent base game returns suited for casual players.`,
+      reason: `Base RTP ratio is ${(metrics.baseRtpRatio * 100).toFixed(1)}% (> 55%). Consistent base-game returns suit players seeking low-stress entertainment with frequent small rewards.`,
     };
   }
+
+  // Fallback
   return {
-    archetype: "Balanced Player",
-    reason: "No dominant feature dependency, volatility, or base game bias detected. Game appeals broadly across player types.",
+    archetype: "Casual Player",
+    reason: "Balanced profile with no dominant structural signal. Broad player appeal with casual-friendly characteristics.",
   };
 }
 
@@ -567,6 +611,8 @@ export interface ArchetypeSurvivalRow {
   casual_survival: number;
   bonus_survival: number;
   volatility_survival: number;
+  budget_survival: number;
+  progress_survival: number;
 }
 
 export interface ArchetypeDecayInfo {
@@ -599,10 +645,8 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
       featureFreqCounts[f.triggerFrequency as keyof typeof featureFreqCounts]++;
     }
   }
-  let featureFreq: string;
-  if (game.features.length === 0) {
-    featureFreq = "Low";
-  } else {
+  let featureFreq = "Low";
+  if (game.features.length > 0) {
     const maxCount = Math.max(featureFreqCounts.Low, featureFreqCounts.Medium, featureFreqCounts.High);
     featureFreq = featureFreqCounts.High === maxCount ? "High" : featureFreqCounts.Medium === maxCount ? "Medium" : "Low";
   }
@@ -614,18 +658,71 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
   const lossPressure = volatilityScore * (1 - baseRtp);
   const featureAbsencePressure = 1 - featureScore;
 
+  // Progress pressure: high when game lacks collection mechanics or base strength is weak
+  const hasProgressSystem = game.specialMechanics?.includes("Collection Mechanics") ||
+    game.specialMechanics?.includes("Progressive Jackpot");
+  const progressPressure = hasProgressSystem ? 0.2 : 0.7;
+
+  // Bankroll pressure: derived from volatility and bankroll target
+  const bankrollMap: Record<string, number> = { Low: 0.8, Medium: 0.5, High: 0.3 };
+  const bankrollPressure = (bankrollMap[game.targetBankroll] ?? 0.5) * volatilityScore;
+
   const archetypeDefs = [
-    { name: "Casual Player", key: "casual_survival" as const, lossSens: 0.9, deadSens: 1.0, featureSens: 0.6 },
-    { name: "Bonus-Seeking Player", key: "bonus_survival" as const, lossSens: 0.7, deadSens: 0.6, featureSens: 1.2 },
-    { name: "Volatility-Seeking Player", key: "volatility_survival" as const, lossSens: 0.4, deadSens: 0.3, featureSens: 0.5 },
+    {
+      name: "Casual Player",
+      key: "casual_survival" as const,
+      lossSens: 0.95,
+      deadSens: 1.05,
+      featureSens: 0.55,
+      progressSens: 0.4,
+      bankrollSens: 0.6,
+    },
+    {
+      name: "Bonus-Seeking Player",
+      key: "bonus_survival" as const,
+      lossSens: 0.50,
+      deadSens: 0.45,
+      featureSens: 1.45,
+      progressSens: 0.5,
+      bankrollSens: 0.5,
+    },
+    {
+      name: "Volatility-Seeking Player",
+      key: "volatility_survival" as const,
+      lossSens: 0.28,
+      deadSens: 0.20,
+      featureSens: 0.42,
+      progressSens: 0.2,
+      bankrollSens: 0.3,
+    },
+    {
+      name: "Budget-Constrained Player",
+      key: "budget_survival" as const,
+      lossSens: 1.55,
+      deadSens: 0.85,
+      featureSens: 0.65,
+      progressSens: 0.5,
+      bankrollSens: 1.6,
+    },
+    {
+      name: "Progress-Oriented Player",
+      key: "progress_survival" as const,
+      lossSens: 0.65,
+      deadSens: 0.80,
+      featureSens: 0.85,
+      progressSens: 1.35,
+      bankrollSens: 0.55,
+    },
   ];
 
   const archetypes: ArchetypeDecayInfo[] = archetypeDefs.map(a => {
     const decayRate = (
-      lossPressure * a.lossSens +
-      deadSpinPressure * a.deadSens +
-      featureAbsencePressure * a.featureSens
-    ) / 3;
+      lossPressure      * a.lossSens +
+      deadSpinPressure  * a.deadSens +
+      featureAbsencePressure * a.featureSens +
+      progressPressure  * a.progressSens +
+      bankrollPressure  * a.bankrollSens
+    ) / 5;
 
     let label: string;
     if (decayRate > 0.7) label = "High early churn risk";
@@ -638,7 +735,14 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
 
   const spinSteps = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 120];
   const survivalData: ArchetypeSurvivalRow[] = spinSteps.map(spin => {
-    const row: ArchetypeSurvivalRow = { spin, casual_survival: 0, bonus_survival: 0, volatility_survival: 0 };
+    const row: ArchetypeSurvivalRow = {
+      spin,
+      casual_survival: 0,
+      bonus_survival: 0,
+      volatility_survival: 0,
+      budget_survival: 0,
+      progress_survival: 0,
+    };
     for (const a of archetypes) {
       const raw = 100 * Math.exp(-a.decayRate * spin / 50);
       const clamped = Math.max(5, Math.min(100, Math.round(raw * 10) / 10));
@@ -655,6 +759,8 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
     { name: "loss", value: lossPressure },
     { name: "dead spin", value: deadSpinPressure },
     { name: "feature absence", value: featureAbsencePressure },
+    { name: "progress absence", value: progressPressure },
+    { name: "bankroll", value: bankrollPressure },
   ].sort((a, b) => b.value - a.value);
 
   const dominantPressure = pressures[0].name;
@@ -663,6 +769,10 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
     retentionDriver = "Feature-dependent retention — players leave when features don't trigger";
   } else if (dominantPressure === "dead spin") {
     retentionDriver = "Dead spin pressure dominates — low hit frequency drives disengagement";
+  } else if (dominantPressure === "progress absence") {
+    retentionDriver = "Progress-loop dependency — players disengage without visible advancement";
+  } else if (dominantPressure === "bankroll") {
+    retentionDriver = "Bankroll pressure dominates — volatility erodes budget before engagement peaks";
   } else {
     retentionDriver = "Loss pressure dominates — high volatility erodes bankroll confidence";
   }
