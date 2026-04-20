@@ -1,7 +1,7 @@
-// debug.ts
+import { isDev } from "./env";
 
 export const debug = (label: string, data: unknown) => {
-  if (import.meta.env.MODE !== "production") {
+  if (isDev) {
     // eslint-disable-next-line no-console
     console.log(`[DEBUG] ${label}`, data);
   }
