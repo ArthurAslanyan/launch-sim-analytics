@@ -149,11 +149,18 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
   const icon = ARCHETYPE_ICONS[name];
   const desc = ARCHETYPE_DESCRIPTIONS[name];
 
-  const update = (field: keyof ArchetypeParams, val: number) => {
-    onChange({ ...params, [field]: val });
+  // Defensive fallback — guard against missing archetype defaults
+  const safeParams: ArchetypeParams = params ?? {
+    bankrollMin: 10, bankrollMax: 20, lossTolerance: 50,
+    deadSpinTolerance: 10, featureExpectation: 80,
+    meaningfulWin: 2, continueAfterBigWin: 50, tiltSensitivity: 50,
   };
 
-  const tiltLabel = params.tiltSensitivity < 33 ? "Low" : params.tiltSensitivity < 66 ? "Medium" : "High";
+  const update = (field: keyof ArchetypeParams, val: number) => {
+    onChange({ ...safeParams, [field]: val });
+  };
+
+  const tiltLabel = safeParams.tiltSensitivity < 33 ? "Low" : safeParams.tiltSensitivity < 66 ? "Medium" : "High";
 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
@@ -183,7 +190,7 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
               <div className="flex items-center gap-2">
                 <Input
                   type="number" min={1} max={200} step={1}
-                  value={params.bankrollMin}
+                  value={safeParams.bankrollMin}
                   onChange={e => update("bankrollMin", parseFloat(e.target.value) || 0)}
                   disabled={disabled}
                   className="max-w-20 h-8 text-sm"
@@ -192,7 +199,7 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
                 <span className="text-muted-foreground text-xs">to</span>
                 <Input
                   type="number" min={1} max={500} step={1}
-                  value={params.bankrollMax}
+                  value={safeParams.bankrollMax}
                   onChange={e => update("bankrollMax", parseFloat(e.target.value) || 0)}
                   disabled={disabled}
                   className="max-w-20 h-8 text-sm"
@@ -203,7 +210,7 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
 
             <SliderField
               label="Loss Tolerance" tooltip="Percentage of bankroll a player will lose before considering exit"
-              value={params.lossTolerance} min={20} max={90} unit="%"
+              value={safeParams.lossTolerance} min={20} max={90} unit="%"
               disabled={disabled} onChange={v => update("lossTolerance", v)}
             />
 
@@ -213,7 +220,7 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
               </span>
               <Input
                 type="number" min={3} max={60} step={1}
-                value={params.deadSpinTolerance}
+                value={safeParams.deadSpinTolerance}
                 onChange={e => update("deadSpinTolerance", parseInt(e.target.value) || 0)}
                 disabled={disabled}
                 className="max-w-20 h-8 text-sm"
@@ -226,7 +233,7 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
               </span>
               <Input
                 type="number" min={10} max={500} step={5}
-                value={params.featureExpectation}
+                value={safeParams.featureExpectation}
                 onChange={e => update("featureExpectation", parseInt(e.target.value) || 0)}
                 disabled={disabled}
                 className="max-w-24 h-8 text-sm"
@@ -239,7 +246,7 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
               </span>
               <Input
                 type="number" min={0.5} max={50} step={0.5}
-                value={params.meaningfulWin}
+                value={safeParams.meaningfulWin}
                 onChange={e => update("meaningfulWin", parseFloat(e.target.value) || 0)}
                 disabled={disabled}
                 className="max-w-24 h-8 text-sm"
@@ -248,7 +255,7 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
 
             <SliderField
               label="Continue After Big Win" tooltip="Probability a player keeps playing after hitting a big win"
-              value={params.continueAfterBigWin} min={0} max={100} unit="%"
+              value={safeParams.continueAfterBigWin} min={0} max={100} unit="%"
               disabled={disabled} onChange={v => update("continueAfterBigWin", v)}
             />
 
@@ -265,7 +272,7 @@ function ArchetypeCard({ name, params, disabled, onChange }: ArchetypeCardProps)
               </div>
               <Slider
                 min={0} max={100} step={1}
-                value={[params.tiltSensitivity]}
+                value={[safeParams.tiltSensitivity]}
                 onValueChange={([v]) => update("tiltSensitivity", v)}
                 disabled={disabled}
                 className={disabled ? "opacity-50" : ""}
