@@ -461,7 +461,8 @@ export default function SimulationResultsPage() {
                   </div>
                 );
               })}
-            </SectionCard>
+            </div>
+          </SectionCard>
         )}
 
         {/* ────── Section 4 — Market & Reference Comparison ────── */}
