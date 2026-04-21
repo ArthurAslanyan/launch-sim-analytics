@@ -358,6 +358,76 @@ export function computeStopReasons(game: GameConcept, metrics: ComputedInputMetr
   };
 }
 
+export interface ArchetypeStopReasons {
+  archetype: string;
+  boredomLowEngagement: number;
+  lossToleranceExceeded: number;
+  bankrollDepleted: number;
+  sessionTimeLimit: number;
+}
+
+export function computeArchetypeStopReasons(
+  game: GameConcept,
+  metrics: ComputedInputMetrics
+): ArchetypeStopReasons[] {
+  const vol = game.volatility;
+  const fdi = metrics.featureDependencyIndex;
+  const hitFreq = game.baseHitFrequency;
+  const deadSpinPressure = hitFreq === "Low" ? 0.8 : hitFreq === "High" ? 0.2 : 0.5;
+  const lossPressure = (vol === "Very High" ? 0.9 : vol === "High" ? 0.7 : vol === "Medium" ? 0.4 : 0.2);
+  const bankrollPressure = game.targetBankroll === "Low" ? 0.8 : game.targetBankroll === "High" ? 0.3 : 0.5;
+  const featurePressure = fdi > 0.6 ? 0.8 : fdi > 0.4 ? 0.5 : 0.2;
+
+  const archetypes = [
+    {
+      archetype: "Casual",
+      boredom:    50 + deadSpinPressure * 15,
+      loss:       20 + lossPressure * 12,
+      bankroll:   10 + bankrollPressure * 5,
+      time:       20 - deadSpinPressure * 5,
+    },
+    {
+      archetype: "Bonus-Seeking",
+      boredom:    45 + featurePressure * 10,
+      loss:       25 + lossPressure * 8,
+      bankroll:   12 + bankrollPressure * 5,
+      time:       18 - featurePressure * 3,
+    },
+    {
+      archetype: "Volatility-Seeking",
+      boredom:    18 + deadSpinPressure * 3,
+      loss:       42 + lossPressure * 10,
+      bankroll:   28 + bankrollPressure * 8,
+      time:       12,
+    },
+    {
+      archetype: "Budget-Constrained",
+      boredom:    8 + deadSpinPressure * 5,
+      loss:       22 + lossPressure * 15,
+      bankroll:   55 + bankrollPressure * 10,
+      time:       15 - bankrollPressure * 5,
+    },
+    {
+      archetype: "Progress-Oriented",
+      boredom:    28 + deadSpinPressure * 8 + (featurePressure * 5),
+      loss:       30 + lossPressure * 8,
+      bankroll:   18 + bankrollPressure * 5,
+      time:       24 - featurePressure * 3,
+    },
+  ];
+
+  return archetypes.map(a => {
+    const total = a.boredom + a.loss + a.bankroll + a.time;
+    return {
+      archetype: a.archetype,
+      boredomLowEngagement:  Math.round((a.boredom   / total) * 100),
+      lossToleranceExceeded: Math.round((a.loss       / total) * 100),
+      bankrollDepleted:      Math.round((a.bankroll   / total) * 100),
+      sessionTimeLimit:      Math.round((a.time       / total) * 100),
+    };
+  });
+}
+
 // ============================================
 // BEHAVIORAL INTERPRETATION ENGINE
 // ============================================
@@ -811,6 +881,7 @@ export interface SimulationResults {
   featureInteraction: FeatureInteraction;
   economyBehavior: EconomyBehavior;
   stopReasons: StopReasons;
+  archetypeStopReasons: ArchetypeStopReasons[];
   behavioralInsights: BehavioralInsight[];
   riskFlags: RiskFlag[];
   strengths: Strength[];
@@ -831,6 +902,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
   const featureInteraction = computeFeatureInteraction(game, inputMetrics);
   const economyBehavior = computeEconomyBehavior(game, inputMetrics);
   const stopReasons = computeStopReasons(game, inputMetrics);
+  const archetypeStopReasons = computeArchetypeStopReasons(game, inputMetrics);
   const behavioralInsights = generateBehavioralInsights(game, inputMetrics, featureInteraction);
   const riskFlags = computeRiskFlags(inputMetrics, sessionBehavior, game);
   const strengths = computeStrengths(game, inputMetrics);
@@ -865,6 +937,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
     featureInteraction,
     economyBehavior,
     stopReasons,
+    archetypeStopReasons,
     behavioralInsights,
     riskFlags,
     strengths,

@@ -164,6 +164,7 @@ export default function SimulationResultsPage() {
     stopReasons,
     behavioralSimulation,
   } = results;
+  const archetypeStopReasons = results.archetypeStopReasons ?? [];
   const behavioralInsights = results.behavioralInsights ?? [];
   const riskFlags = results.riskFlags ?? [];
 
@@ -340,36 +341,7 @@ export default function SimulationResultsPage() {
 
             {/* Below chart: stop reasons + early fragility */}
             <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              <div className="lg:col-span-2">
-                <h4 className="text-sm font-semibold mb-3">Session Stop Reasons</h4>
-                {(() => {
-                  const segments = [
-                    { label: "Boredom / Low Engagement", value: stopReasons.lossToleranceExceeded, color: "hsl(160,45%,28%)" },
-                    { label: "Loss Tolerance", value: stopReasons.noFeatureTrigger, color: "hsl(160,40%,48%)" },
-                    { label: "No Bonus", value: stopReasons.timeLimit, color: "hsl(160,35%,65%)" },
-                    { label: "Time Limit", value: stopReasons.bigWinExit, color: "hsl(160,30%,80%)" },
-                  ];
-                  const total = segments.reduce((s, seg) => s + seg.value, 0) || 100;
-                  return (
-                    <div>
-                      <div className="flex h-8 w-full overflow-hidden rounded-lg">
-                        {segments.map((seg, i) => (
-                          <div key={i} style={{ width: `${(seg.value / total) * 100}%`, backgroundColor: seg.color }} className="transition-all" />
-                        ))}
-                      </div>
-                      <div className="mt-2 flex flex-wrap gap-3">
-                        {segments.map((seg, i) => (
-                          <div key={i} className="flex items-center gap-1.5 text-xs">
-                            <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: seg.color }} />
-                            <span className="text-muted-foreground">{seg.label} ({seg.value}%)</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
+              <div className="lg:col-span-2" />
               <div className="rounded-lg border p-4 flex flex-col items-center justify-center text-center">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Early-Session Fragility</p>
                 {(() => {
@@ -387,6 +359,109 @@ export default function SimulationResultsPage() {
               </div>
             </div>
           </SectionCard>
+        )}
+
+        {/* ── Why Sessions End — per-archetype stacked bar ── */}
+        {archetypeStopReasons.length > 0 && (
+          <SectionCard title="Why Sessions End" icon={<BarChart3 className="h-5 w-5 text-primary" />}>
+            <p className="text-sm text-muted-foreground mb-4">
+              Stop-reason distribution per player archetype, derived from archetype-specific behavioral parameters. Each column sums to 100%.
+            </p>
+            <div className="h-[320px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={archetypeStopReasons}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 30 }}
+                  barSize={52}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis
+                    dataKey="archetype"
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    tickLine={false}
+                    label={{
+                      value: "Archetype",
+                      position: "insideBottom",
+                      offset: -18,
+                      style: { fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 600 },
+                    }}
+                  />
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    tickLine={false}
+                    label={{
+                      value: "Why Sessions End",
+                      angle: -90,
+                      position: "insideLeft",
+                      offset: 12,
+                      style: { fill: "hsl(var(--muted-foreground))", fontSize: 11 },
+                    }}
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
+                      fontSize: 12,
+                    }}
+                    formatter={(value: number, name: string) => [`${value}%`, name]}
+                    cursor={{ fill: "hsl(var(--border))", opacity: 0.3 }}
+                  />
+                  <Legend
+                    wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
+                    formatter={(value) => (
+                      <span style={{ color: "hsl(var(--foreground))" }}>{value}</span>
+                    )}
+                  />
+                  <Bar
+                    dataKey="boredomLowEngagement"
+                    name="Boredom / Low Engagement"
+                    stackId="a"
+                    fill="hsl(160,45%,22%)"
+                  />
+                  <Bar
+                    dataKey="lossToleranceExceeded"
+                    name="Loss Tolerance Exceeded"
+                    stackId="a"
+                    fill="hsl(160,38%,42%)"
+                  />
+                  <Bar
+                    dataKey="bankrollDepleted"
+                    name="Bankroll Depleted"
+                    stackId="a"
+                    fill="hsl(158,30%,60%)"
+                  />
+                  <Bar
+                    dataKey="sessionTimeLimit"
+                    name="Session Time Limit"
+                    stackId="a"
+                    fill="hsl(155,22%,78%)"
+                    radius={[4, 4, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-5">
+              {archetypeStopReasons.map((a, i) => {
+                const dominant = Object.entries({
+                  "Boredom": a.boredomLowEngagement,
+                  "Loss Tolerance": a.lossToleranceExceeded,
+                  "Bankroll": a.bankrollDepleted,
+                  "Time Limit": a.sessionTimeLimit,
+                }).sort((x, y) => y[1] - x[1])[0];
+                return (
+                  <div key={i} className="rounded-lg border bg-secondary/30 px-3 py-2 text-center">
+                    <p className="text-xs font-semibold text-foreground">{a.archetype}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Primary: <span className="font-medium text-foreground">{dominant[0]}</span>
+                    </p>
+                    <p className="text-lg font-bold text-primary">{dominant[1]}%</p>
+                  </div>
+                );
+              })}
+            </SectionCard>
         )}
 
         {/* ────── Section 4 — Market & Reference Comparison ────── */}
