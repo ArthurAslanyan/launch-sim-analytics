@@ -15,6 +15,15 @@ export interface ReferenceGame {
   rtpRange: string;
   marketPresence: "High" | "Medium" | "Low";
   targetMarkets: string[];
+  // Optional fields populated when live API data is available
+  gameId?: number;
+  hitFrequency?: number;
+  featureTriggerFrequency?: string;
+  demoLink?: string;
+  imageUrl?: string;
+  slotRank?: number;
+  lastUpdated?: string;
+  isLive?: boolean;
 }
 
 // ─── Static Dataset (30 titles) ───────────────────────────────
