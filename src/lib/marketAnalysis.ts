@@ -2,7 +2,20 @@
 // Combines reference-game matching with AI-powered market intelligence
 
 import { GameConcept } from "@/lib/simulation";
-import { findSimilarGames, computeMarketSaturation, MatchedGame } from "@/lib/referenceGames";
+import { findSimilarGames, computeMarketSaturation, MatchedGame, scoreGameMatch, ReferenceGame } from "@/lib/referenceGames";
+import { fetchLiveGames, mergeLiveWithStatic } from "@/lib/slotCatalogApi";
+import { REFERENCE_GAMES } from "@/lib/referenceGames";
+
+let _mergedGamesCache: ReferenceGame[] | null = null;
+
+async function getMergedGames(): Promise<ReferenceGame[]> {
+  if (_mergedGamesCache) return _mergedGamesCache;
+  const live = await fetchLiveGames();
+  _mergedGamesCache = live.length > 0
+    ? mergeLiveWithStatic(live, REFERENCE_GAMES)
+    : REFERENCE_GAMES;
+  return _mergedGamesCache;
+}
 
 // ─── Interfaces ──────────────────────────────────────────────
 
@@ -195,17 +208,27 @@ function buildStaticAnalysis(game: GameConcept, matches: MatchedGame[], saturati
 
 export async function runMarketAnalysis(game: GameConcept): Promise<MarketAnalysis> {
   const fNames = featureNames(game);
-  const matches = findSimilarGames(
-    game.gameType,
-    game.targetMarkets?.[0] ?? "",
-    game.volatility,
-    fNames,
-    game.targetMarkets || [],
-    8,
-  );
+
+  // Fetch merged dataset (live API + static fallback)
+  const mergedGames = await getMergedGames();
+
+  // Use the scoring function with merged dataset
+  const matches = mergedGames
+    .map(ref => ({
+      ...ref,
+      matchScore: scoreGameMatch(
+        ref,
+        game.gameType,
+        game.targetMarkets?.[0] ?? "",
+        game.volatility,
+        fNames,
+        game.targetMarkets || []
+      ),
+    }))
+    .sort((a, b) => b.matchScore - a.matchScore)
+    .slice(0, 8);
+
   const saturation = computeMarketSaturation(game.gameType, game.volatility);
 
-  // Always return the static analysis — no external AI call needed
-  // This keeps the system deterministic and fast per project rules
-  return buildStaticAnalysis(game, matches, saturation);
+  return buildStaticAnalysis(game, matches as MatchedGame[], saturation);
 }
