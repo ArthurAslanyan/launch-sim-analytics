@@ -236,7 +236,7 @@ export function computeSessionBehavior(game: GameConcept, metrics: ComputedInput
     High: 8.5,
     "Very High": 9,
   };
-  let baseSessionLength = baseMap[game.volatility] ?? 6;
+  const baseSessionLength = baseMap[game.volatility] ?? 6;
 
   let adjustedSessionLength = baseSessionLength;
   if (metrics.featureDependencyIndex > 0.5) adjustedSessionLength += 1;
@@ -337,10 +337,10 @@ export interface StopReasons {
 }
 
 export function computeStopReasons(game: GameConcept, metrics: ComputedInputMetrics): StopReasons {
-  let lossTolerance = 30;
+  const lossTolerance = 30;
   let noFeature = 15;
   let bigWin = 10;
-  let timeLimit = 45;
+  const timeLimit = 45;
 
   if (metrics.featureDependencyIndex > 0.45) {
     noFeature = Math.max(noFeature, 25);
