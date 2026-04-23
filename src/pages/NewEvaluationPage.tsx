@@ -81,6 +81,7 @@ const createEmptyFeature = (): Feature => ({
   visibility: "",
   winImpact: "",
   progressImpact: "",
+  rtpContribution: 0,
 });
 
 interface CollapsibleSectionProps {
@@ -173,14 +174,9 @@ export default function NewEvaluationPage() {
   // RTP
   const [rtpTarget, setRtpTarget] = useState("96.5");
   const [baseGameRtp, setBaseGameRtp] = useState("45");
-  const [featureRtpField, setFeatureRtpField] = useState("51.5");
   const [freeSpinsRtp, setFreeSpinsRtp] = useState("25");
-  const [bonusRtp, setBonusRtp] = useState("10");
-  const [jackpotRtp, setJackpotRtp] = useState("8");
   const [holdSpinRtp, setHoldSpinRtp] = useState("0");
-  const [respinsRtp, setRespinsRtp] = useState("0");
-  const [wildContributionRtp, setWildContributionRtp] = useState("0");
-  const [showAdvancedRtp, setShowAdvancedRtp] = useState(false);
+  const [otherFeatureRtp, setOtherFeatureRtp] = useState("0");
 
   // Feature extras
   const [bonusBuyAvailable, setBonusBuyAvailable] = useState(false);
@@ -228,18 +224,12 @@ export default function NewEvaluationPage() {
   // Computed values
   const rtpNum = parseFloat(rtpTarget) || 0;
   const baseRtpNum = parseFloat(baseGameRtp) || 0;
-  const featureRtpNum = parseFloat(featureRtpField) || 0;
+  const freeSpinsRtpNum = parseFloat(freeSpinsRtp) || 0;
+  const holdSpinRtpNum = parseFloat(holdSpinRtp) || 0;
+  const otherFeatureRtpNum = parseFloat(otherFeatureRtp) || 0;
+  const featureRtpNum = freeSpinsRtpNum + holdSpinRtpNum + otherFeatureRtpNum;
   const rtpSumValid = Math.abs(baseRtpNum + featureRtpNum - rtpNum) < 0.1;
   const rtpInRange = rtpNum >= 85 && rtpNum <= 99;
-
-  const advFreeSpins = parseFloat(freeSpinsRtp) || 0;
-  const advBonus = parseFloat(bonusRtp) || 0;
-  const advJackpot = parseFloat(jackpotRtp) || 0;
-  const advHoldSpin = parseFloat(holdSpinRtp) || 0;
-  const advRespins = parseFloat(respinsRtp) || 0;
-  const advWild = parseFloat(wildContributionRtp) || 0;
-  const advSum = advFreeSpins + advBonus + advJackpot + advHoldSpin + advRespins + advWild;
-  const advSumValid = Math.abs(advSum - featureRtpNum) < 0.1;
 
   const winTotal = (parseFloat(winSub1x) || 0) + (parseFloat(win1to5) || 0) + (parseFloat(win5to20) || 0) + (parseFloat(win20to100) || 0) + (parseFloat(win100plus) || 0);
   const winTotalValid = Math.abs(winTotal - 100) < 0.5;
@@ -337,11 +327,11 @@ export default function NewEvaluationPage() {
 
     const rtpBreakdown: RtpBreakdown = {
       baseGameRtp: baseRtpNum,
-      wildRtp: parseFloat(wildContributionRtp) || 0,
-      respinRtp: parseFloat(respinsRtp) || 0,
-      freeSpinsRtp: advFreeSpins,
-      jackpotRtp: advJackpot,
-      otherFeatureRtp: (parseFloat(bonusRtp) || 0) + (parseFloat(holdSpinRtp) || 0),
+      wildRtp: 0,
+      respinRtp: holdSpinRtpNum,
+      freeSpinsRtp: freeSpinsRtpNum,
+      jackpotRtp: 0,
+      otherFeatureRtp: otherFeatureRtpNum,
     };
 
     const winDistribution: WinDistribution = {
@@ -404,8 +394,6 @@ export default function NewEvaluationPage() {
       freeGameReels: hasScatter ? (freeGameReels as GameConcept["freeGameReels"]) : undefined,
       hasMultiplierSymbol,
       multiplierSymbolType: hasMultiplierSymbol ? (multiplierSymbolType as GameConcept["multiplierSymbolType"]) : undefined,
-      respinsRtp: parseFloat(respinsRtp) || 0,
-      wildContributionRtp: parseFloat(wildContributionRtp) || 0,
       bonusBuyAvailable,
       anteBetAvailable,
       winPacing: winPacing as GameConcept["winPacing"],
@@ -742,52 +730,78 @@ export default function NewEvaluationPage() {
           </FormField>
           <FormRow>
             <FormField label="Base Game RTP (%)">
-              <Input type="number" step="0.1" min="0" max="99" value={baseGameRtp} onChange={e => setBaseGameRtp(e.target.value)} className="max-w-32" />
-            </FormField>
-            <FormField label="Feature RTP (%)">
-              <Input type="number" step="0.1" min="0" max="99" value={featureRtpField} onChange={e => setFeatureRtpField(e.target.value)} className="max-w-32" />
+              <Input
+                type="number" step="0.1" min="0" max="99"
+                value={baseGameRtp}
+                onChange={e => setBaseGameRtp(e.target.value)}
+                className="max-w-32"
+              />
             </FormField>
           </FormRow>
-          {!rtpSumValid && baseGameRtp && featureRtpField && (
-            <p className="text-xs text-destructive">Base RTP + Feature RTP must equal Total RTP ({rtpNum}%). Currently: {(baseRtpNum + featureRtpNum).toFixed(1)}%</p>
-          )}
 
-          <div className="mt-2">
-            <button type="button" onClick={() => setShowAdvancedRtp(!showAdvancedRtp)} className="text-sm text-primary font-medium hover:underline">
-              {showAdvancedRtp ? "Hide" : "Show"} Advanced Breakdown
-            </button>
+          <div className="rounded-lg border border-dashed border-border bg-secondary/20 p-4 space-y-4">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Feature RTP Breakdown
+              <span className="ml-2 font-normal normal-case">
+                (these three must sum to: <span className="font-mono font-semibold text-foreground">{(rtpNum - baseRtpNum).toFixed(1)}%</span>)
+              </span>
+            </p>
+            <FormRow columns={3}>
+              <FormField
+                label={
+                  <span className="inline-flex items-center gap-1.5">
+                    Free Spins RTP (%)
+                    <Tip text="RTP delivered through free spins and free game features. Typically the largest feature component." />
+                  </span>
+                }
+              >
+                <Input
+                  type="number" step="0.1" min="0"
+                  value={freeSpinsRtp}
+                  onChange={e => setFreeSpinsRtp(e.target.value)}
+                  className="max-w-28"
+                  placeholder="e.g. 55"
+                />
+              </FormField>
+              <FormField
+                label={
+                  <span className="inline-flex items-center gap-1.5">
+                    Hold & Spin RTP (%)
+                    <Tip text="RTP from Hold & Spin, respins, and lock-and-spin mechanics." />
+                  </span>
+                }
+              >
+                <Input
+                  type="number" step="0.1" min="0"
+                  value={holdSpinRtp}
+                  onChange={e => setHoldSpinRtp(e.target.value)}
+                  className="max-w-28"
+                  placeholder="e.g. 15"
+                />
+              </FormField>
+              <FormField
+                label={
+                  <span className="inline-flex items-center gap-1.5">
+                    Other Feature RTP (%)
+                    <Tip text="RTP from all other features: bonus games, jackpots, multiplier wilds, pick games, and collection mechanics." />
+                  </span>
+                }
+              >
+                <Input
+                  type="number" step="0.1" min="0"
+                  value={otherFeatureRtp}
+                  onChange={e => setOtherFeatureRtp(e.target.value)}
+                  className="max-w-28"
+                  placeholder="e.g. 8"
+                />
+              </FormField>
+            </FormRow>
+            {!rtpSumValid && baseGameRtp && (freeSpinsRtp || holdSpinRtp || otherFeatureRtp) && (
+              <p className="text-xs text-destructive">
+                Base RTP + Free Spins RTP + Hold & Spin RTP + Other must equal Total RTP ({rtpNum}%). Currently: {(baseRtpNum + featureRtpNum).toFixed(1)}%
+              </p>
+            )}
           </div>
-          {showAdvancedRtp && (
-            <div className="space-y-4 rounded-lg border border-dashed border-border bg-secondary/20 p-4">
-              <FormRow columns={3}>
-                <FormField label="Free Spins RTP (%)">
-                  <Input type="number" step="0.1" min="0" value={freeSpinsRtp} onChange={e => setFreeSpinsRtp(e.target.value)} className="max-w-28" />
-                </FormField>
-                <FormField label="Respins RTP (%)">
-                  <Input type="number" step="0.1" min="0" value={respinsRtp} onChange={e => setRespinsRtp(e.target.value)} className="max-w-28" />
-                </FormField>
-                <FormField label="Hold & Spin RTP (%)">
-                  <Input type="number" step="0.1" min="0" value={holdSpinRtp} onChange={e => setHoldSpinRtp(e.target.value)} className="max-w-28" />
-                </FormField>
-              </FormRow>
-              <FormRow columns={3}>
-                <FormField label={<span className="inline-flex items-center gap-1.5">Wild Contribution RTP (%) <Tip text="RTP attributable specifically to wilds (substitution and multiplier effects)." /></span>}>
-                  <Input type="number" step="0.1" min="0" value={wildContributionRtp} onChange={e => setWildContributionRtp(e.target.value)} className="max-w-28" />
-                </FormField>
-                <FormField label="Bonus Game RTP (%)">
-                  <Input type="number" step="0.1" min="0" value={bonusRtp} onChange={e => setBonusRtp(e.target.value)} className="max-w-28" />
-                </FormField>
-                <FormField label="Jackpot / Progressive RTP (%)">
-                  <Input type="number" step="0.1" min="0" value={jackpotRtp} onChange={e => setJackpotRtp(e.target.value)} className="max-w-28" />
-                </FormField>
-              </FormRow>
-              {!advSumValid && (
-                <p className="text-xs text-destructive">
-                  All sub-values (Free Spins + Respins + Hold & Spin + Wild + Bonus + Jackpot) must sum to Feature RTP ({featureRtpNum.toFixed(1)}%). Currently: {advSum.toFixed(1)}%
-                </p>
-              )}
-            </div>
-          )}
 
           {/* Computed summary */}
           <div className="rounded-lg bg-secondary/50 p-4 text-sm mt-2">
@@ -967,6 +981,25 @@ export default function NewEvaluationPage() {
                   </FormField>
                   <FormField label="Feature Volatility">
                     <SelectButtons options={FEATURE_VOL} value={feature.featureVolatility} onChange={v => updateFeature(feature.id, "featureVolatility", v)} />
+                  </FormField>
+                  <FormField
+                    label={
+                      <span className="inline-flex items-center gap-1.5">
+                        RTP Contribution (%)
+                        <Tip text="What share of the total game RTP does this feature deliver? Free spins typically contribute 40–65%. Leave 0 if unknown — this field is used for reference only and does not affect simulation." />
+                      </span>
+                    }
+                  >
+                    <Input
+                      type="number"
+                      step="0.1"
+                      min="0"
+                      max="100"
+                      value={feature.rtpContribution ?? ""}
+                      onChange={e => updateFeature(feature.id, "rtpContribution", parseFloat(e.target.value) || 0)}
+                      placeholder="e.g. 55"
+                      className="max-w-28"
+                    />
                   </FormField>
                 </div>
                 {feature.type === "Hold & Spin" && (
