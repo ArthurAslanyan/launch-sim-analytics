@@ -19,6 +19,7 @@ export interface Feature {
   averageValue: number;
   maxValue: number;
   featureVolatility: string;
+  rtpContribution?: number;
   // Legacy compat
   visibility: string;
   winImpact: string;
