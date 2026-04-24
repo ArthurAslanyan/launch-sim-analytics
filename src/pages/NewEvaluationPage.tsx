@@ -194,6 +194,7 @@ export default function NewEvaluationPage() {
   // Volatility
   const [volatility, setVolatility] = useState("");
   const [topWin, setTopWin] = useState("5000");
+  const [volatilityStdDev, setVolatilityStdDev] = useState("");
 
   // Win Distribution
   const [winSub1x, setWinSub1x] = useState("50");
@@ -359,6 +360,7 @@ export default function NewEvaluationPage() {
       volatility,
       rtpTarget: rtpNum,
       topWin: topWinNum,
+      volatilityStdDev: volatilityStdDev ? parseFloat(volatilityStdDev) : undefined,
       maxExposureCategory,
       rtpBreakdown,
       winDistribution,
@@ -900,6 +902,33 @@ export default function NewEvaluationPage() {
         <CollapsibleSection title="Volatility Profile" icon={<TrendingUp className="h-5 w-5" />}>
           <FormField label="Volatility *" required>
             <SelectButtons options={VOLATILITIES} value={volatility} onChange={setVolatility} />
+          </FormField>
+          <FormField
+            label={
+              <span className="inline-flex items-center gap-1.5">
+                Std Dev / Variance Score
+                <span className="text-xs font-normal text-muted-foreground">(optional)</span>
+                <Tip text="Standard deviation per spin in units of bet, from your math tool or simulation output. When provided, this sharpens the behavioral decay model. Leave blank to use the volatility label above. Typical ranges: Low ~2–5, Medium ~5–9, High ~7–18, Very High ~15–40." />
+              </span>
+            }
+          >
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                value={volatilityStdDev}
+                onChange={e => setVolatilityStdDev(e.target.value)}
+                placeholder="e.g. 12.5"
+                className="max-w-32"
+              />
+              {volatilityStdDev && parseFloat(volatilityStdDev) > 0 && (
+                <span className="text-xs text-[hsl(var(--badge-success-text))] bg-[hsl(var(--badge-success-bg))] px-2 py-1 rounded-full font-medium">
+                  ✓ Enhanced precision active
+                </span>
+              )}
+            </div>
           </FormField>
           <FormRow>
             <FormField label="Top Win (× bet)">
