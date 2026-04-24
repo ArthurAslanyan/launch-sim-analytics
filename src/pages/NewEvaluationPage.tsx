@@ -194,6 +194,7 @@ export default function NewEvaluationPage() {
   // Volatility
   const [volatility, setVolatility] = useState("");
   const [topWin, setTopWin] = useState("5000");
+  const [volatilityStdDev, setVolatilityStdDev] = useState("");
 
   // Win Distribution
   const [winSub1x, setWinSub1x] = useState("50");
