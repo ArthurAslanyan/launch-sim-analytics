@@ -360,6 +360,7 @@ export default function NewEvaluationPage() {
       volatility,
       rtpTarget: rtpNum,
       topWin: topWinNum,
+      volatilityStdDev: volatilityStdDev ? parseFloat(volatilityStdDev) : undefined,
       maxExposureCategory,
       rtpBreakdown,
       winDistribution,
