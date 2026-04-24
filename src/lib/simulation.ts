@@ -51,6 +51,7 @@ export interface GameConcept {
   volatility: string;
   rtpTarget: number;
   topWin: number;
+  volatilityStdDev?: number;  // Actual standard deviation per spin (in units of bet). Optional — improves simulation accuracy when provided.
   maxExposureCategory: string;
   rtpBreakdown: RtpBreakdown;
   winDistribution: WinDistribution;
