@@ -107,7 +107,43 @@ export interface GameConcept {
   // Session
   winPacing?: "Front-loaded" | "Even" | "Bonus-dependent";
   requiresSimulation?: boolean;
+  populationRange?: PopulationRange;
   referenceGame?: string;
+}
+
+export type PopulationRange =
+  | "100-1000"
+  | "1000-5000"
+  | "5000-10000"
+  | "10000-50000"
+  | "50000-200000"
+  | "200000-500000"
+  | "500000-1000000"
+  | "1000000+";
+
+export interface SimulatedPopulation {
+  rangeLabel: string;
+  midpoint: number;
+  totalRounds: number;
+  totalBets: number;
+  totalPlayers: number;
+  avgSessionDurationMinutes: number;
+  avgRoundsPerSession: number;
+  roundsPerUniquePlayer: number;
+  avgBetPerRound: number;
+  retentionD1: number;
+  retentionD7: number;
+  churnRate: number;
+}
+
+export interface PerformanceScore {
+  overall: number;
+  sessionQuality: number;
+  playerRetention: number;
+  featureEfficiency: number;
+  marketFit: number;
+  label: "Poor" | "Average" | "Good" | "Excellent";
+  summary: string;
 }
 
 // ============================================
