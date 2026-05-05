@@ -179,8 +179,8 @@ export default function SimulationResultsPage() {
 
         {/* Score Summary Bar */}
         <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <div className="flex flex-wrap items-center justify-center gap-8 md:justify-start">
+          <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
+            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 lg:justify-start">
               <ScoreBadge score={results.structuralStabilityScore} label="Structural Stability" />
               <ScoreBadge score={results.earlySessionRiskScore} label="Early-Session Risk" thresholds={{ good: 30, moderate: 50 }} />
               <div className="flex flex-col items-center gap-2">
@@ -327,14 +327,18 @@ export default function SimulationResultsPage() {
         {behavioralSimulation && (
           <SectionCard title="Session Survival by Player Archetype" icon={<Users className="h-5 w-5 text-primary" />}>
             <p className="mb-4 text-sm text-muted-foreground">Deterministic decay model showing estimated session survival across player archetypes.</p>
-            <div className="h-[340px] w-full">
+            <div className="h-[380px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={behavioralSimulation.survivalData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="spin" label={{ value: "Spin Count", position: "insideBottom", offset: -2, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis domain={[0, 100]} label={{ value: "% Sessions Active", angle: -90, position: "insideLeft", offset: 10, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} formatter={(value: number) => [`${value}%`, undefined]} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
+                    iconSize={10}
+                    formatter={(value) => <span style={{ color: "hsl(var(--foreground))", marginRight: 8 }}>{value}</span>}
+                  />
                   <Line type="monotone" dataKey="casual_survival" name="Casual Player" stroke="hsl(160,45%,30%)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="bonus_survival" name="Bonus-Seeking Player" stroke="hsl(160,40%,50%)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="volatility_survival" name="Volatility-Seeking Player" stroke="hsl(155,35%,70%)" strokeWidth={2.5} dot={{ r: 3 }} />
@@ -345,9 +349,8 @@ export default function SimulationResultsPage() {
             </div>
 
             {/* Below chart: stop reasons + early fragility */}
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              <div className="lg:col-span-2" />
-              <div className="rounded-lg border p-4 flex flex-col items-center justify-center text-center">
+            <div className="mt-6 flex justify-center">
+              <div className="rounded-lg border p-4 flex flex-col items-center justify-center text-center max-w-sm w-full">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Early-Session Fragility</p>
                 {(() => {
                   const ep = sessionBehavior.earlyExitProbability;
@@ -376,20 +379,18 @@ export default function SimulationResultsPage() {
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart
                   data={archetypeStopReasons}
-                  margin={{ top: 10, right: 20, left: 0, bottom: 30 }}
+                  margin={{ top: 10, right: 20, left: 0, bottom: 50 }}
                   barSize={52}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis
                     dataKey="archetype"
-                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                    tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
                     tickLine={false}
-                    label={{
-                      value: "Archetype",
-                      position: "insideBottom",
-                      offset: -18,
-                      style: { fill: "hsl(var(--muted-foreground))", fontSize: 12, fontWeight: 600 },
-                    }}
+                    interval={0}
+                    angle={-15}
+                    textAnchor="end"
+                    height={70}
                   />
                   <YAxis
                     domain={[0, 100]}
@@ -583,10 +584,10 @@ export default function SimulationResultsPage() {
               { label: "Market Fit", value: ps.marketFit, icon: <Target className="h-4 w-4 text-muted-foreground" />, desc: "Structural robustness, differentiation" },
             ];
             return (
-              <div className="grid gap-6 lg:grid-cols-3">
+              <div className="grid gap-6 lg:grid-cols-3 auto-rows-fr">
                 {/* Overall score */}
                 <div
-                  className="rounded-xl border-2 p-6 flex flex-col items-center text-center"
+                  className="rounded-xl border-2 p-6 flex flex-col items-center text-center h-full"
                   style={{ borderColor: overallColor }}
                 >
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">Overall Performance</p>
@@ -606,11 +607,11 @@ export default function SimulationResultsPage() {
                 </div>
 
                 {/* Sub-scores */}
-                <div className="lg:col-span-2 grid gap-3 sm:grid-cols-2">
+                <div className="lg:col-span-2 grid gap-3 sm:grid-cols-2 h-full">
                   {subs.map(s => {
                     const c = s.value >= 7 ? "hsl(160,45%,35%)" : s.value >= 5 ? "hsl(40,85%,52%)" : "hsl(0,65%,50%)";
                     return (
-                      <div key={s.label} className="rounded-lg border bg-card p-4">
+                      <div key={s.label} className="rounded-lg border bg-card p-4 h-full flex flex-col">
                         <div className="flex items-center gap-2 mb-2">
                           {s.icon}
                           <span className="text-sm font-semibold">{s.label}</span>
@@ -669,8 +670,9 @@ export default function SimulationResultsPage() {
                   <ResponsiveContainer>
                     <BarChart
                       data={[
-                        { label: "Spin 30", value: Math.round(results.behavioralSimulation.survivalData.find(r => r.spin === 30)?.casual_survival ?? 70) },
-                        { label: "Spin 60", value: Math.round(results.behavioralSimulation.survivalData.find(r => r.spin === 60)?.casual_survival ?? 45) },
+                        { label: "Session Start", value: 100 },
+                        { label: "Spin 30", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 30)?.casual_survival ?? 100) },
+                        { label: "Spin 60", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 60)?.casual_survival ?? 100) },
                         { label: "D1 Return", value: results.simulatedPopulation.retentionD1 },
                         { label: "D7 Return", value: results.simulatedPopulation.retentionD7 },
                       ]}
@@ -681,7 +683,7 @@ export default function SimulationResultsPage() {
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                       <Tooltip formatter={(v: number) => [`${v}%`, "Players remaining"]} />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {[0, 1, 2, 3].map((i) => (
+                        {[0, 1, 2, 3, 4].map((i) => (
                           <Cell key={i} fill={i < 2 ? "hsl(160,45%,35%)" : "hsl(40,85%,52%)"} />
                         ))}
                       </Bar>
@@ -695,18 +697,6 @@ export default function SimulationResultsPage() {
             </>
           )}
 
-          {/* Recommendation */}
-          <div className="mt-6 rounded-lg border-2 border-primary/20 bg-primary/5 p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
-              <Badge className="bg-primary/15 text-primary border-primary/30 text-sm font-bold">
-                {market?.finalVerdict?.recommendation ?? results.recommendation}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {market?.finalVerdict?.recommendationRationale ?? results.diagnosis}
-            </p>
-          </div>
         </SectionCard>
         )}
 
