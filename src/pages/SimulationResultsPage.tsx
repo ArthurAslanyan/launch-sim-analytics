@@ -568,6 +568,7 @@ export default function SimulationResultsPage() {
         )}
 
         {/* ────── Performance Dashboard ────── */}
+        {results.performanceScore && (
         <SectionCard title="Performance Dashboard" icon={<Shield className="h-5 w-5 text-primary" />}>
           {(() => {
             const ps = results.performanceScore;
