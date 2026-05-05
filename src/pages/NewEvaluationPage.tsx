@@ -1149,7 +1149,7 @@ export default function NewEvaluationPage() {
                 type="button"
                 onClick={() => setPopulationRange(opt.value)}
                 className={cn(
-                  "rounded-lg border px-3 py-2.5 text-left transition-colors",
+                  "rounded-lg border px-3 py-2.5 text-left transition-colors flex flex-col justify-between min-h-[68px]",
                   populationRange === opt.value
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-border bg-card text-foreground hover:bg-secondary/50"
