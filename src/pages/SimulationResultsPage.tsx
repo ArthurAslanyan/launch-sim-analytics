@@ -584,10 +584,10 @@ export default function SimulationResultsPage() {
               { label: "Market Fit", value: ps.marketFit, icon: <Target className="h-4 w-4 text-muted-foreground" />, desc: "Structural robustness, differentiation" },
             ];
             return (
-              <div className="grid gap-6 lg:grid-cols-3">
+              <div className="grid gap-6 lg:grid-cols-3 auto-rows-fr">
                 {/* Overall score */}
                 <div
-                  className="rounded-xl border-2 p-6 flex flex-col items-center text-center"
+                  className="rounded-xl border-2 p-6 flex flex-col items-center text-center h-full"
                   style={{ borderColor: overallColor }}
                 >
                   <p className="text-xs uppercase tracking-wider text-muted-foreground">Overall Performance</p>
