@@ -334,7 +334,11 @@ export default function SimulationResultsPage() {
                   <XAxis dataKey="spin" label={{ value: "Spin Count", position: "insideBottom", offset: -2, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis domain={[0, 100]} label={{ value: "% Sessions Active", angle: -90, position: "insideLeft", offset: 10, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} formatter={(value: number) => [`${value}%`, undefined]} />
-                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                  <Legend
+                    wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
+                    iconSize={10}
+                    formatter={(value) => <span style={{ color: "hsl(var(--foreground))", marginRight: 8 }}>{value}</span>}
+                  />
                   <Line type="monotone" dataKey="casual_survival" name="Casual Player" stroke="hsl(160,45%,30%)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="bonus_survival" name="Bonus-Seeking Player" stroke="hsl(160,40%,50%)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="volatility_survival" name="Volatility-Seeking Player" stroke="hsl(155,35%,70%)" strokeWidth={2.5} dot={{ r: 3 }} />
