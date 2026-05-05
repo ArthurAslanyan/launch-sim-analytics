@@ -683,7 +683,7 @@ export default function SimulationResultsPage() {
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
                       <Tooltip formatter={(v: number) => [`${v}%`, "Players remaining"]} />
                       <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {[0, 1, 2, 3].map((i) => (
+                        {[0, 1, 2, 3, 4].map((i) => (
                           <Cell key={i} fill={i < 2 ? "hsl(160,45%,35%)" : "hsl(40,85%,52%)"} />
                         ))}
                       </Bar>
