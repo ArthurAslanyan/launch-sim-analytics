@@ -36,7 +36,7 @@ export default function HomePage() {
           </div>
 
           <h1 className="mb-6 text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-            Evaluate slot game ideas before production using behavioral simulation
+            Know if your game is worth building — before you build it.
           </h1>
 
           <p className="mb-10 text-lg text-muted-foreground sm:text-xl">
