@@ -221,6 +221,7 @@ export default function NewEvaluationPage() {
   // Design Intent
   const [primaryGoal, setPrimaryGoal] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
+  const [populationRange, setPopulationRange] = useState<PopulationRange>("10000-50000");
 
   // Computed values
   const rtpNum = parseFloat(rtpTarget) || 0;
