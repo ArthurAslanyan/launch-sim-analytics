@@ -1136,22 +1136,4 @@ export function runSimulation(game: GameConcept): SimulationResults {
     simulatedPopulation,
     performanceScore,
   };
-    inputMetrics,
-    archetypeSelection,
-    sessionBehavior,
-    featureInteraction,
-    economyBehavior,
-    stopReasons,
-    archetypeStopReasons,
-    behavioralInsights,
-    riskFlags,
-    strengths,
-    improvements,
-    diagnosis,
-    recommendation,
-    structuralStabilityScore,
-    earlySessionRiskScore,
-    featureDependencyLevel,
-    behavioralSimulation,
-  };
 }
