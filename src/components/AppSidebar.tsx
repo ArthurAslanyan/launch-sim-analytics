@@ -18,6 +18,7 @@ const navItems = [
   { title: "Home", url: "/", icon: Home },
   { title: "New Evaluation", url: "/evaluate", icon: Plus },
   { title: "Results", url: "/results", icon: BarChart3 },
+  { title: "Validation", url: "/validate", icon: FlaskConical },
 ];
 
 export function AppSidebar() {
