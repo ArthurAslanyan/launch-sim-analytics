@@ -349,9 +349,8 @@ export default function SimulationResultsPage() {
             </div>
 
             {/* Below chart: stop reasons + early fragility */}
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
-              <div className="lg:col-span-2" />
-              <div className="rounded-lg border p-4 flex flex-col items-center justify-center text-center">
+            <div className="mt-6 flex justify-center">
+              <div className="rounded-lg border p-4 flex flex-col items-center justify-center text-center max-w-sm w-full">
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Early-Session Fragility</p>
                 {(() => {
                   const ep = sessionBehavior.earlyExitProbability;
