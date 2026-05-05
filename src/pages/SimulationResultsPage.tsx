@@ -327,7 +327,7 @@ export default function SimulationResultsPage() {
         {behavioralSimulation && (
           <SectionCard title="Session Survival by Player Archetype" icon={<Users className="h-5 w-5 text-primary" />}>
             <p className="mb-4 text-sm text-muted-foreground">Deterministic decay model showing estimated session survival across player archetypes.</p>
-            <div className="h-[340px] w-full">
+            <div className="h-[380px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={behavioralSimulation.survivalData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
