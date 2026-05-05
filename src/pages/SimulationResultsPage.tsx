@@ -567,14 +567,135 @@ export default function SimulationResultsPage() {
           </SectionCard>
         )}
 
-        {/* ────── Section 6 — Final Verdict ────── */}
-        <SectionCard title="Final Verdict" icon={<Shield className="h-5 w-5 text-primary" />}>
-          <div className="grid grid-cols-3 gap-6 mb-6">
-            <SemiGauge value={market?.finalVerdict?.conceptRiskIndex ?? Math.round(100 - results.earlySessionRiskScore)} label="Concept Risk Index" />
-            <SemiGauge value={market?.finalVerdict?.marketDifferentiationScore ?? 50} label="Market Differentiation" />
-            <SemiGauge value={market?.finalVerdict?.structuralRobustnessScore ?? results.structuralStabilityScore} label="Structural Robustness" />
-          </div>
-          <div className="rounded-lg border-2 border-primary/20 bg-primary/5 p-5">
+        {/* ────── Performance Dashboard ────── */}
+        <SectionCard title="Performance Dashboard" icon={<Shield className="h-5 w-5 text-primary" />}>
+          {(() => {
+            const ps = results.performanceScore;
+            const overallColor =
+              ps.overall >= 8 ? "hsl(160,45%,35%)" :
+              ps.overall >= 6 ? "hsl(40,85%,52%)" :
+              ps.overall >= 4 ? "hsl(40,85%,52%)" : "hsl(0,65%,50%)";
+            const subs = [
+              { label: "Session Quality", value: ps.sessionQuality, icon: <Clock className="h-4 w-4 text-muted-foreground" />, desc: "Avg session length, early exit rate, spin depth" },
+              { label: "Player Retention", value: ps.playerRetention, icon: <Users className="h-4 w-4 text-muted-foreground" />, desc: "D1 and D7 return probability" },
+              { label: "Feature Efficiency", value: ps.featureEfficiency, icon: <Zap className="h-4 w-4 text-muted-foreground" />, desc: "Feature encounter rate, pacing quality" },
+              { label: "Market Fit", value: ps.marketFit, icon: <Target className="h-4 w-4 text-muted-foreground" />, desc: "Structural robustness, differentiation" },
+            ];
+            return (
+              <div className="grid gap-6 lg:grid-cols-3">
+                {/* Overall score */}
+                <div
+                  className="rounded-xl border-2 p-6 flex flex-col items-center text-center"
+                  style={{ borderColor: overallColor }}
+                >
+                  <p className="text-xs uppercase tracking-wider text-muted-foreground">Overall Performance</p>
+                  <p className="text-6xl font-bold mt-2" style={{ color: overallColor }}>
+                    {ps.overall.toFixed(1)}
+                  </p>
+                  <Badge className="mt-2" style={{ backgroundColor: overallColor, color: "white" }}>{ps.label}</Badge>
+                  <div className="w-full h-2 rounded-full bg-secondary mt-4 overflow-hidden">
+                    <div className="h-full" style={{ width: `${(ps.overall / 10) * 100}%`, backgroundColor: overallColor }} />
+                  </div>
+                  <div className="flex justify-between w-full text-xs text-muted-foreground mt-1">
+                    <span>0 — Poor</span>
+                    <span>5 — Average</span>
+                    <span>10 — Excellent</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4 leading-relaxed">{ps.summary}</p>
+                </div>
+
+                {/* Sub-scores */}
+                <div className="lg:col-span-2 grid gap-3 sm:grid-cols-2">
+                  {subs.map(s => {
+                    const c = s.value >= 7 ? "hsl(160,45%,35%)" : s.value >= 5 ? "hsl(40,85%,52%)" : "hsl(0,65%,50%)";
+                    return (
+                      <div key={s.label} className="rounded-lg border bg-card p-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          {s.icon}
+                          <span className="text-sm font-semibold">{s.label}</span>
+                        </div>
+                        <div className="flex items-baseline gap-1">
+                          <span className="text-3xl font-bold" style={{ color: c }}>{s.value.toFixed(1)}</span>
+                          <span className="text-sm text-muted-foreground">/ 10</span>
+                        </div>
+                        <div className="w-full h-1.5 rounded-full bg-secondary mt-2 overflow-hidden">
+                          <div className="h-full" style={{ width: `${(s.value / 10) * 100}%`, backgroundColor: c }} />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{s.desc}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Population metrics */}
+          {results.simulatedPopulation && (
+            <>
+              <div className="flex items-center gap-2 mt-8 mb-4">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                  Simulated Population Metrics — {results.simulatedPopulation.rangeLabel}
+                </h3>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                {[
+                  { label: "Total Players", value: results.simulatedPopulation.totalPlayers.toLocaleString(), sub: results.simulatedPopulation.rangeLabel, icon: <Users className="h-4 w-4 text-muted-foreground" /> },
+                  { label: "Total Rounds", value: results.simulatedPopulation.totalRounds.toLocaleString(), sub: `${results.simulatedPopulation.roundsPerUniquePlayer} per player`, icon: <TrendingUp className="h-4 w-4 text-muted-foreground" /> },
+                  { label: "Avg Session", value: `${results.simulatedPopulation.avgSessionDurationMinutes} min`, sub: `${results.simulatedPopulation.avgRoundsPerSession} rounds`, icon: <Clock className="h-4 w-4 text-muted-foreground" /> },
+                  { label: "Early Churn", value: `${results.simulatedPopulation.churnRate}%`, sub: "before feature trigger", icon: <AlertTriangle className="h-4 w-4 text-muted-foreground" /> },
+                ].map(m => (
+                  <div key={m.label} className="rounded-lg border bg-card p-4">
+                    <div className="flex items-center gap-2 mb-1">
+                      {m.icon}
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground">{m.label}</span>
+                    </div>
+                    <p className="text-2xl font-bold mt-1">{m.value}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{m.sub}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Retention bar chart */}
+              <div className="mt-6 rounded-lg border bg-card p-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <TrendingUp className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-semibold">Simulated Player Retention</h4>
+                </div>
+                <div style={{ width: "100%", height: 240 }}>
+                  <ResponsiveContainer>
+                    <BarChart
+                      data={[
+                        { label: "Spin 30", value: Math.round(results.behavioralSimulation.survivalData.find(r => r.spin === 30)?.casual_survival ?? 70) },
+                        { label: "Spin 60", value: Math.round(results.behavioralSimulation.survivalData.find(r => r.spin === 60)?.casual_survival ?? 45) },
+                        { label: "D1 Return", value: results.simulatedPopulation.retentionD1 },
+                        { label: "D7 Return", value: results.simulatedPopulation.retentionD7 },
+                      ]}
+                      margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                      <Tooltip formatter={(v: number) => [`${v}%`, "Players remaining"]} />
+                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                        {[0, 1, 2, 3].map((i) => (
+                          <Cell key={i} fill={i < 2 ? "hsl(160,45%,35%)" : "hsl(40,85%,52%)"} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Session survival uses Casual Player archetype as the retention baseline. D1/D7 are structurally derived estimates.
+                </p>
+              </div>
+            </>
+          )}
+
+          {/* Recommendation */}
+          <div className="mt-6 rounded-lg border-2 border-primary/20 bg-primary/5 p-5">
             <div className="flex items-center gap-3 mb-2">
               <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
               <Badge className="bg-primary/15 text-primary border-primary/30 text-sm font-bold">
