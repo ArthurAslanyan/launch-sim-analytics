@@ -708,6 +708,7 @@ export default function SimulationResultsPage() {
             </p>
           </div>
         </SectionCard>
+        )}
 
         {/* ────── Behavioral Insights (kept) ────── */}
         <SectionCard title="Behavioral Interpretation" icon={<Info className="h-5 w-5 text-primary" />}>
