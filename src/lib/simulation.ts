@@ -107,7 +107,43 @@ export interface GameConcept {
   // Session
   winPacing?: "Front-loaded" | "Even" | "Bonus-dependent";
   requiresSimulation?: boolean;
+  populationRange?: PopulationRange;
   referenceGame?: string;
+}
+
+export type PopulationRange =
+  | "100-1000"
+  | "1000-5000"
+  | "5000-10000"
+  | "10000-50000"
+  | "50000-200000"
+  | "200000-500000"
+  | "500000-1000000"
+  | "1000000+";
+
+export interface SimulatedPopulation {
+  rangeLabel: string;
+  midpoint: number;
+  totalRounds: number;
+  totalBets: number;
+  totalPlayers: number;
+  avgSessionDurationMinutes: number;
+  avgRoundsPerSession: number;
+  roundsPerUniquePlayer: number;
+  avgBetPerRound: number;
+  retentionD1: number;
+  retentionD7: number;
+  churnRate: number;
+}
+
+export interface PerformanceScore {
+  overall: number;
+  sessionQuality: number;
+  playerRetention: number;
+  featureEfficiency: number;
+  marketFit: number;
+  label: "Poor" | "Average" | "Good" | "Excellent";
+  summary: string;
 }
 
 // ============================================
@@ -899,6 +935,142 @@ export interface SimulationResults {
   structuralStabilityScore: number;
   earlySessionRiskScore: number;
   featureDependencyLevel: "Low" | "Medium" | "High";
+  simulatedPopulation: SimulatedPopulation;
+  performanceScore: PerformanceScore;
+}
+
+const POPULATION_MIDPOINTS: Record<PopulationRange, number> = {
+  "100-1000":          500,
+  "1000-5000":         3000,
+  "5000-10000":        7500,
+  "10000-50000":       30000,
+  "50000-200000":      125000,
+  "200000-500000":     350000,
+  "500000-1000000":    750000,
+  "1000000+":          1500000,
+};
+
+const POPULATION_LABELS: Record<PopulationRange, string> = {
+  "100-1000":          "100 – 1,000 players",
+  "1000-5000":         "1,000 – 5,000 players",
+  "5000-10000":        "5,000 – 10,000 players",
+  "10000-50000":       "10,000 – 50,000 players",
+  "50000-200000":      "50,000 – 200,000 players",
+  "200000-500000":     "200,000 – 500,000 players",
+  "500000-1000000":    "500,000 – 1,000,000 players",
+  "1000000+":          "1,000,000+ players",
+};
+
+export function computeSimulatedPopulation(
+  game: GameConcept,
+  sessionBehavior: SessionBehavior,
+  metrics: ComputedInputMetrics
+): SimulatedPopulation {
+  const range = game.populationRange ?? "10000-50000";
+  const midpoint = POPULATION_MIDPOINTS[range];
+  const rangeLabel = POPULATION_LABELS[range];
+
+  const avgSessionMinutes = sessionBehavior.adjustedSessionLength;
+  const spinsPerMinute = 6;
+  const avgRoundsPerSession = Math.round(avgSessionMinutes * spinsPerMinute);
+
+  const avgSessionsPerPlayer = 1.2 + (1 - metrics.featureDependencyIndex) * 0.8;
+  const roundsPerUniquePlayer = Math.round(avgRoundsPerSession * avgSessionsPerPlayer);
+
+  const totalRounds = Math.round(midpoint * roundsPerUniquePlayer);
+  const totalBets = totalRounds;
+
+  const earlyExitRate = metrics.featureDependencyIndex > 0.6
+    ? 0.45 + (metrics.featureDependencyIndex - 0.6) * 0.5
+    : 0.25 + metrics.featureDependencyIndex * 0.3;
+
+  const volMap: Record<string, number> = {
+    Low: 0.05, Medium: 0.08, High: 0.12, "Very High": 0.18
+  };
+  const volPenalty = volMap[game.volatility] ?? 0.1;
+
+  const retentionD1 = Math.max(15, Math.min(75,
+    Math.round((1 - earlyExitRate) * 100 - volPenalty * 100 + (avgSessionMinutes / 3))
+  ));
+  const retentionD7 = Math.max(5, Math.min(40,
+    Math.round(retentionD1 * (0.25 + (1 - metrics.featureDependencyIndex) * 0.2))
+  ));
+
+  const churnRate = Math.round(earlyExitRate * 100);
+
+  return {
+    rangeLabel,
+    midpoint,
+    totalRounds,
+    totalBets,
+    totalPlayers: midpoint,
+    avgSessionDurationMinutes: Math.round(avgSessionMinutes * 10) / 10,
+    avgRoundsPerSession,
+    roundsPerUniquePlayer,
+    avgBetPerRound: 1.0,
+    retentionD1,
+    retentionD7,
+    churnRate,
+  };
+}
+
+export function computePerformanceScore(
+  game: GameConcept,
+  sessionBehavior: SessionBehavior,
+  metrics: ComputedInputMetrics,
+  pop: SimulatedPopulation,
+  stabilityScore: number,
+  earlyRiskScore: number
+): PerformanceScore {
+  const sessionBenchmark = 15;
+  const sessionRatio = Math.min(1, pop.avgSessionDurationMinutes / sessionBenchmark);
+  const earlyExitPenalty = pop.churnRate / 100;
+  const sessionQuality = Math.round(Math.max(0, Math.min(10,
+    (sessionRatio * 5) + ((1 - earlyExitPenalty) * 4) + (stabilityScore / 100)
+  )) * 10) / 10;
+
+  const playerRetention = Math.round(Math.max(0, Math.min(10,
+    (pop.retentionD1 / 100) * 6 + (pop.retentionD7 / 100) * 4
+  )) * 10) / 10;
+
+  const featureEncounterRate = Math.max(10, Math.min(90,
+    100 - (metrics.featureDependencyIndex * 40) - (earlyRiskScore * 0.3)
+  ));
+  const featureEfficiency = Math.round(Math.max(0, Math.min(10,
+    (featureEncounterRate / 100) * 5 +
+    (metrics.featureDependencyIndex > 0.4 && metrics.featureDependencyIndex < 0.7 ? 3 : 1) +
+    (game.features.length > 0 && game.features.length <= 3 ? 2 : 1)
+  )) * 10) / 10;
+
+  const marketFit = Math.round(Math.max(0, Math.min(10,
+    (stabilityScore / 100) * 5 +
+    ((100 - earlyRiskScore) / 100) * 3 +
+    (game.topWin > 2000 ? 1.5 : 0.8) +
+    (game.features.length >= 2 ? 0.5 : 0)
+  )) * 10) / 10;
+
+  const overall = Math.round(
+    (sessionQuality * 0.30 +
+     playerRetention * 0.25 +
+     featureEfficiency * 0.25 +
+     marketFit * 0.20) * 10
+  ) / 10;
+
+  const label: PerformanceScore["label"] =
+    overall >= 8 ? "Excellent" :
+    overall >= 6 ? "Good" :
+    overall >= 4 ? "Average" : "Poor";
+
+  const summary =
+    overall >= 8
+      ? "Strong across all dimensions. High session quality with good retention indicators."
+      : overall >= 6
+      ? "Solid foundation with identifiable improvement areas. Review feature efficiency."
+      : overall >= 4
+      ? "Moderate performance. Session quality or retention needs structural improvement."
+      : "Significant structural issues detected. Review volatility profile and feature pacing.";
+
+  return { overall, sessionQuality, playerRetention, featureEfficiency, marketFit, label, summary };
 }
 
 export function runSimulation(game: GameConcept): SimulationResults {
@@ -925,6 +1097,12 @@ export function runSimulation(game: GameConcept): SimulationResults {
   const featureDependencyLevel: "Low" | "Medium" | "High" =
     inputMetrics.featureDependencyIndex > 0.50 ? "High" :
     inputMetrics.featureDependencyIndex > 0.30 ? "Medium" : "Low";
+
+  const simulatedPopulation = computeSimulatedPopulation(game, sessionBehavior, inputMetrics);
+  const performanceScore = computePerformanceScore(
+    game, sessionBehavior, inputMetrics, simulatedPopulation,
+    structuralStabilityScore, earlySessionRiskScore
+  );
 
   let recommendation: string;
   if (structuralStabilityScore >= 70 && earlySessionRiskScore <= 30) {
@@ -955,5 +1133,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
     earlySessionRiskScore,
     featureDependencyLevel,
     behavioralSimulation,
+    simulatedPopulation,
+    performanceScore,
   };
 }
