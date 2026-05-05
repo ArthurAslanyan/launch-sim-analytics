@@ -1133,7 +1133,7 @@ export default function NewEvaluationPage() {
           icon={<Users className="h-5 w-5" />}
           description="Select the player volume for population-level simulations. This scales session counts and retention estimates."
         >
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 auto-rows-fr">
             {([
               { value: "100-1000",          label: "100 – 1K",      sub: "Small / Regional" },
               { value: "1000-5000",         label: "1K – 5K",       sub: "Niche title" },
