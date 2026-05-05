@@ -1098,6 +1098,12 @@ export function runSimulation(game: GameConcept): SimulationResults {
     inputMetrics.featureDependencyIndex > 0.50 ? "High" :
     inputMetrics.featureDependencyIndex > 0.30 ? "Medium" : "Low";
 
+  const simulatedPopulation = computeSimulatedPopulation(game, sessionBehavior, inputMetrics);
+  const performanceScore = computePerformanceScore(
+    game, sessionBehavior, inputMetrics, simulatedPopulation,
+    structuralStabilityScore, earlySessionRiskScore
+  );
+
   let recommendation: string;
   if (structuralStabilityScore >= 70 && earlySessionRiskScore <= 30) {
     recommendation = "Ready to Launch";
