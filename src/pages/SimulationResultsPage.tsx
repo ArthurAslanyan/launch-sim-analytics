@@ -179,8 +179,8 @@ export default function SimulationResultsPage() {
 
         {/* Score Summary Bar */}
         <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-            <div className="flex flex-wrap items-center justify-center gap-8 md:justify-start">
+          <div className="flex flex-col items-center justify-between gap-6 lg:flex-row">
+            <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 lg:justify-start">
               <ScoreBadge score={results.structuralStabilityScore} label="Structural Stability" />
               <ScoreBadge score={results.earlySessionRiskScore} label="Early-Session Risk" thresholds={{ good: 30, moderate: 50 }} />
               <div className="flex flex-col items-center gap-2">
