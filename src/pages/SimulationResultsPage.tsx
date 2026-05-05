@@ -670,8 +670,9 @@ export default function SimulationResultsPage() {
                   <ResponsiveContainer>
                     <BarChart
                       data={[
-                        { label: "Spin 30", value: Math.round(results.behavioralSimulation.survivalData.find(r => r.spin === 30)?.casual_survival ?? 70) },
-                        { label: "Spin 60", value: Math.round(results.behavioralSimulation.survivalData.find(r => r.spin === 60)?.casual_survival ?? 45) },
+                        { label: "Session Start", value: 100 },
+                        { label: "Spin 30", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 30)?.casual_survival ?? 100) },
+                        { label: "Spin 60", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 60)?.casual_survival ?? 100) },
                         { label: "D1 Return", value: results.simulatedPopulation.retentionD1 },
                         { label: "D7 Return", value: results.simulatedPopulation.retentionD7 },
                       ]}
