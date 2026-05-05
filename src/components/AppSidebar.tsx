@@ -1,4 +1,4 @@
-import { Home, Plus, BarChart3, Settings, Menu } from "lucide-react";
+import { Home, Plus, BarChart3, Settings, Menu, FlaskConical } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
