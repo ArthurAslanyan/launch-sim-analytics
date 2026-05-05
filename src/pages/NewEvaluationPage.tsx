@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FormField, FormRow } from "@/components/FormSection";
 import { MultiSelect, SelectButtons } from "@/components/MultiSelect";
-import { GameConcept, Feature, RtpBreakdown, WinDistribution, runSimulation } from "@/lib/simulation";
+import { GameConcept, Feature, RtpBreakdown, WinDistribution, runSimulation, PopulationRange } from "@/lib/simulation";
 import { DocumentUpload, ExtractedGameData } from "@/components/DocumentUpload";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
