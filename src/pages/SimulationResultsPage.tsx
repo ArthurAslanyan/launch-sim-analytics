@@ -607,11 +607,11 @@ export default function SimulationResultsPage() {
                 </div>
 
                 {/* Sub-scores */}
-                <div className="lg:col-span-2 grid gap-3 sm:grid-cols-2">
+                <div className="lg:col-span-2 grid gap-3 sm:grid-cols-2 h-full">
                   {subs.map(s => {
                     const c = s.value >= 7 ? "hsl(160,45%,35%)" : s.value >= 5 ? "hsl(40,85%,52%)" : "hsl(0,65%,50%)";
                     return (
-                      <div key={s.label} className="rounded-lg border bg-card p-4">
+                      <div key={s.label} className="rounded-lg border bg-card p-4 h-full flex flex-col">
                         <div className="flex items-center gap-2 mb-2">
                           {s.icon}
                           <span className="text-sm font-semibold">{s.label}</span>
