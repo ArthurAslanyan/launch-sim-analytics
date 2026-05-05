@@ -12,6 +12,8 @@ import {
   BarChart3,
   Crosshair,
   Shield,
+  Clock,
+  Zap,
 } from "lucide-react";
 import {
   LineChart,
@@ -28,6 +30,9 @@ import {
   ScatterChart,
   Scatter,
   ZAxis,
+  RadialBarChart,
+  RadialBar,
+  PolarAngleAxis,
 } from "recharts";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { RecommendationBadge, ScoreBadge } from "@/components/MetricCard";
