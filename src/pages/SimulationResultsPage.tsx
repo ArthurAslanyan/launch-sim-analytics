@@ -697,18 +697,6 @@ export default function SimulationResultsPage() {
             </>
           )}
 
-          {/* Recommendation */}
-          <div className="mt-6 rounded-lg border-2 border-primary/20 bg-primary/5 p-5">
-            <div className="flex items-center gap-3 mb-2">
-              <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
-              <Badge className="bg-primary/15 text-primary border-primary/30 text-sm font-bold">
-                {market?.finalVerdict?.recommendation ?? results.recommendation}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {market?.finalVerdict?.recommendationRationale ?? results.diagnosis}
-            </p>
-          </div>
         </SectionCard>
         )}
 
