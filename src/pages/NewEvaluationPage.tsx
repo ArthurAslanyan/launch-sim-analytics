@@ -1126,6 +1126,41 @@ export default function NewEvaluationPage() {
         {/* SECTION 14 — Player Archetype Configuration */}
         <PlayerArchetypeConfig />
 
+        {/* Expected Player Volume */}
+        <CollapsibleSection
+          title="Expected Player Volume"
+          icon={<Users className="h-5 w-5" />}
+          description="Select the player volume for population-level simulations. This scales session counts and retention estimates."
+        >
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {([
+              { value: "100-1000",          label: "100 – 1K",      sub: "Small / Regional" },
+              { value: "1000-5000",         label: "1K – 5K",       sub: "Niche title" },
+              { value: "5000-10000",        label: "5K – 10K",      sub: "Limited release" },
+              { value: "10000-50000",       label: "10K – 50K",     sub: "Standard launch" },
+              { value: "50000-200000",      label: "50K – 200K",    sub: "Strong release" },
+              { value: "200000-500000",     label: "200K – 500K",   sub: "Major title" },
+              { value: "500000-1000000",    label: "500K – 1M",     sub: "Top performer" },
+              { value: "1000000+",          label: "1M+",           sub: "Global hit" },
+            ] as Array<{ value: PopulationRange; label: string; sub: string }>).map(opt => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setPopulationRange(opt.value)}
+                className={cn(
+                  "rounded-lg border px-3 py-2.5 text-left transition-colors",
+                  populationRange === opt.value
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-card text-foreground hover:bg-secondary/50"
+                )}
+              >
+                <p className="text-sm font-semibold">{opt.label}</p>
+                <p className="text-xs text-muted-foreground">{opt.sub}</p>
+              </button>
+            ))}
+          </div>
+        </CollapsibleSection>
+
         {/* SECTION 15 — Math Complexity Summary */}
         <CollapsibleSection
           title="Math Complexity Summary"
