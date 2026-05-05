@@ -7,6 +7,7 @@ import HomePage from "./pages/HomePage";
 import NewEvaluationPage from "./pages/NewEvaluationPage";
 import SimulationResultsPage from "./pages/SimulationResultsPage";
 import AdvancedEvaluationPage from "./pages/AdvancedEvaluationPage";
+import ValidationRunnerPage from "./pages/ValidationRunnerPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
