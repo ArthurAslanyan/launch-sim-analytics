@@ -401,6 +401,7 @@ export default function NewEvaluationPage() {
       anteBetAvailable,
       winPacing: winPacing as GameConcept["winPacing"],
       requiresSimulation,
+      populationRange,
       referenceGame,
     };
 
