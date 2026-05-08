@@ -994,9 +994,24 @@ export function computeSimulatedPopulation(
   const totalRounds = Math.round(midpoint * roundsPerUniquePlayer);
   const totalBets = totalRounds;
 
-  const earlyExitRate = metrics.featureDependencyIndex > 0.6
-    ? 0.45 + (metrics.featureDependencyIndex - 0.6) * 0.5
-    : 0.25 + metrics.featureDependencyIndex * 0.3;
+  // Early exit should consider archetype match with FDI
+  const fdi = metrics.featureDependencyIndex;
+  const archetype = game.features.some(f => f.type.includes("Hold") || f.type.includes("Respin"))
+    ? "Bonus-Seeking Player"
+    : "Casual Player"; // simplified archetype proxy for this calc
+
+  const earlyExitRate = (() => {
+    if (archetype.includes("Bonus") || archetype.includes("Volatility")) {
+      if (fdi > 0.7 && sessionBehavior.adjustedSessionLength < 8) {
+        return 0.5 + (fdi - 0.7) * 0.4;
+      }
+      return 0.20 + fdi * 0.25;
+    }
+    if (fdi > 0.6) {
+      return 0.45 + (fdi - 0.6) * 0.5;
+    }
+    return 0.25 + fdi * 0.3;
+  })();
 
   const volMap: Record<string, number> = {
     Low: 0.05, Medium: 0.08, High: 0.12, "Very High": 0.18
