@@ -129,6 +129,41 @@ function PresenceBadge({ level }: { level: string }) {
   return <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${cls}`}>{level}</span>;
 }
 
+// Minimal Archetype Icons
+const ArchetypeIcons = {
+  casual: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="8" r="3.5" stroke={color} strokeWidth="1.5" />
+      <path d="M14 12V20M8 15C8 15 8 18 14 18C20 18 20 15 20 15" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  bonus: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="10" stroke={color} strokeWidth="1.5" />
+      <path d="M14 9V19M9 14H19" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  volatility: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="6,18 10,10 14,15 18,8 22,16" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="18" y1="8" x2="22" y2="4" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  budget: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="6" y="8" width="16" height="12" rx="1.5" stroke={color} strokeWidth="1.5" />
+      <line x1="14" y1="8" x2="14" y2="20" stroke={color} strokeWidth="1.5" />
+      <circle cx="14" cy="14" r="1.5" fill={color} />
+    </svg>
+  ),
+  progress: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="8,18 12,12 16,16 20,8" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18,8H22V12" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+};
+
 // ─── Main Page ───────────────────────────────────────────────
 
 export default function SimulationResultsPage() {
@@ -397,7 +432,8 @@ export default function SimulationResultsPage() {
                 {
                   id: "casual",
                   name: "Casual Player",
-                  emoji: "😊",
+                  emoji: null as string | null,
+                  icon: "casual",
                   description: "Sessions: 8–12 min, Loss tolerance: 40%, Exits after 8 dead spins",
                   primaryColor: "hsl(186,70%,45%)",
                   lightColor: "hsl(186,70%,92%)",
@@ -423,7 +459,8 @@ export default function SimulationResultsPage() {
                 {
                   id: "bonus",
                   name: "Bonus-Seeking Player",
-                  emoji: "🎯",
+                  emoji: null as string | null,
+                  icon: "bonus",
                   description: "Sessions: 12–18 min, Loss tolerance: 68%, Expects features every 45 spins",
                   primaryColor: "hsl(160,65%,42%)",
                   lightColor: "hsl(160,65%,92%)",
@@ -449,7 +486,8 @@ export default function SimulationResultsPage() {
                 {
                   id: "volatility",
                   name: "Volatility-Seeking Player",
-                  emoji: "🚀",
+                  emoji: null as string | null,
+                  icon: "volatility",
                   description: "Sessions: 15–25 min, Loss tolerance: 85%, Expects 12×+ feature wins",
                   primaryColor: "hsl(120,70%,48%)",
                   lightColor: "hsl(120,70%,92%)",
@@ -486,7 +524,9 @@ export default function SimulationResultsPage() {
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-start gap-3 flex-1">
-                        <span className="text-3xl">{arch.emoji}</span>
+                        <div className="pt-0.5">
+                          {arch.icon && ArchetypeIcons[arch.icon as keyof typeof ArchetypeIcons](arch.primaryColor)}
+                        </div>
                         <div>
                           <h4 className="font-bold text-lg leading-tight">{arch.name}</h4>
                           <p className="text-xs text-muted-foreground mt-0.5 font-medium">
@@ -629,7 +669,8 @@ export default function SimulationResultsPage() {
                   {
                     id: "budget",
                     name: "Budget-Constrained",
-                    emoji: "💰",
+                    emoji: null as string | null,
+                    icon: "budget",
                     description: "Strict bankroll limits (5–10× bet), low loss tolerance (22%), exits after 7 dead spins",
                     primaryColor: "hsl(35,85%,52%)",
                     lightColor: "hsl(35,85%,92%)",
@@ -644,7 +685,8 @@ export default function SimulationResultsPage() {
                   {
                     id: "progress",
                     name: "Progress-Oriented",
-                    emoji: "📈",
+                    emoji: null as string | null,
+                    icon: "progress",
                     description: "Value achievement & cross-session goals, moderate loss tolerance (58%), need progression mechanics",
                     primaryColor: "hsl(210,80%,50%)",
                     lightColor: "hsl(210,80%,92%)",
@@ -666,7 +708,9 @@ export default function SimulationResultsPage() {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-start gap-2">
-                        <span className="text-2xl">{arch.emoji}</span>
+                        <div className="pt-0.5">
+                          {arch.icon && ArchetypeIcons[arch.icon as keyof typeof ArchetypeIcons](arch.primaryColor)}
+                        </div>
                         <div>
                           <h5 className="font-bold text-sm">{arch.name}</h5>
                           <p className="text-xs text-muted-foreground mt-0.5">
@@ -692,7 +736,11 @@ export default function SimulationResultsPage() {
             {/* Actionable summary */}
             <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-5">
               <div className="flex items-start gap-3">
-                <span className="text-2xl">🎯</span>
+                <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="14" cy="14" r="12" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                  <circle cx="14" cy="14" r="8" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                  <circle cx="14" cy="14" r="4" fill="hsl(var(--primary))" />
+                </svg>
                 <div>
                   <p className="text-sm font-bold text-foreground mb-2">Next Steps</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">
