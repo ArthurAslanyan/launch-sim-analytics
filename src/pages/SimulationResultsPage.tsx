@@ -486,7 +486,8 @@ export default function SimulationResultsPage() {
                 {
                   id: "volatility",
                   name: "Volatility-Seeking Player",
-                  emoji: "🚀",
+                  emoji: null as string | null,
+                  icon: "volatility",
                   description: "Sessions: 15–25 min, Loss tolerance: 85%, Expects 12×+ feature wins",
                   primaryColor: "hsl(120,70%,48%)",
                   lightColor: "hsl(120,70%,92%)",
