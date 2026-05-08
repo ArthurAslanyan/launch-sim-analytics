@@ -708,7 +708,9 @@ export default function SimulationResultsPage() {
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-start gap-2">
-                        <span className="text-2xl">{arch.emoji}</span>
+                        <div className="pt-0.5">
+                          {arch.icon && ArchetypeIcons[arch.icon as keyof typeof ArchetypeIcons](arch.primaryColor)}
+                        </div>
                         <div>
                           <h5 className="font-bold text-sm">{arch.name}</h5>
                           <p className="text-xs text-muted-foreground mt-0.5">
