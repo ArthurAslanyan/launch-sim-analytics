@@ -378,7 +378,7 @@ export default function SimulationResultsPage() {
                               <p className="text-xs font-semibold text-muted-foreground mb-1.5">Shared Features</p>
                               <div className="flex flex-wrap gap-1">
                                 {g.sharedFeatures.map((f, fi) => (
-                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-700 dark:text-emerald-400">
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs" style={{ backgroundColor: "#E8F4EE", borderColor: "#2E8950", color: "#2E8950" }}>
                                     <CheckCircle2 className="h-3 w-3" /> {f}
                                   </span>
                                 ))}
