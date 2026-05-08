@@ -397,9 +397,11 @@ export default function SimulationResultsPage() {
                 {
                   id: "casual",
                   name: "Casual Player",
-                  icon: "😊",
+                  emoji: "😊",
                   description: "Sessions: 8–12 min, Loss tolerance: 40%, Exits after 8 dead spins",
-                  color: "hsl(160,45%,30%)",
+                  primaryColor: "hsl(186,70%,45%)",
+                  lightColor: "hsl(186,70%,92%)",
+                  darkColor: "hsl(186,70%,25%)",
                   survivalAt: { spin10: 95, spin30: 85, spin50: 72, spin100: 48 },
                   pressures: [
                     "Dead spin frequency — too many non-wins exhaust bankroll",
@@ -411,13 +413,21 @@ export default function SimulationResultsPage() {
                     const fdi = results.inputMetrics.featureDependencyIndex > 0.65 ? -2 : 0;
                     return Math.max(2, Math.min(10, vol + fdi));
                   })(),
+                  fitLabel: (score: number) => score >= 8 ? "Perfect fit" : score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
+                  fitReason: (score: number) =>
+                    score >= 8 ? "This game's structure is ideal for Casual players" :
+                    score >= 6 ? "This game works well for Casual players with minor caveats" :
+                    score >= 4 ? "This game challenges some Casual player expectations" :
+                    "This game may struggle to retain Casual players",
                 },
                 {
                   id: "bonus",
                   name: "Bonus-Seeking Player",
-                  icon: "🎯",
+                  emoji: "🎯",
                   description: "Sessions: 12–18 min, Loss tolerance: 68%, Expects features every 45 spins",
-                  color: "hsl(160,40%,50%)",
+                  primaryColor: "hsl(160,65%,42%)",
+                  lightColor: "hsl(160,65%,92%)",
+                  darkColor: "hsl(160,65%,22%)",
                   survivalAt: { spin10: 98, spin30: 92, spin50: 82, spin100: 65 },
                   pressures: [
                     "Feature trigger frequency — waiting too long kills motivation",
@@ -429,13 +439,21 @@ export default function SimulationResultsPage() {
                     const vol = game.volatility === "High" || game.volatility === "Very High" ? 1 : 0;
                     return Math.max(4, Math.min(10, fdi + vol));
                   })(),
+                  fitLabel: (score: number) => score >= 8 ? "Perfect fit" : score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
+                  fitReason: (score: number) =>
+                    score >= 8 ? "Your game is built for Bonus-Seeking players" :
+                    score >= 6 ? "Bonus-Seeking players will enjoy this game" :
+                    score >= 4 ? "Some adjustments would improve Bonus-Seeker engagement" :
+                    "This game doesn't align well with Bonus-Seeking expectations",
                 },
                 {
                   id: "volatility",
                   name: "Volatility-Seeking Player",
-                  icon: "🚀",
+                  emoji: "🚀",
                   description: "Sessions: 15–25 min, Loss tolerance: 85%, Expects 12×+ feature wins",
-                  color: "hsl(155,35%,70%)",
+                  primaryColor: "hsl(120,70%,48%)",
+                  lightColor: "hsl(120,70%,92%)",
+                  darkColor: "hsl(120,70%,28%)",
                   survivalAt: { spin10: 99, spin30: 95, spin50: 88, spin100: 72 },
                   pressures: [
                     "Top win potential — games with <5000× max win feel underwhelming",
@@ -447,6 +465,12 @@ export default function SimulationResultsPage() {
                     const topWin = game.topWin >= 5000 ? 1 : -2;
                     return Math.max(3, Math.min(10, vol + topWin));
                   })(),
+                  fitLabel: (score: number) => score >= 8 ? "Excellent fit" : score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
+                  fitReason: (score: number) =>
+                    score >= 8 ? "Volatility Seekers will be captivated by this game" :
+                    score >= 6 ? "This game appeals to Volatility-Seeking players" :
+                    score >= 4 ? "Missing elements that Volatility Seekers crave" :
+                    "This game doesn't meet Volatility-Seeker expectations",
                 },
               ].map(arch => {
                 const isExpanded = expandedArchetype === arch.id;
@@ -454,62 +478,75 @@ export default function SimulationResultsPage() {
                   <button
                     key={arch.id}
                     onClick={() => setExpandedArchetype(isExpanded ? null : arch.id)}
-                    className="rounded-xl border bg-card p-5 text-left transition-all hover:border-primary/50 hover:shadow-md"
-                    style={{ borderColor: isExpanded ? arch.color : undefined }}
+                    className="group rounded-2xl border-2 bg-card p-6 text-left transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
+                    style={{
+                      borderColor: isExpanded ? arch.primaryColor : "hsl(var(--border))",
+                      backgroundColor: isExpanded ? arch.lightColor : "hsl(var(--card))",
+                    }}
                   >
-                    {/* Header */}
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <p className="text-2xl mb-1">{arch.icon}</p>
-                        <h4 className="font-bold text-base">{arch.name}</h4>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <div
-                          className="text-2xl font-black tabular-nums"
-                          style={{ color: arch.color }}
-                        >
-                          {arch.fitScore.toFixed(1)}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-3 flex-1">
+                        <span className="text-3xl">{arch.emoji}</span>
+                        <div>
+                          <h4 className="font-bold text-lg leading-tight">{arch.name}</h4>
+                          <p className="text-xs text-muted-foreground mt-0.5 font-medium">
+                            {arch.fitLabel(arch.fitScore)}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground">Fit Score</p>
+                      </div>
+                      <div
+                        className="flex flex-col items-center justify-center rounded-xl p-4 min-w-[90px] text-center"
+                        style={{ backgroundColor: arch.primaryColor }}
+                      >
+                        <p className="text-3xl font-black text-white tabular-nums">
+                          {arch.fitScore.toFixed(1)}
+                        </p>
+                        <p className="text-xs font-bold text-white/90 mt-0.5">Fit Score</p>
                       </div>
                     </div>
 
-                    {/* Description */}
-                    <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{arch.description}</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                      {arch.description}
+                    </p>
 
-                    {/* Session depth bar */}
-                    <div className="mb-3">
-                      <p className="text-xs font-semibold text-muted-foreground mb-1.5">Session Depth</p>
-                      <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-semibold text-muted-foreground">Session Depth</p>
+                        <p className="text-xs font-bold" style={{ color: arch.primaryColor }}>
+                          {arch.survivalAt.spin50}% active @ spin 50
+                        </p>
+                      </div>
+                      <div className="h-3 rounded-full bg-secondary overflow-hidden">
                         <div
-                          className="h-full rounded-full"
+                          className="h-full rounded-full transition-all duration-500"
                           style={{
                             width: `${Math.max(30, Math.min(100, arch.survivalAt.spin50))}%`,
-                            backgroundColor: arch.color,
+                            backgroundColor: arch.primaryColor,
                           }}
                         />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {arch.survivalAt.spin50}% still active at 50 spins
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: arch.primaryColor }}
+                      />
+                      <p className="text-xs font-semibold" style={{ color: arch.darkColor }}>
+                        {arch.fitReason(arch.fitScore)}
                       </p>
                     </div>
 
-                    {/* Fit verdict badge */}
-                    <div className="inline-flex items-center gap-2">
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: arch.color }}
-                      />
-                      <span className="text-xs font-semibold">
-                        {arch.fitScore >= 7.5 ? "Excellent fit" : arch.fitScore >= 6 ? "Good fit" : arch.fitScore >= 4 ? "Moderate fit" : "Poor fit"}
-                      </span>
-                    </div>
+                    <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50 group-hover:text-foreground transition-colors">
+                      {isExpanded ? "Click to collapse details" : "Click to view pressure points & survival data"}
+                    </p>
 
-                    {/* Expandable details */}
                     {isExpanded && (
-                      <div className="mt-4 pt-4 border-t space-y-3">
+                      <div className="mt-6 pt-6 border-t-2 space-y-5" style={{ borderTopColor: arch.primaryColor }}>
                         <div>
-                          <p className="text-xs font-semibold text-muted-foreground mb-2">Survival Curve</p>
+                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                            Survival Curve
+                          </p>
                           <div className="grid grid-cols-4 gap-2">
                             {[
                               { label: "Spin 10", val: arch.survivalAt.spin10 },
@@ -517,28 +554,58 @@ export default function SimulationResultsPage() {
                               { label: "Spin 50", val: arch.survivalAt.spin50 },
                               { label: "Spin 100", val: arch.survivalAt.spin100 },
                             ].map(pt => (
-                              <div key={pt.label} className="text-center rounded-lg bg-secondary/50 p-2">
-                                <p className="text-2xl font-bold" style={{ color: arch.color }}>
+                              <div
+                                key={pt.label}
+                                className="rounded-lg p-3 text-center border-2"
+                                style={{
+                                  borderColor: arch.lightColor,
+                                  backgroundColor: arch.lightColor,
+                                }}
+                              >
+                                <p className="text-2xl font-black tabular-nums" style={{ color: arch.primaryColor }}>
                                   {pt.val}%
                                 </p>
-                                <p className="text-xs text-muted-foreground">{pt.label}</p>
+                                <p className="text-xs font-medium text-muted-foreground mt-1">{pt.label}</p>
                               </div>
                             ))}
                           </div>
+                          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                            Percentage of {arch.name}s still actively playing at that spin count. Higher = more engaged.
+                          </p>
                         </div>
+
                         <div>
-                          <p className="text-xs font-semibold text-muted-foreground mb-2">Pressure Points</p>
-                          <ul className="space-y-2">
+                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
+                            Why They Might Exit
+                          </p>
+                          <ul className="space-y-2.5">
                             {arch.pressures.map((p, pi) => (
-                              <li key={pi} className="text-xs flex items-start gap-2">
-                                <span
-                                  className="h-1.5 w-1.5 rounded-full mt-1 shrink-0"
-                                  style={{ backgroundColor: arch.color }}
+                              <li key={pi} className="flex items-start gap-3">
+                                <div
+                                  className="h-2 w-2 rounded-full mt-2 shrink-0"
+                                  style={{ backgroundColor: arch.primaryColor }}
                                 />
-                                <span className="text-muted-foreground">{p}</span>
+                                <span className="text-sm text-muted-foreground leading-relaxed">{p}</span>
                               </li>
                             ))}
                           </ul>
+                        </div>
+
+                        <div
+                          className="rounded-lg p-3 text-sm"
+                          style={{ backgroundColor: arch.lightColor }}
+                        >
+                          <p style={{ color: arch.darkColor, fontWeight: 600 }}>
+                            💡 Consider: {
+                              arch.id === "casual"
+                                ? "Reduce volatility or increase base game hit frequency to match expectations"
+                                : arch.id === "bonus"
+                                ? "Ensure feature trigger frequency aligns with player anticipation window (45 spins max)"
+                                : arch.id === "volatility"
+                                ? "Increase maximum win potential and volatility authenticity to attract high-variance players"
+                                : ""
+                            }
+                          </p>
                         </div>
                       </div>
                     )}
@@ -547,48 +614,73 @@ export default function SimulationResultsPage() {
               })}
             </div>
 
-            {/* Edge Case Archetypes — 2 columns, more compact */}
-            <div className="rounded-lg bg-secondary/20 p-4 mb-4">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
-                Edge Case Archetypes
-              </p>
-              <div className="grid gap-3 sm:grid-cols-2">
+            {/* Edge Case Archetypes — clearer visual separation */}
+            <div className="mt-8 rounded-2xl border-2 border-border/30 bg-secondary/10 p-6">
+              <div className="mb-5">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
+                  📊 Niche Segments
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  These archetypes represent smaller but important player segments. Review their fit scores if targeting these audiences.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
                 {[
                   {
                     id: "budget",
                     name: "Budget-Constrained",
-                    icon: "💰",
+                    emoji: "💰",
                     description: "Strict bankroll limits (5–10× bet), low loss tolerance (22%), exits after 7 dead spins",
-                    color: "hsl(40,80%,52%)",
+                    primaryColor: "hsl(35,85%,52%)",
+                    lightColor: "hsl(35,85%,92%)",
+                    darkColor: "hsl(35,85%,32%)",
                     fitScore: (() => {
                       const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
                       const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
                       return Math.max(2, Math.min(9, vol + bgt));
                     })(),
+                    fitLabel: (score: number) => score >= 7 ? "Good fit" : score >= 5 ? "Moderate fit" : "Challenging",
                   },
                   {
                     id: "progress",
                     name: "Progress-Oriented",
-                    icon: "📈",
+                    emoji: "📈",
                     description: "Value achievement & cross-session goals, moderate loss tolerance (58%), need progression mechanics",
-                    color: "hsl(200,60%,50%)",
+                    primaryColor: "hsl(210,80%,50%)",
+                    lightColor: "hsl(210,80%,92%)",
+                    darkColor: "hsl(210,80%,30%)",
                     fitScore: (() => {
                       const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
                       return Math.max(3, Math.min(9, 5 + hasProgress));
                     })(),
+                    fitLabel: (score: number) => score >= 7 ? "Good fit" : score >= 5 ? "Moderate fit" : "Challenging",
                   },
                 ].map(arch => (
-                  <div key={arch.id} className="rounded-lg border bg-card p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-lg mb-0.5">{arch.icon}</p>
-                        <h5 className="font-semibold text-sm">{arch.name}</h5>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-lg font-black tabular-nums" style={{ color: arch.color }}>
-                          {arch.fitScore.toFixed(1)}
+                  <div
+                    key={arch.id}
+                    className="rounded-xl border-2 bg-card p-4 hover:shadow-md transition-all"
+                    style={{
+                      borderColor: arch.lightColor,
+                      backgroundColor: arch.lightColor,
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start gap-2">
+                        <span className="text-2xl">{arch.emoji}</span>
+                        <div>
+                          <h5 className="font-bold text-sm">{arch.name}</h5>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {arch.fitLabel(arch.fitScore)}
+                          </p>
                         </div>
-                        <p className="text-xs text-muted-foreground">Fit</p>
+                      </div>
+                      <div
+                        className="rounded-lg px-3 py-2 text-center"
+                        style={{ backgroundColor: arch.primaryColor }}
+                      >
+                        <p className="text-2xl font-black text-white tabular-nums">
+                          {arch.fitScore.toFixed(1)}
+                        </p>
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">{arch.description}</p>
@@ -597,10 +689,18 @@ export default function SimulationResultsPage() {
               </div>
             </div>
 
-            {/* Summary note */}
-            <p className="text-xs text-muted-foreground text-center pt-2 border-t">
-              Fit Scores are computed from your game's volatility, feature structure, and session depth. Click any core archetype card to see detailed survival percentages.
-            </p>
+            {/* Actionable summary */}
+            <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-5">
+              <div className="flex items-start gap-3">
+                <span className="text-2xl">🎯</span>
+                <div>
+                  <p className="text-sm font-bold text-foreground mb-2">Next Steps</p>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Focus on the archetype(s) with the highest fit scores — these are your natural audience. For archetypes scoring below 5, consider structural adjustments (volatility, feature pacing, base game hit rate) or accept a narrower target market. Click core archetype cards to explore pressure points and survival data.
+                  </p>
+                </div>
+              </div>
+            </div>
           </SectionCard>
         )}
 
