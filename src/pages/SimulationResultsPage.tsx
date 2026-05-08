@@ -425,8 +425,8 @@ export default function SimulationResultsPage() {
             </p>
 
             <div className="space-y-6">
-              {/* Archetype Legend + Quick Fit Assessment */}
-              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
+              {/* Archetype Legend + Quick Fit Assessment — 5 Archetypes */}
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                 {[
                   {
                     name: "Casual Player",
@@ -458,16 +458,35 @@ export default function SimulationResultsPage() {
                     })(),
                     fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
                   },
+                  {
+                    name: "Budget-Constrained Player",
+                    color: "#7B8C6F",
+                    fitScore: (() => {
+                      const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
+                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
+                      return Math.max(2, Math.min(9, vol + bgt));
+                    })(),
+                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
+                  },
+                  {
+                    name: "Progress-Oriented Player",
+                    color: "#4A7BA7",
+                    fitScore: (() => {
+                      const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
+                      return Math.max(3, Math.min(9, 5 + hasProgress));
+                    })(),
+                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
+                  },
                 ].map(arch => (
                   <div key={arch.name} className="rounded-lg border p-3 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="h-3 w-3 rounded-full" style={{ backgroundColor: arch.color }} />
-                      <div>
-                        <p className="text-sm font-semibold">{arch.name}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate">{arch.name}</p>
                         <p className="text-xs text-muted-foreground">{arch.fit(arch.fitScore)}</p>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right ml-2 shrink-0">
                       <p className="text-lg font-bold tabular-nums" style={{ color: arch.color }}>
                         {arch.fitScore.toFixed(1)}
                       </p>
@@ -479,11 +498,11 @@ export default function SimulationResultsPage() {
 
               {/* Main Chart — Session Survival */}
               <div className="rounded-lg border bg-card p-5">
-                <div className="h-[320px] w-full">
+                <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={behavioralSimulation.survivalData}
-                      margin={{ top: 5, right: 30, left: 0, bottom: 30 }}
+                      margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
                     >
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis
@@ -491,7 +510,7 @@ export default function SimulationResultsPage() {
                         label={{
                           value: "Spin Count",
                           position: "insideBottom",
-                          offset: -20,
+                          offset: -5,
                           style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 },
                         }}
                         tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
@@ -502,7 +521,7 @@ export default function SimulationResultsPage() {
                           value: "% Sessions Active",
                           angle: -90,
                           position: "insideLeft",
-                          offset: 10,
+                          offset: 5,
                           style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 },
                         }}
                         tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
@@ -515,12 +534,6 @@ export default function SimulationResultsPage() {
                           fontSize: 12,
                         }}
                         formatter={(value: number) => [`${value}%`, undefined]}
-                      />
-                      <Legend
-                        wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
-                        formatter={(value) => (
-                          <span style={{ color: "hsl(var(--foreground))" }}>{value}</span>
-                        )}
                       />
                       <Line
                         type="monotone"
@@ -546,27 +559,67 @@ export default function SimulationResultsPage() {
                         strokeWidth={2.5}
                         dot={{ r: 3 }}
                       />
+                      <Line
+                        type="monotone"
+                        dataKey="budget_survival"
+                        name="Budget-Constrained Player"
+                        stroke="#7B8C6F"
+                        strokeWidth={2}
+                        strokeDasharray="4 2"
+                        dot={{ r: 2.5 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="progress_survival"
+                        name="Progress-Oriented Player"
+                        stroke="#4A7BA7"
+                        strokeWidth={2}
+                        strokeDasharray="6 3"
+                        dot={{ r: 2.5 }}
+                      />
                     </LineChart>
                   </ResponsiveContainer>
+                </div>
+
+                {/* Legend moved below chart */}
+                <div className="flex flex-wrap items-center justify-center gap-4 mt-4 pt-4 border-t">
+                  {[
+                    { name: "Casual Player", color: "#5B9F8B", line: "solid" },
+                    { name: "Bonus-Seeking", color: "#3D6955", line: "solid" },
+                    { name: "Volatility-Seeking", color: "#2E8950", line: "solid" },
+                    { name: "Budget-Constrained", color: "#7B8C6F", line: "dashed" },
+                    { name: "Progress-Oriented", color: "#4A7BA7", line: "dashed" },
+                  ].map(leg => (
+                    <div key={leg.name} className="flex items-center gap-2">
+                      <div
+                        className="w-6 h-0.5"
+                        style={{
+                          backgroundColor: leg.color,
+                          borderBottom: leg.line === "dashed" ? `2px dashed ${leg.color}` : "none",
+                        }}
+                      />
+                      <span className="text-xs font-medium text-muted-foreground">{leg.name}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
               {/* Key Insights */}
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   {
                     title: "Early Exits (Spins 0–30)",
-                    description: "Casual players drop fastest here due to dead spin clusters. Budget-Constrained players rarely make it past spin 20.",
+                    description: "Casual & Budget-Constrained players drop fastest here due to dead spin clusters. Casual players rarely make it past spin 25.",
                     color: "#5B9F8B",
                   },
                   {
                     title: "Mid-Session (Spins 30–70)",
-                    description: "Bonus-Seeking players stay engaged hunting for features. Volatility Seekers push past 50 spins. This is your feature trigger window.",
+                    description: "Bonus-Seeking players stay engaged hunting for features. Volatility Seekers push past 50 spins. This is your feature trigger window — if triggers are too infrequent, expect Bonus players to churn here.",
                     color: "#3D6955",
                   },
                   {
                     title: "Late Sessions (Spins 70+)",
-                    description: "Only Volatility Seekers make it here. If your max win or feature payouts disappoint, they exit. Retention collapses here for others.",
+                    description: "Only Volatility Seekers reliably reach here. Progress-Oriented players persist if progression mechanics are present. If your max win or feature payouts disappoint, expect rapid abandonment.",
                     color: "#2E8950",
                   },
                 ].map((phase, i) => (
@@ -589,11 +642,22 @@ export default function SimulationResultsPage() {
               {/* Edge Cases Callout */}
               <div className="rounded-lg border border-border/30 bg-secondary/10 p-4">
                 <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-                  📊 Niche Segments (Budget-Constrained, Progress-Oriented)
+                  📊 About Budget-Constrained & Progress-Oriented
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  Budget-Constrained players exit before spin 10 if volatility is high or hit rate is low. Progress-Oriented players persist longer if the game includes collection mechanics or unlockables. These curves aren't shown above but are factored into the fit scores.
-                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground mb-1">Budget-Constrained Players</p>
+                    <p className="text-sm text-muted-foreground">
+                      Exit before spin 10 if volatility is high or hit rate is low. Shown as dashed line. Fit score reflects whether your volatility/RTP mix supports tight bankrolls (5–10× bet).
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground mb-1">Progress-Oriented Players</p>
+                    <p className="text-sm text-muted-foreground">
+                      Persist longer if the game includes collection mechanics or unlockables. Shown as dashed line. Fit score reflects whether your game has progression hooks.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </SectionCard>
