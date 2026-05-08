@@ -435,9 +435,9 @@ export default function SimulationResultsPage() {
                   emoji: null as string | null,
                   icon: "casual",
                   description: "Sessions: 8–12 min, Loss tolerance: 40%, Exits after 8 dead spins",
-                  primaryColor: "hsl(186,70%,45%)",
-                  lightColor: "hsl(186,70%,92%)",
-                  darkColor: "hsl(186,70%,25%)",
+                  primaryColor: "#5B9F8B",
+                  lightColor: "#E8F3F0",
+                  darkColor: "#2D5047",
                   survivalAt: { spin10: 95, spin30: 85, spin50: 72, spin100: 48 },
                   pressures: [
                     "Dead spin frequency — too many non-wins exhaust bankroll",
@@ -462,9 +462,9 @@ export default function SimulationResultsPage() {
                   emoji: null as string | null,
                   icon: "bonus",
                   description: "Sessions: 12–18 min, Loss tolerance: 68%, Expects features every 45 spins",
-                  primaryColor: "hsl(160,65%,42%)",
-                  lightColor: "hsl(160,65%,92%)",
-                  darkColor: "hsl(160,65%,22%)",
+                  primaryColor: "#3D6955",
+                  lightColor: "#EBF1ED",
+                  darkColor: "#1D3D2D",
                   survivalAt: { spin10: 98, spin30: 92, spin50: 82, spin100: 65 },
                   pressures: [
                     "Feature trigger frequency — waiting too long kills motivation",
@@ -489,9 +489,9 @@ export default function SimulationResultsPage() {
                   emoji: null as string | null,
                   icon: "volatility",
                   description: "Sessions: 15–25 min, Loss tolerance: 85%, Expects 12×+ feature wins",
-                  primaryColor: "hsl(120,70%,48%)",
-                  lightColor: "hsl(120,70%,92%)",
-                  darkColor: "hsl(120,70%,28%)",
+                  primaryColor: "#2E8950",
+                  lightColor: "#E8F4EE",
+                  darkColor: "#145230",
                   survivalAt: { spin10: 99, spin30: 95, spin50: 88, spin100: 72 },
                   pressures: [
                     "Top win potential — games with <5000× max win feel underwhelming",
@@ -672,9 +672,9 @@ export default function SimulationResultsPage() {
                     emoji: null as string | null,
                     icon: "budget",
                     description: "Strict bankroll limits (5–10× bet), low loss tolerance (22%), exits after 7 dead spins",
-                    primaryColor: "hsl(35,85%,52%)",
-                    lightColor: "hsl(35,85%,92%)",
-                    darkColor: "hsl(35,85%,32%)",
+                    primaryColor: "#7B8C6F",
+                    lightColor: "#F0F2ED",
+                    darkColor: "#3D4538",
                     fitScore: (() => {
                       const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
                       const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
@@ -688,9 +688,9 @@ export default function SimulationResultsPage() {
                     emoji: null as string | null,
                     icon: "progress",
                     description: "Value achievement & cross-session goals, moderate loss tolerance (58%), need progression mechanics",
-                    primaryColor: "hsl(210,80%,50%)",
-                    lightColor: "hsl(210,80%,92%)",
-                    darkColor: "hsl(210,80%,30%)",
+                    primaryColor: "#4A7BA7",
+                    lightColor: "#EEF2F8",
+                    darkColor: "#1F3A52",
                     fitScore: (() => {
                       const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
                       return Math.max(3, Math.min(9, 5 + hasProgress));
@@ -734,7 +734,7 @@ export default function SimulationResultsPage() {
             </div>
 
             {/* Actionable summary */}
-            <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-5">
+            <div className="mt-8 rounded-xl border p-5" style={{ backgroundColor: "#E8F4EE", borderColor: "#3D6955" }}>
               <div className="flex items-start gap-3">
                 <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="14" cy="14" r="12" stroke="hsl(var(--primary))" strokeWidth="1.5" />
