@@ -524,7 +524,9 @@ export default function SimulationResultsPage() {
                   >
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-start gap-3 flex-1">
-                        <span className="text-3xl">{arch.emoji}</span>
+                        <div className="pt-0.5">
+                          {arch.icon && ArchetypeIcons[arch.icon as keyof typeof ArchetypeIcons](arch.primaryColor)}
+                        </div>
                         <div>
                           <h4 className="font-bold text-lg leading-tight">{arch.name}</h4>
                           <p className="text-xs text-muted-foreground mt-0.5 font-medium">
