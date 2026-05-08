@@ -270,65 +270,114 @@ export default function SimulationResultsPage() {
         )}
         {!marketLoading && market && (
           <>
-            <SectionCard title="Similar Games Identified" icon={<Users className="h-5 w-5 text-primary" />}>
-              <Table>
-                <TableHeader>
-                  <TableRow className="data-table-header">
-                    <TableHead>Game Name</TableHead>
-                    <TableHead>Provider</TableHead>
-                    <TableHead className="text-center">Year</TableHead>
-                    <TableHead>Core Mechanics</TableHead>
-                    <TableHead className="text-center">Presence</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {market.similarGames.slice(0, 4).map((g, i) => (
-                    <TableRow key={i}>
-                      <TableCell className="font-medium">{g.name}</TableCell>
-                      <TableCell>{g.provider}</TableCell>
-                      <TableCell className="text-center">{g.releaseYear}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{g.coreMechanics}</TableCell>
-                      <TableCell className="text-center"><PresenceBadge level={g.marketPresence} /></TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </SectionCard>
-
-            <SectionCard title="Similarity Heatmap" icon={<Crosshair className="h-5 w-5 text-primary" />}>
-              {market.similarityMatrix.games.length > 0 && (
-                <div>
-                  <div className="grid gap-1" style={{ gridTemplateColumns: `120px repeat(${market.similarityMatrix.games.length}, 1fr)` }}>
-                    <div />
-                    {market.similarityMatrix.games.map((g, i) => (
-                      <div key={i} className="truncate text-center text-xs font-medium text-muted-foreground px-1">
-                        {g.name.split(" ").slice(0, 2).join(" ")}
+            {/* ────── Section 2 — Similar Games & Similarity Analysis ────── */}
+            <SectionCard title="Similar Games Analysis" icon={<Crosshair className="h-5 w-5 text-primary" />}>
+              <p className="text-sm text-muted-foreground mb-4">
+                Multi-dimensional similarity scoring across theme, mechanics, features, and volatility profile.
+              </p>
+              <div className="space-y-4">
+                {market.similarGames.slice(0, 4).map((g, i) => {
+                  const overallPct = Math.round(g.matchScore);
+                  const overallColor = overallPct >= 75 ? "hsl(160,45%,35%)" : overallPct >= 50 ? "hsl(40,85%,52%)" : "hsl(0,65%,50%)";
+                  const dimensions = [
+                    { label: "Theme", score: g.themeScore, color: "hsl(270,50%,55%)" },
+                    { label: "Mechanics", score: g.mechanicsScore, color: "hsl(200,60%,50%)" },
+                    { label: "Features", score: g.featureScore, color: "hsl(160,45%,42%)" },
+                    { label: "Volatility", score: g.volatilityScore, color: "hsl(35,85%,52%)" },
+                  ];
+                  return (
+                    <div key={i} className="rounded-xl border bg-card p-5">
+                      <div className="flex items-start justify-between mb-4">
+                        <div>
+                          <div className="flex items-center gap-3">
+                            <h4 className="text-base font-bold">{g.name}</h4>
+                            <PresenceBadge level={g.marketPresence} />
+                          </div>
+                          <p className="text-sm text-muted-foreground mt-0.5">
+                            {g.provider} · {g.releaseYear} · {g.coreMechanics}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-center min-w-[80px]">
+                          <div className="relative h-16 w-16">
+                            <svg viewBox="0 0 36 36" className="h-16 w-16 -rotate-90">
+                              <circle cx="18" cy="18" r="14" fill="none" stroke="hsl(var(--border))" strokeWidth="3" />
+                              <circle
+                                cx="18" cy="18" r="14" fill="none"
+                                stroke={overallColor}
+                                strokeWidth="3"
+                                strokeDasharray={`${overallPct * 0.88} 88`}
+                                strokeLinecap="round"
+                              />
+                            </svg>
+                            <span className="absolute inset-0 flex items-center justify-center text-sm font-bold" style={{ color: overallColor }}>
+                              {overallPct}%
+                            </span>
+                          </div>
+                          <span className="text-xs text-muted-foreground mt-1">Match</span>
+                        </div>
                       </div>
-                    ))}
-                    {(["Theme", "Mechanics", "Features"] as const).map(dim => (
-                      <React.Fragment key={dim}>
-                        <div className="text-xs font-medium py-2">{dim}</div>
-                        {market.similarityMatrix.games.map((g, i) => {
-                          const score = dim === "Theme" ? g.themeScore : dim === "Mechanics" ? g.mechanicsScore : g.featureScore;
-                          const alpha = 0.12 + (score / 100) * 0.72;
-                          return (
-                            <div
-                              key={`${dim}-${i}`}
-                              className="flex items-center justify-center rounded py-2 text-xs font-semibold"
-                              style={{
-                                backgroundColor: `hsla(160,45%,35%,${alpha})`,
-                                color: score > 50 ? "hsl(160,10%,95%)" : "hsl(var(--foreground))",
-                              }}
-                            >
-                              {score}
+
+                      <div className="grid gap-2 mb-4">
+                        {dimensions.map(d => (
+                          <div key={d.label} className="flex items-center gap-3">
+                            <span className="text-xs font-medium text-muted-foreground w-20 text-right">{d.label}</span>
+                            <div className="flex-1 h-2.5 rounded-full bg-secondary overflow-hidden">
+                              <div
+                                className="h-full rounded-full transition-all"
+                                style={{ width: `${d.score}%`, backgroundColor: d.color }}
+                              />
                             </div>
-                          );
-                        })}
-                      </React.Fragment>
-                    ))}
-                  </div>
-                </div>
-              )}
+                            <span className="text-xs font-bold tabular-nums w-10 text-right" style={{ color: d.color }}>
+                              {d.score}%
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {(g.sharedFeatures.length > 0 || g.missingFeatures.length > 0 || g.uniqueFeatures.length > 0) && (
+                        <div className="flex flex-wrap gap-4 pt-3 border-t">
+                          {g.sharedFeatures.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">Shared Features</p>
+                              <div className="flex flex-wrap gap-1">
+                                {g.sharedFeatures.map((f, fi) => (
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-700 dark:text-emerald-400">
+                                    <CheckCircle2 className="h-3 w-3" /> {f}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {g.missingFeatures.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">Your Concept Has (They Don't)</p>
+                              <div className="flex flex-wrap gap-1">
+                                {g.missingFeatures.map((f, fi) => (
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs text-blue-700 dark:text-blue-400">
+                                    <Zap className="h-3 w-3" /> {f}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {g.uniqueFeatures.length > 0 && (
+                            <div>
+                              <p className="text-xs font-semibold text-muted-foreground mb-1.5">They Have (You Don't)</p>
+                              <div className="flex flex-wrap gap-1">
+                                {g.uniqueFeatures.map((f, fi) => (
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400">
+                                    <AlertTriangle className="h-3 w-3" /> {f}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </SectionCard>
           </>
         )}
