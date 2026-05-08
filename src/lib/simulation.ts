@@ -476,6 +476,19 @@ export interface BehavioralInsight {
   type: "warning" | "info" | "positive";
 }
 
+export interface DataInterpretation {
+  category: string;
+  metrics: Array<{
+    name: string;
+    value: string;
+    explanation: string;
+    benchmark?: string;
+    verdict: "excellent" | "good" | "average" | "poor";
+  }>;
+  narrative: string;
+  actionable: string[];
+}
+
 export function generateBehavioralInsights(
   game: GameConcept,
   metrics: ComputedInputMetrics,
