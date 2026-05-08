@@ -49,6 +49,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GameConcept, SimulationResults } from "@/lib/simulation";
 import { MarketAnalysis, runMarketAnalysis } from "@/lib/marketAnalysis";
+import { cn } from "@/lib/utils";
 
 // ─── SVG Gauge ───────────────────────────────────────────────
 
@@ -698,6 +699,100 @@ export default function SimulationResultsPage() {
           )}
 
         </SectionCard>
+        )}
+
+        {/* ────── Data Interpretation Guide ────── */}
+        {results.dataInterpretation && results.dataInterpretation.length > 0 && (
+          <SectionCard title="Data Interpretation Guide" icon={<Lightbulb className="h-5 w-5 text-primary" />}>
+            <p className="text-sm text-muted-foreground mb-6">
+              Detailed breakdown of key metrics, benchmarks, and actionable recommendations tied to this simulation.
+            </p>
+            <div className="space-y-8">
+              {results.dataInterpretation.map((interp, idx) => (
+                <div key={idx} className="rounded-xl border bg-card p-6">
+                  <div className="flex items-center gap-3 mb-4 pb-3 border-b">
+                    <div className="h-2 w-2 rounded-full bg-primary" />
+                    <h3 className="text-lg font-bold">{interp.category}</h3>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-5">
+                    {interp.metrics.map((metric, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          "rounded-lg border p-4",
+                          metric.verdict === "excellent" ? "border-emerald-500/30 bg-emerald-500/5" :
+                          metric.verdict === "good" ? "border-blue-500/30 bg-blue-500/5" :
+                          metric.verdict === "average" ? "border-amber-500/30 bg-amber-500/5" :
+                          "border-red-500/30 bg-red-500/5"
+                        )}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                            {metric.name}
+                          </p>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "text-xs",
+                              metric.verdict === "excellent" ? "border-emerald-500 text-emerald-600 dark:text-emerald-400" :
+                              metric.verdict === "good" ? "border-blue-500 text-blue-600 dark:text-blue-400" :
+                              metric.verdict === "average" ? "border-amber-500 text-amber-600 dark:text-amber-400" :
+                              "border-red-500 text-red-600 dark:text-red-400"
+                            )}
+                          >
+                            {metric.verdict.charAt(0).toUpperCase() + metric.verdict.slice(1)}
+                          </Badge>
+                        </div>
+                        <p className="text-2xl font-bold mb-2">{metric.value}</p>
+                        <p className="text-xs text-muted-foreground mb-2 leading-relaxed">
+                          {metric.explanation}
+                        </p>
+                        {metric.benchmark && (
+                          <p className="text-xs font-medium text-foreground/80 mt-2 pt-2 border-t">
+                            Benchmark: {metric.benchmark}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="rounded-lg bg-secondary/30 p-4 mb-4">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                          What This Means
+                        </p>
+                        <p className="text-sm leading-relaxed">{interp.narrative}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {interp.actionable.length > 0 && (
+                    <div className="rounded-lg bg-primary/5 border border-primary/20 p-4">
+                      <div className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-2">
+                            Recommended Actions
+                          </p>
+                          <ul className="space-y-1.5">
+                            {interp.actionable.map((action, ai) => (
+                              <li key={ai} className="text-sm flex items-start gap-2">
+                                <span className="text-primary mt-1">→</span>
+                                <span>{action}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
         )}
 
         {/* ────── Behavioral Insights (kept) ────── */}

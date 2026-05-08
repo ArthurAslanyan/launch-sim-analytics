@@ -476,6 +476,19 @@ export interface BehavioralInsight {
   type: "warning" | "info" | "positive";
 }
 
+export interface DataInterpretation {
+  category: string;
+  metrics: Array<{
+    name: string;
+    value: string;
+    explanation: string;
+    benchmark?: string;
+    verdict: "excellent" | "good" | "average" | "poor";
+  }>;
+  narrative: string;
+  actionable: string[];
+}
+
 export function generateBehavioralInsights(
   game: GameConcept,
   metrics: ComputedInputMetrics,
@@ -937,6 +950,7 @@ export interface SimulationResults {
   featureDependencyLevel: "Low" | "Medium" | "High";
   simulatedPopulation: SimulatedPopulation;
   performanceScore: PerformanceScore;
+  dataInterpretation: DataInterpretation[];
 }
 
 const POPULATION_MIDPOINTS: Record<PopulationRange, number> = {
@@ -1073,6 +1087,244 @@ export function computePerformanceScore(
   return { overall, sessionQuality, playerRetention, featureEfficiency, marketFit, label, summary };
 }
 
+export function generateDataInterpretation(
+  game: GameConcept,
+  results: Omit<SimulationResults, 'dataInterpretation' | 'stopReasons' | 'economyBehavior' | 'strengths'>
+): DataInterpretation[] {
+  const interpretations: DataInterpretation[] = [];
+
+  // ═══ 1. RETENTION ═══
+  const d1 = results.simulatedPopulation.retentionD1;
+  const d7 = results.simulatedPopulation.retentionD7;
+  const retScore = results.performanceScore.playerRetention;
+
+  const d1Verdict: DataInterpretation["metrics"][0]["verdict"] =
+    d1 >= 60 ? "excellent" : d1 >= 45 ? "good" : d1 >= 30 ? "average" : "poor";
+  const d7Verdict: DataInterpretation["metrics"][0]["verdict"] =
+    d7 >= 30 ? "excellent" : d7 >= 20 ? "good" : d7 >= 12 ? "average" : "poor";
+
+  const d1Benchmark =
+    d1 >= 60 ? "Excellent (Starburst-tier retention)" :
+    d1 >= 45 ? "Good (Sweet Bonanza range)" :
+    d1 >= 30 ? "Average (typical high-volatility games)" :
+    "Poor (below industry baseline)";
+
+  const d7Benchmark =
+    d7 >= 30 ? "Excellent (sustained engagement)" :
+    d7 >= 20 ? "Good (moderate week-1 retention)" :
+    d7 >= 12 ? "Average (typical high-volatility decline)" :
+    "Poor (severe week-1 drop-off)";
+
+  const retentionNarrative = `The Player Retention score of ${retScore.toFixed(1)}/10 is computed as (D1 / 100) × 0.6 + (D7 / 100) × 0.4, which yields ${((d1/100) * 0.6 + (d7/100) * 0.4).toFixed(2)} scaled to 10. ${
+    retScore < 5
+      ? `This is below the 5.0 threshold for "Average" because the formula expects D1 ≥ 55% and D7 ≥ 25% for typical retention profiles. Your game's ${d1}% D1 and ${d7}% D7 indicate ${
+          d1 < 40 ? "weak first-session engagement" : "moderate initial interest but poor long-term hooks"
+        }.`
+      : retScore < 7
+      ? "This falls in the Average-to-Good range, indicating solid initial retention but room for improvement in sustained engagement."
+      : "This is a strong retention profile, indicating the game successfully retains players across both short and medium timeframes."
+  }`;
+
+  const retentionActions: string[] = [];
+  if (d1 < 45) retentionActions.push("Increase base game hit frequency or add small wins between features to improve first-session satisfaction");
+  if (d7 < 20) retentionActions.push("Add progression mechanics (collections, achievements, unlockables) to build cross-session engagement");
+  if (d7 < d1 * 0.35) retentionActions.push("Week-1 retention collapse is severe — consider adding daily login bonuses or time-gated content");
+  if (retentionActions.length === 0) retentionActions.push("Retention profile is structurally sound — focus on distribution and marketing to maximize reach");
+
+  interpretations.push({
+    category: "Player Retention",
+    metrics: [
+      {
+        name: "D1 Return Rate",
+        value: `${d1}%`,
+        explanation: `Structurally-derived estimate of players who will return the next day. Driven by volatility penalty, early exit rate, and session length. Formula: (1 - earlyExitRate) × 100 - volPenalty × 100 + (sessionMinutes / 3).`,
+        benchmark: d1Benchmark,
+        verdict: d1Verdict,
+      },
+      {
+        name: "D7 Return Rate",
+        value: `${d7}%`,
+        explanation: `Fraction of D1 returners still engaged after a week. Formula: D1 × (0.25 + (1 - featureDependency) × 0.2). Measures long-term engagement strength.`,
+        benchmark: d7Benchmark,
+        verdict: d7Verdict,
+      },
+      {
+        name: "Player Retention Score",
+        value: `${retScore.toFixed(1)} / 10`,
+        explanation: `Composite score weighting D1 at 60% and D7 at 40%. The ${retScore < 5 ? "Poor" : retScore < 7 ? "Average" : "Good"} rating reflects ${
+          retScore < 5 ? "below-target structural retention" : retScore < 7 ? "acceptable but improvable retention" : "strong player stickiness"
+        }.`,
+        benchmark: "Target: 5.0+ (Average), 7.0+ (Good), 8.5+ (Excellent)",
+        verdict: retScore >= 7 ? "good" : retScore >= 5 ? "average" : "poor",
+      },
+    ],
+    narrative: retentionNarrative,
+    actionable: retentionActions,
+  });
+
+  // ═══ 2. SESSION QUALITY ═══
+  const sessionMin = results.simulatedPopulation.avgSessionDurationMinutes;
+  const roundsPerSession = results.simulatedPopulation.avgRoundsPerSession;
+  const earlyChurn = results.simulatedPopulation.churnRate;
+  const sessionScore = results.performanceScore.sessionQuality;
+
+  const sessionVerdict: DataInterpretation["metrics"][0]["verdict"] =
+    sessionMin >= 15 ? "excellent" : sessionMin >= 10 ? "good" : sessionMin >= 7 ? "average" : "poor";
+
+  const sessionNarrative = `Average session length of ${sessionMin} minutes (${roundsPerSession} rounds at ~6 spins/min) ${
+    sessionMin < 10
+      ? `is below the 12-minute industry benchmark. This indicates ${earlyChurn >= 50 ? "high early exit rate — many players leave before engaging deeply" : "moderate engagement depth but room for improvement"}.`
+      : sessionMin >= 15
+      ? "exceeds the 15-minute benchmark for highly engaging games, indicating strong session stickiness."
+      : "is within the healthy 10–15 minute range for modern slots."
+  } The Session Quality score of ${sessionScore.toFixed(1)}/10 combines session length, early exit penalty, and structural stability.`;
+
+  const sessionActions: string[] = [];
+  if (sessionMin < 10) sessionActions.push("Session length is short — review first 50 spins for dead spin clusters or feature pacing issues");
+  if (earlyChurn >= 50) sessionActions.push("Early churn rate is elevated — consider adding quick wins or a 'near-miss' mechanic in the first 30 spins");
+  if (roundsPerSession < 60) sessionActions.push("Players are not reaching deep enough into sessions — improve anticipation curve or add mid-session surprise triggers");
+  if (sessionActions.length === 0) sessionActions.push("Session depth is healthy — players are engaging long enough to experience core mechanics");
+
+  interpretations.push({
+    category: "Session Quality",
+    metrics: [
+      {
+        name: "Avg Session Duration",
+        value: `${sessionMin} min`,
+        explanation: `Computed from adjusted session length × 6 spins/min. Reflects how long players stay engaged before exiting. Industry benchmark: 12 min average, 15+ min for top performers.`,
+        benchmark: sessionMin >= 15 ? "Excellent" : sessionMin >= 12 ? "Good" : sessionMin >= 8 ? "Average" : "Below target",
+        verdict: sessionVerdict,
+      },
+      {
+        name: "Rounds Per Session",
+        value: `${roundsPerSession}`,
+        explanation: `Total spins completed before session end. Derived from session minutes × 6. More rounds = deeper engagement with game mechanics.`,
+        benchmark: roundsPerSession >= 90 ? "Deep engagement" : roundsPerSession >= 60 ? "Moderate" : "Shallow",
+        verdict: roundsPerSession >= 90 ? "excellent" : roundsPerSession >= 60 ? "good" : roundsPerSession >= 40 ? "average" : "poor",
+      },
+      {
+        name: "Early Churn Rate",
+        value: `${earlyChurn}%`,
+        explanation: `Percentage of players who exit before triggering a feature. High values indicate base game weakness or poor first-impression experience.`,
+        benchmark: earlyChurn < 30 ? "Low risk" : earlyChurn < 50 ? "Moderate risk" : "High risk",
+        verdict: earlyChurn < 30 ? "excellent" : earlyChurn < 50 ? "average" : "poor",
+      },
+    ],
+    narrative: sessionNarrative,
+    actionable: sessionActions,
+  });
+
+  // ═══ 3. FEATURE EFFICIENCY ═══
+  const fdi = results.inputMetrics.featureDependencyIndex;
+  const featureScore = results.performanceScore.featureEfficiency;
+  const featCount = game.features.length;
+
+  const fdiVerdict: DataInterpretation["metrics"][0]["verdict"] =
+    fdi >= 0.4 && fdi <= 0.6 ? "excellent" : fdi >= 0.3 && fdi <= 0.7 ? "good" : "average";
+
+  const featureNarrative = `Feature Dependency Index of ${(fdi * 100).toFixed(0)}% indicates ${
+    fdi > 0.65
+      ? "high dependency on feature triggers — base game provides minimal satisfaction, players are waiting for the bonus"
+      : fdi > 0.55
+      ? "moderate-to-high feature focus — most of the game's appeal comes from features rather than base game"
+      : fdi >= 0.4
+      ? "balanced feature/base split — players enjoy both the base game and feature content"
+      : "low feature dependency — base game carries most of the experience, features are secondary"
+  }. The Feature Efficiency score of ${featureScore.toFixed(1)}/10 measures how well features serve their role in the game's reward structure.`;
+
+  const featureActions: string[] = [];
+  if (fdi > 0.65) featureActions.push("Feature dependency is too high — strengthen base game with more frequent small wins or wild multipliers");
+  if (fdi < 0.35) featureActions.push("Features are underutilized — increase their RTP contribution or add more impactful feature mechanics");
+  if (featCount === 0) featureActions.push("No features defined — modern slots typically include 2–4 feature types for variety");
+  if (featCount > 4) featureActions.push("Feature count is high — ensure each feature has a clear purpose and doesn't dilute the core experience");
+  if (featureActions.length === 0) featureActions.push("Feature structure is well-balanced — both base and feature content contribute meaningfully");
+
+  interpretations.push({
+    category: "Feature Efficiency",
+    metrics: [
+      {
+        name: "Feature Dependency Index",
+        value: `${(fdi * 100).toFixed(0)}%`,
+        explanation: `Ratio of feature RTP to total RTP. Measures how much of the game's value proposition comes from triggered features vs. base game. Formula: featureRTP / totalRTP.`,
+        benchmark: "Target: 40–60% (balanced), <40% (base-heavy), >65% (feature-dependent)",
+        verdict: fdiVerdict,
+      },
+      {
+        name: "Feature Count",
+        value: `${featCount}`,
+        explanation: `Total number of distinct feature types in the game. Modern slots typically have 2–4 features for variety without overwhelming players.`,
+        benchmark: featCount >= 2 && featCount <= 4 ? "Optimal range" : featCount === 1 ? "Single feature focus" : featCount > 4 ? "High complexity" : "No features",
+        verdict: featCount >= 2 && featCount <= 4 ? "good" : "average",
+      },
+      {
+        name: "Feature Efficiency Score",
+        value: `${featureScore.toFixed(1)} / 10`,
+        explanation: `Composite score evaluating feature encounter rate, pacing quality, and alignment with game structure. Balances feature presence with base game strength.`,
+        benchmark: "Target: 6.0+ (efficient), 8.0+ (excellent)",
+        verdict: featureScore >= 7 ? "good" : featureScore >= 5 ? "average" : "poor",
+      },
+    ],
+    narrative: featureNarrative,
+    actionable: featureActions,
+  });
+
+  // ═══ 4. ARCHETYPE & VOLATILITY ═══
+  const selectedArchetype = results.archetypeSelection.archetype;
+  const vol = game.volatility;
+  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, "Medium-High": 0.65, High: 0.8, "Very High": 1.0 };
+  const volatilityScore = (game.volatilityStdDev && game.volatilityStdDev > 0)
+    ? Math.min(1, game.volatilityStdDev / 20)
+    : volScoreMap[game.volatility] ?? 0.5;
+
+  const archetypeNarrative = `The simulation selected **${selectedArchetype}** as the dominant player archetype for this game. ${
+    selectedArchetype === "Casual Player"
+      ? `Casual players prioritize session length over big wins. They have low loss tolerance (~40%) and exit after 8 consecutive dead spins. Your ${vol} volatility and ${(fdi * 100).toFixed(0)}% feature dependency align with this profile.`
+      : selectedArchetype === "Bonus-Seeking Player"
+      ? `Bonus-Seeking players tolerate moderate losses (~68%) in pursuit of feature triggers. They expect features every 45 spins and will chase bonuses for extended sessions. Your game's feature structure matches this playstyle.`
+      : selectedArchetype === "Volatility-Seeking Player"
+      ? `Volatility Seekers accept 85%+ loss tolerance in exchange for high multiplier potential. They tolerate 45 dead spins and expect features to deliver 12×+ wins. Your ${vol} volatility and ${game.topWin}× max win appeal to this segment.`
+      : selectedArchetype === "Budget-Constrained Player"
+      ? `Budget-Constrained players have strict bankroll limits (5–10× bet) and low loss tolerance (~22%). They exit quickly during losing streaks. Your game's ${vol} volatility may be challenging for this segment unless base game hit frequency is high.`
+      : selectedArchetype === "Progress-Oriented Player"
+      ? `Progress-Oriented players value achievement systems and cross-session goals. They tolerate moderate losses (~58%) if they see progression. Consider adding collection mechanics or unlockables to maximize retention for this archetype.`
+      : `Feature-Focused or Loss-Chasing players represent edge cases. Review game structure to ensure it aligns with a broader player base.`
+  }`;
+
+  const archetypeActions: string[] = [];
+  if (selectedArchetype === "Budget-Constrained Player" && vol === "High")
+    archetypeActions.push("Volatility is high for Budget-Constrained players — consider adding an Ante Bet option or increasing base game hit frequency");
+  if (selectedArchetype === "Volatility-Seeking Player" && game.topWin < 5000)
+    archetypeActions.push("Max win is low for Volatility Seekers — increase top prize to 10,000×+ to match archetype expectations");
+  if (selectedArchetype === "Progress-Oriented Player" && !(game.specialMechanics ?? []).some(m => m.includes("Collection")))
+    archetypeActions.push("Progress-Oriented players need collection mechanics — add a symbol collection feature or achievement system");
+  if (archetypeActions.length === 0)
+    archetypeActions.push("Archetype alignment is good — game structure matches the selected player segment");
+
+  interpretations.push({
+    category: "Player Archetype & Volatility",
+    metrics: [
+      {
+        name: "Selected Archetype",
+        value: selectedArchetype,
+        explanation: `Dominant player type attracted by this game's structure. Determined by feature dependency, volatility, base RTP ratio, and special mechanics.`,
+        benchmark: "N/A — archetype is descriptive, not scored",
+        verdict: "average",
+      },
+      {
+        name: "Volatility",
+        value: vol + (game.volatilityStdDev ? ` (SD: ${game.volatilityStdDev.toFixed(1)})` : ""),
+        explanation: `${game.volatilityStdDev ? `Actual standard deviation of ${game.volatilityStdDev.toFixed(1)} provided. ` : ""}Volatility Score of ${volatilityScore.toFixed(2)} used in decay model. Higher scores → steeper survival curve drops.`,
+        benchmark: vol === "Low" ? "SD 2–5" : vol === "Medium" ? "SD 5–9" : vol === "High" ? "SD 7–18" : "SD 15–40+",
+        verdict: vol === "Medium" ? "good" : "average",
+      },
+    ],
+    narrative: archetypeNarrative,
+    actionable: archetypeActions,
+  });
+
+  return interpretations;
+}
+
 export function runSimulation(game: GameConcept): SimulationResults {
   const behavioralSimulation = computeBehavioralSimulation(game);
   const inputMetrics = computeInputMetrics(game);
@@ -1115,6 +1367,25 @@ export function runSimulation(game: GameConcept): SimulationResults {
     recommendation = "Redesign Recommended";
   }
 
+  const dataInterpretation = generateDataInterpretation(game, {
+    archetypeSelection,
+    sessionBehavior,
+    inputMetrics,
+    behavioralSimulation,
+    featureInteraction,
+    structuralStabilityScore,
+    earlySessionRiskScore,
+    featureDependencyLevel,
+    recommendation,
+    diagnosis,
+    improvements,
+    behavioralInsights,
+    riskFlags,
+    archetypeStopReasons,
+    simulatedPopulation,
+    performanceScore,
+  });
+
   return {
     inputMetrics,
     archetypeSelection,
@@ -1135,5 +1406,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     behavioralSimulation,
     simulatedPopulation,
     performanceScore,
+    dataInterpretation,
   };
 }
