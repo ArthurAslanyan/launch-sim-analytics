@@ -138,6 +138,7 @@ export default function SimulationResultsPage() {
   const [market, setMarket] = useState<MarketAnalysis | null>(null);
   const [marketLoading, setMarketLoading] = useState(false);
   const [showAllArchetypes, setShowAllArchetypes] = useState(false);
+  const [expandedArchetype, setExpandedArchetype] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -383,84 +384,223 @@ export default function SimulationResultsPage() {
           </>
         )}
 
-        {/* ────── Section 3 — Behavioral Simulation ────── */}
+        {/* ────── Player Archetype Profiles ────── */}
         {behavioralSimulation && (
-          <SectionCard title="Session Survival by Player Archetype" icon={<Users className="h-5 w-5 text-primary" />}>
-            <p className="mb-4 text-sm text-muted-foreground">
-              Session survival showing how likely each player type is to stay active across spin counts. Higher = more engaged players continuing to play.
-              {!showAllArchetypes && <span className="block mt-1 text-xs italic">Showing 3 core archetypes.</span>}
+          <SectionCard title="Player Archetype Profiles" icon={<Users className="h-5 w-5 text-primary" />}>
+            <p className="mb-6 text-sm text-muted-foreground">
+              How different player types respond to your game's structure. Cards show typical session depth, pressure points, and fit assessment.
             </p>
-            <div className="h-[380px] w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={(() => {
-                    if (!behavioralSimulation) return [];
-                    return behavioralSimulation.survivalData.map(d => ({
-                      spin: d.spin,
-                      casual_survival: d.casual_survival,
-                      bonus_survival: d.bonus_survival,
-                      volatility_survival: d.volatility_survival,
-                      ...(showAllArchetypes ? {
-                        budget_survival: d.budget_survival,
-                        progress_survival: d.progress_survival,
-                      } : {}),
-                    }));
-                  })()}
-                  margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis dataKey="spin" label={{ value: "Spin Count", position: "insideBottom", offset: -2, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <YAxis domain={[0, 100]} label={{ value: "% Sessions Active", angle: -90, position: "insideLeft", offset: 10, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
-                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: 12 }} formatter={(value: number) => [`${value}%`, undefined]} />
-                  <Legend
-                    wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
-                    iconSize={10}
-                    formatter={(value) => <span style={{ color: "hsl(var(--foreground))", marginRight: 8 }}>{value}</span>}
-                    verticalAlign="top"
-                    height={showAllArchetypes ? 60 : 40}
-                  />
-                  <Line type="monotone" dataKey="casual_survival" name="Casual Player" stroke="hsl(160,45%,30%)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="bonus_survival" name="Bonus-Seeking Player" stroke="hsl(160,40%,50%)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="volatility_survival" name="Volatility-Seeking Player" stroke="hsl(155,35%,70%)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  {showAllArchetypes && (
-                    <>
-                      <Line type="monotone" dataKey="budget_survival" name="Budget-Constrained Player" stroke="hsl(40,80%,52%)" strokeWidth={2} strokeDasharray="4 2" dot={{ r: 2.5 }} />
-                      <Line type="monotone" dataKey="progress_survival" name="Progress-Oriented Player" stroke="hsl(200,60%,50%)" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 2.5 }} />
-                    </>
-                  )}
-                </LineChart>
-              </ResponsiveContainer>
+
+            {/* Core Archetypes — 3 columns */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+              {[
+                {
+                  id: "casual",
+                  name: "Casual Player",
+                  icon: "😊",
+                  description: "Sessions: 8–12 min, Loss tolerance: 40%, Exits after 8 dead spins",
+                  color: "hsl(160,45%,30%)",
+                  survivalAt: { spin10: 95, spin30: 85, spin50: 72, spin100: 48 },
+                  pressures: [
+                    "Dead spin frequency — too many non-wins exhaust bankroll",
+                    "Volatility penalty — high variance causes rapid exits",
+                    "Session length — short engagement window means limited bonus exposure"
+                  ],
+                  fitScore: (() => {
+                    const vol = game.volatility === "Low" ? 9 : game.volatility === "Medium" ? 7 : game.volatility === "High" ? 5 : 2;
+                    const fdi = results.inputMetrics.featureDependencyIndex > 0.65 ? -2 : 0;
+                    return Math.max(2, Math.min(10, vol + fdi));
+                  })(),
+                },
+                {
+                  id: "bonus",
+                  name: "Bonus-Seeking Player",
+                  icon: "🎯",
+                  description: "Sessions: 12–18 min, Loss tolerance: 68%, Expects features every 45 spins",
+                  color: "hsl(160,40%,50%)",
+                  survivalAt: { spin10: 98, spin30: 92, spin50: 82, spin100: 65 },
+                  pressures: [
+                    "Feature trigger frequency — waiting too long kills motivation",
+                    "Feature RTP quality — if bonus wins are weak, abandonment spikes",
+                    "Pacing perception — need regular 'near-miss' triggers to sustain hope"
+                  ],
+                  fitScore: (() => {
+                    const fdi = results.inputMetrics.featureDependencyIndex >= 0.55 && results.inputMetrics.featureDependencyIndex <= 0.75 ? 9 : 6;
+                    const vol = game.volatility === "High" || game.volatility === "Very High" ? 1 : 0;
+                    return Math.max(4, Math.min(10, fdi + vol));
+                  })(),
+                },
+                {
+                  id: "volatility",
+                  name: "Volatility-Seeking Player",
+                  icon: "🚀",
+                  description: "Sessions: 15–25 min, Loss tolerance: 85%, Expects 12×+ feature wins",
+                  color: "hsl(155,35%,70%)",
+                  survivalAt: { spin10: 99, spin30: 95, spin50: 88, spin100: 72 },
+                  pressures: [
+                    "Top win potential — games with <5000× max win feel underwhelming",
+                    "Volatility authenticity — if variance is too low, feels boring despite label",
+                    "Feature multiplier quality — need massive wins to justify the grind"
+                  ],
+                  fitScore: (() => {
+                    const vol = game.volatility === "Very High" ? 10 : game.volatility === "High" ? 8 : 4;
+                    const topWin = game.topWin >= 5000 ? 1 : -2;
+                    return Math.max(3, Math.min(10, vol + topWin));
+                  })(),
+                },
+              ].map(arch => {
+                const isExpanded = expandedArchetype === arch.id;
+                return (
+                  <button
+                    key={arch.id}
+                    onClick={() => setExpandedArchetype(isExpanded ? null : arch.id)}
+                    className="rounded-xl border bg-card p-5 text-left transition-all hover:border-primary/50 hover:shadow-md"
+                    style={{ borderColor: isExpanded ? arch.color : undefined }}
+                  >
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <p className="text-2xl mb-1">{arch.icon}</p>
+                        <h4 className="font-bold text-base">{arch.name}</h4>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div
+                          className="text-2xl font-black tabular-nums"
+                          style={{ color: arch.color }}
+                        >
+                          {arch.fitScore.toFixed(1)}
+                        </div>
+                        <p className="text-xs text-muted-foreground">Fit Score</p>
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{arch.description}</p>
+
+                    {/* Session depth bar */}
+                    <div className="mb-3">
+                      <p className="text-xs font-semibold text-muted-foreground mb-1.5">Session Depth</p>
+                      <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.max(30, Math.min(100, arch.survivalAt.spin50))}%`,
+                            backgroundColor: arch.color,
+                          }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {arch.survivalAt.spin50}% still active at 50 spins
+                      </p>
+                    </div>
+
+                    {/* Fit verdict badge */}
+                    <div className="inline-flex items-center gap-2">
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: arch.color }}
+                      />
+                      <span className="text-xs font-semibold">
+                        {arch.fitScore >= 7.5 ? "Excellent fit" : arch.fitScore >= 6 ? "Good fit" : arch.fitScore >= 4 ? "Moderate fit" : "Poor fit"}
+                      </span>
+                    </div>
+
+                    {/* Expandable details */}
+                    {isExpanded && (
+                      <div className="mt-4 pt-4 border-t space-y-3">
+                        <div>
+                          <p className="text-xs font-semibold text-muted-foreground mb-2">Survival Curve</p>
+                          <div className="grid grid-cols-4 gap-2">
+                            {[
+                              { label: "Spin 10", val: arch.survivalAt.spin10 },
+                              { label: "Spin 30", val: arch.survivalAt.spin30 },
+                              { label: "Spin 50", val: arch.survivalAt.spin50 },
+                              { label: "Spin 100", val: arch.survivalAt.spin100 },
+                            ].map(pt => (
+                              <div key={pt.label} className="text-center rounded-lg bg-secondary/50 p-2">
+                                <p className="text-2xl font-bold" style={{ color: arch.color }}>
+                                  {pt.val}%
+                                </p>
+                                <p className="text-xs text-muted-foreground">{pt.label}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-muted-foreground mb-2">Pressure Points</p>
+                          <ul className="space-y-2">
+                            {arch.pressures.map((p, pi) => (
+                              <li key={pi} className="text-xs flex items-start gap-2">
+                                <span
+                                  className="h-1.5 w-1.5 rounded-full mt-1 shrink-0"
+                                  style={{ backgroundColor: arch.color }}
+                                />
+                                <span className="text-muted-foreground">{p}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="mt-4 flex justify-center">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAllArchetypes(!showAllArchetypes)}
-                className="gap-2"
-              >
-                {showAllArchetypes ? "← Show Core Archetypes Only" : "Show All 5 Archetypes →"}
-              </Button>
-            </div>
-
-            {/* Below chart: stop reasons + early fragility */}
-            <div className="mt-6 flex justify-center">
-              <div className="rounded-lg border p-4 flex flex-col items-center justify-center text-center max-w-sm w-full">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Early-Session Fragility</p>
-                {(() => {
-                  const ep = sessionBehavior.earlyExitProbability;
-                  const level = ep >= 50 ? "High" : ep >= 30 ? "Medium" : "Low";
-                  const cls = ep >= 50 ? "text-destructive" : ep >= 30 ? "text-amber-500" : "text-emerald-500";
-                  const sub = ep >= 50 ? "Risk of early churn is elevated" : ep >= 30 ? "Risk of early churn is moderate" : "Risk of early churn is low";
-                  return (
-                    <>
-                      <p className={`text-3xl font-bold ${cls}`}>{level}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-                    </>
-                  );
-                })()}
+            {/* Edge Case Archetypes — 2 columns, more compact */}
+            <div className="rounded-lg bg-secondary/20 p-4 mb-4">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">
+                Edge Case Archetypes
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  {
+                    id: "budget",
+                    name: "Budget-Constrained",
+                    icon: "💰",
+                    description: "Strict bankroll limits (5–10× bet), low loss tolerance (22%), exits after 7 dead spins",
+                    color: "hsl(40,80%,52%)",
+                    fitScore: (() => {
+                      const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
+                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
+                      return Math.max(2, Math.min(9, vol + bgt));
+                    })(),
+                  },
+                  {
+                    id: "progress",
+                    name: "Progress-Oriented",
+                    icon: "📈",
+                    description: "Value achievement & cross-session goals, moderate loss tolerance (58%), need progression mechanics",
+                    color: "hsl(200,60%,50%)",
+                    fitScore: (() => {
+                      const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
+                      return Math.max(3, Math.min(9, 5 + hasProgress));
+                    })(),
+                  },
+                ].map(arch => (
+                  <div key={arch.id} className="rounded-lg border bg-card p-3">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="text-lg mb-0.5">{arch.icon}</p>
+                        <h5 className="font-semibold text-sm">{arch.name}</h5>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-lg font-black tabular-nums" style={{ color: arch.color }}>
+                          {arch.fitScore.toFixed(1)}
+                        </div>
+                        <p className="text-xs text-muted-foreground">Fit</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{arch.description}</p>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* Summary note */}
+            <p className="text-xs text-muted-foreground text-center pt-2 border-t">
+              Fit Scores are computed from your game's volatility, feature structure, and session depth. Click any core archetype card to see detailed survival percentages.
+            </p>
           </SectionCard>
         )}
 
