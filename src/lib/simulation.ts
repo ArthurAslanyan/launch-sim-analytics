@@ -1367,6 +1367,25 @@ export function runSimulation(game: GameConcept): SimulationResults {
     recommendation = "Redesign Recommended";
   }
 
+  const dataInterpretation = generateDataInterpretation(game, {
+    archetypeSelection,
+    sessionBehavior,
+    inputMetrics,
+    behavioralSimulation,
+    featureInteraction,
+    structuralStabilityScore,
+    earlySessionRiskScore,
+    featureDependencyLevel,
+    recommendation,
+    diagnosis,
+    improvements,
+    behavioralInsights,
+    riskFlags,
+    archetypeStopReasons,
+    simulatedPopulation,
+    performanceScore,
+  });
+
   return {
     inputMetrics,
     archetypeSelection,
@@ -1387,5 +1406,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     behavioralSimulation,
     simulatedPopulation,
     performanceScore,
+    dataInterpretation,
   };
 }
