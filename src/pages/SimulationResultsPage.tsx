@@ -315,12 +315,12 @@ export default function SimulationResultsPage() {
               <div className="space-y-4">
                 {market.similarGames.slice(0, 4).map((g, i) => {
                   const overallPct = Math.round(g.matchScore);
-                  const overallColor = overallPct >= 75 ? "hsl(160,45%,35%)" : overallPct >= 50 ? "hsl(40,85%,52%)" : "hsl(0,65%,50%)";
+                  const overallColor = overallPct >= 75 ? "#2E8950" : overallPct >= 50 ? "#5B9F8B" : "#7B8C6F";
                   const dimensions = [
-                    { label: "Theme", score: g.themeScore, color: "hsl(270,50%,55%)" },
-                    { label: "Mechanics", score: g.mechanicsScore, color: "hsl(200,60%,50%)" },
-                    { label: "Features", score: g.featureScore, color: "hsl(160,45%,42%)" },
-                    { label: "Volatility", score: g.volatilityScore, color: "hsl(35,85%,52%)" },
+                    { label: "Theme", score: g.themeScore, color: "#5B9F8B" },
+                    { label: "Mechanics", score: g.mechanicsScore, color: "#3D6955" },
+                    { label: "Features", score: g.featureScore, color: "#2E8950" },
+                    { label: "Volatility", score: g.volatilityScore, color: "#4A7BA7" },
                   ];
                   return (
                     <div key={i} className="rounded-xl border bg-card p-5">
@@ -378,7 +378,7 @@ export default function SimulationResultsPage() {
                               <p className="text-xs font-semibold text-muted-foreground mb-1.5">Shared Features</p>
                               <div className="flex flex-wrap gap-1">
                                 {g.sharedFeatures.map((f, fi) => (
-                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-xs text-emerald-700 dark:text-emerald-400">
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs" style={{ backgroundColor: "#E8F4EE", borderColor: "#2E8950", color: "#2E8950" }}>
                                     <CheckCircle2 className="h-3 w-3" /> {f}
                                   </span>
                                 ))}
@@ -390,7 +390,7 @@ export default function SimulationResultsPage() {
                               <p className="text-xs font-semibold text-muted-foreground mb-1.5">Your Concept Has (They Don't)</p>
                               <div className="flex flex-wrap gap-1">
                                 {g.missingFeatures.map((f, fi) => (
-                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs text-blue-700 dark:text-blue-400">
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs" style={{ backgroundColor: "#EEF2F8", borderColor: "#4A7BA7", color: "#4A7BA7" }}>
                                     <Zap className="h-3 w-3" /> {f}
                                   </span>
                                 ))}
@@ -402,7 +402,7 @@ export default function SimulationResultsPage() {
                               <p className="text-xs font-semibold text-muted-foreground mb-1.5">They Have (You Don't)</p>
                               <div className="flex flex-wrap gap-1">
                                 {g.uniqueFeatures.map((f, fi) => (
-                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400">
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs" style={{ backgroundColor: "#F0F2ED", borderColor: "#7B8C6F", color: "#7B8C6F" }}>
                                     <AlertTriangle className="h-3 w-3" /> {f}
                                   </span>
                                 ))}
