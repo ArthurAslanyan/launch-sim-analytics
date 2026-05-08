@@ -49,6 +49,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GameConcept, SimulationResults } from "@/lib/simulation";
 import { MarketAnalysis, runMarketAnalysis } from "@/lib/marketAnalysis";
+import { cn } from "@/lib/utils";
 
 // ─── SVG Gauge ───────────────────────────────────────────────
 
