@@ -736,7 +736,11 @@ export default function SimulationResultsPage() {
             {/* Actionable summary */}
             <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-5">
               <div className="flex items-start gap-3">
-                <span className="text-2xl">🎯</span>
+                <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="14" cy="14" r="12" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                  <circle cx="14" cy="14" r="8" stroke="hsl(var(--primary))" strokeWidth="1.5" />
+                  <circle cx="14" cy="14" r="4" fill="hsl(var(--primary))" />
+                </svg>
                 <div>
                   <p className="text-sm font-bold text-foreground mb-2">Next Steps</p>
                   <p className="text-sm text-muted-foreground leading-relaxed">
