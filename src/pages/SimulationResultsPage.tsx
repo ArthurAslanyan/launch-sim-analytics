@@ -685,7 +685,8 @@ export default function SimulationResultsPage() {
                   {
                     id: "progress",
                     name: "Progress-Oriented",
-                    emoji: "📈",
+                    emoji: null as string | null,
+                    icon: "progress",
                     description: "Value achievement & cross-session goals, moderate loss tolerance (58%), need progression mechanics",
                     primaryColor: "hsl(210,80%,50%)",
                     lightColor: "hsl(210,80%,92%)",
