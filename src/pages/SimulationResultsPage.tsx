@@ -459,7 +459,8 @@ export default function SimulationResultsPage() {
                 {
                   id: "bonus",
                   name: "Bonus-Seeking Player",
-                  emoji: "🎯",
+                  emoji: null as string | null,
+                  icon: "bonus",
                   description: "Sessions: 12–18 min, Loss tolerance: 68%, Expects features every 45 spins",
                   primaryColor: "hsl(160,65%,42%)",
                   lightColor: "hsl(160,65%,92%)",
