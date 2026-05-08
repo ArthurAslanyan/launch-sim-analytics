@@ -950,6 +950,7 @@ export interface SimulationResults {
   featureDependencyLevel: "Low" | "Medium" | "High";
   simulatedPopulation: SimulatedPopulation;
   performanceScore: PerformanceScore;
+  dataInterpretation: DataInterpretation[];
 }
 
 const POPULATION_MIDPOINTS: Record<PopulationRange, number> = {
