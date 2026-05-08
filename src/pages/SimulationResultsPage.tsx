@@ -402,7 +402,7 @@ export default function SimulationResultsPage() {
                               <p className="text-xs font-semibold text-muted-foreground mb-1.5">They Have (You Don't)</p>
                               <div className="flex flex-wrap gap-1">
                                 {g.uniqueFeatures.map((f, fi) => (
-                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-xs text-amber-700 dark:text-amber-400">
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs" style={{ backgroundColor: "#F0F2ED", borderColor: "#7B8C6F", color: "#7B8C6F" }}>
                                     <AlertTriangle className="h-3 w-3" /> {f}
                                   </span>
                                 ))}
