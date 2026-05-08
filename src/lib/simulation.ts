@@ -1399,7 +1399,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
     inputMetrics.featureDependencyIndex > 0.50 ? "High" :
     inputMetrics.featureDependencyIndex > 0.30 ? "Medium" : "Low";
 
-  const simulatedPopulation = computeSimulatedPopulation(game, sessionBehavior, inputMetrics);
+  const simulatedPopulation = computeSimulatedPopulation(game, sessionBehavior, inputMetrics, behavioralSimulation, archetypeStopReasons);
   const performanceScore = computePerformanceScore(
     game, sessionBehavior, inputMetrics, simulatedPopulation,
     structuralStabilityScore, earlySessionRiskScore
