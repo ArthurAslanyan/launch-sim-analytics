@@ -1244,21 +1244,27 @@ export function generateDataInterpretation(
   const featCount = game.features.length;
 
   const fdiVerdict: DataInterpretation["metrics"][0]["verdict"] =
-    fdi >= 0.4 && fdi <= 0.6 ? "excellent" : fdi >= 0.3 && fdi <= 0.7 ? "good" : "average";
+    fdi >= 0.55 && fdi <= 0.70 ? "excellent" :
+    fdi >= 0.45 && fdi < 0.55 ? "good" :
+    fdi >= 0.35 && fdi < 0.45 ? "good" :
+    fdi > 0.70 && fdi <= 0.80 ? "good" :
+    "average";
 
   const featureNarrative = `Feature Dependency Index of ${(fdi * 100).toFixed(0)}% indicates ${
     fdi > 0.65
-      ? "high dependency on feature triggers — base game provides minimal satisfaction, players are waiting for the bonus"
+      ? "strong feature-driven design — players are chasing bonus triggers, which is a proven engagement model in modern slots (see Big Bass Bonanza, Gates of Olympus). This works well for Bonus-Seeking and Volatility-Seeking players."
       : fdi > 0.55
-      ? "moderate-to-high feature focus — most of the game's appeal comes from features rather than base game"
+      ? "feature-focused gameplay — the anticipation of triggering the bonus is a primary engagement driver. This aligns with player expectations in the current market."
       : fdi >= 0.4
-      ? "balanced feature/base split — players enjoy both the base game and feature content"
-      : "low feature dependency — base game carries most of the experience, features are secondary"
-  }. The Feature Efficiency score of ${featureScore.toFixed(1)}/10 measures how well features serve their role in the game's reward structure.`;
+      ? "balanced feature/base split — players get satisfaction from both base game spins and feature triggers. This appeals to a broad audience."
+      : "base-game-heavy design — features are secondary to the core gameplay loop. This works for Casual players but may underwhelm Bonus-Seekers."
+  }. The Feature Efficiency score of ${featureScore.toFixed(1)}/10 measures how well features serve their role relative to the selected archetype's expectations.`;
 
   const featureActions: string[] = [];
-  if (fdi > 0.65) featureActions.push("Feature dependency is too high — strengthen base game with more frequent small wins or wild multipliers");
-  if (fdi < 0.35) featureActions.push("Features are underutilized — increase their RTP contribution or add more impactful feature mechanics");
+  if (fdi > 0.75) featureActions.push("Feature dependency is very high (>75%) — ensure trigger frequency supports session length, or add Ante Bet to accelerate feature access");
+  if (fdi > 0.65 && results.simulatedPopulation.avgSessionDurationMinutes < 9) featureActions.push("High FDI with short sessions — players may exit before triggering feature. Review base game hit frequency or reduce trigger cost.");
+  if (fdi < 0.35 && results.archetypeSelection.archetype === "Bonus-Seeking Player") featureActions.push("FDI is low for Bonus-Seeking archetype — increase feature RTP contribution to match player expectations");
+  if (fdi < 0.30) featureActions.push("Features are underutilized — modern slots typically allocate 45–65% RTP to features to drive anticipation");
   if (featCount === 0) featureActions.push("No features defined — modern slots typically include 2–4 feature types for variety");
   if (featCount > 4) featureActions.push("Feature count is high — ensure each feature has a clear purpose and doesn't dilute the core experience");
   if (featureActions.length === 0) featureActions.push("Feature structure is well-balanced — both base and feature content contribute meaningfully");
@@ -1270,7 +1276,7 @@ export function generateDataInterpretation(
         name: "Feature Dependency Index",
         value: `${(fdi * 100).toFixed(0)}%`,
         explanation: `Ratio of feature RTP to total RTP. Measures how much of the game's value proposition comes from triggered features vs. base game. Formula: featureRTP / totalRTP.`,
-        benchmark: "Target: 40–60% (balanced), <40% (base-heavy), >65% (feature-dependent)",
+        benchmark: "Target: 55–70% (feature-driven modern slots), 40–55% (balanced), 30–40% (base-game focus)",
         verdict: fdiVerdict,
       },
       {
