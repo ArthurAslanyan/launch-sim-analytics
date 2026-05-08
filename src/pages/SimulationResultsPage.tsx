@@ -139,15 +139,24 @@ export default function SimulationResultsPage() {
   const [marketLoading, setMarketLoading] = useState(false);
 
   useEffect(() => {
-    const gameData = sessionStorage.getItem("launchindex_game");
-    const resultsData = sessionStorage.getItem("launchindex_results");
-    if (gameData && resultsData) {
-      const g = JSON.parse(gameData) as GameConcept;
-      setGame(g);
-      setResults(JSON.parse(resultsData));
+    try {
+      const gameData = sessionStorage.getItem("launchindex_game");
+      const resultsData = sessionStorage.getItem("launchindex_results");
+      if (gameData && resultsData) {
+        const g = JSON.parse(gameData) as GameConcept;
+        const r = JSON.parse(resultsData) as SimulationResults;
+        setGame(g);
+        setResults(r);
 
-      setMarketLoading(true);
-      runMarketAnalysis(g).then(m => { setMarket(m); setMarketLoading(false); }).catch(() => setMarketLoading(false));
+        setMarketLoading(true);
+        runMarketAnalysis(g).then(m => { setMarket(m); setMarketLoading(false); }).catch(() => setMarketLoading(false));
+      }
+    } catch (err) {
+      console.error("Failed to load stored simulation data:", err);
+      try {
+        sessionStorage.removeItem("launchindex_game");
+        sessionStorage.removeItem("launchindex_results");
+      } catch {}
     }
   }, []);
 
