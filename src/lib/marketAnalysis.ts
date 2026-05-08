@@ -33,10 +33,19 @@ export interface SimilarGameEntry {
   coreMechanics: string;
   marketPresence: string;
   matchScore: number;
+  // Per-dimension similarity scores (0–100)
+  themeScore: number;
+  mechanicsScore: number;
+  featureScore: number;
+  volatilityScore: number;
+  // Shared / missing feature comparison
+  sharedFeatures: string[];
+  missingFeatures: string[];
+  uniqueFeatures: string[];
 }
 
 export interface SimilarityMatrix {
-  games: Array<{ name: string; themeScore: number; mechanicsScore: number; featureScore: number }>;
+  games: Array<{ name: string; themeScore: number; mechanicsScore: number; featureScore: number; volatilityScore: number }>;
 }
 
 export interface MarketSaturation {
