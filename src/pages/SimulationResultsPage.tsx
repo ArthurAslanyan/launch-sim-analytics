@@ -672,9 +672,9 @@ export default function SimulationResultsPage() {
                     emoji: null as string | null,
                     icon: "budget",
                     description: "Strict bankroll limits (5–10× bet), low loss tolerance (22%), exits after 7 dead spins",
-                    primaryColor: "hsl(35,85%,52%)",
-                    lightColor: "hsl(35,85%,92%)",
-                    darkColor: "hsl(35,85%,32%)",
+                    primaryColor: "#7B8C6F",
+                    lightColor: "#F0F2ED",
+                    darkColor: "#3D4538",
                     fitScore: (() => {
                       const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
                       const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
