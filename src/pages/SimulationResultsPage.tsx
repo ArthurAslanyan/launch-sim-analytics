@@ -172,8 +172,6 @@ export default function SimulationResultsPage() {
   const [results, setResults] = useState<SimulationResults | null>(null);
   const [market, setMarket] = useState<MarketAnalysis | null>(null);
   const [marketLoading, setMarketLoading] = useState(false);
-  const [showAllArchetypes, setShowAllArchetypes] = useState(false);
-  const [expandedArchetype, setExpandedArchetype] = useState<string | null>(null);
 
   useEffect(() => {
     try {
@@ -419,334 +417,183 @@ export default function SimulationResultsPage() {
           </>
         )}
 
-        {/* ────── Player Archetype Profiles ────── */}
+        {/* ────── Session Journey — Interactive Survival ────── */}
         {behavioralSimulation && (
-          <SectionCard title="Player Archetype Profiles" icon={<Users className="h-5 w-5 text-primary" />}>
+          <SectionCard title="Session Journey by Player Type" icon={<Users className="h-5 w-5 text-primary" />}>
             <p className="mb-6 text-sm text-muted-foreground">
-              How different player types respond to your game's structure. Cards show typical session depth, pressure points, and fit assessment.
+              How long does each player type stay engaged? Hover over pressure points to see where they typically exit.
             </p>
 
-            {/* Core Archetypes — 3 columns */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
-              {[
-                {
-                  id: "casual",
-                  name: "Casual Player",
-                  emoji: null as string | null,
-                  icon: "casual",
-                  description: "Sessions: 8–12 min, Loss tolerance: 40%, Exits after 8 dead spins",
-                  primaryColor: "#5B9F8B",
-                  lightColor: "#E8F3F0",
-                  darkColor: "#2D5047",
-                  survivalAt: { spin10: 95, spin30: 85, spin50: 72, spin100: 48 },
-                  pressures: [
-                    "Dead spin frequency — too many non-wins exhaust bankroll",
-                    "Volatility penalty — high variance causes rapid exits",
-                    "Session length — short engagement window means limited bonus exposure"
-                  ],
-                  fitScore: (() => {
-                    const vol = game.volatility === "Low" ? 9 : game.volatility === "Medium" ? 7 : game.volatility === "High" ? 5 : 2;
-                    const fdi = results.inputMetrics.featureDependencyIndex > 0.65 ? -2 : 0;
-                    return Math.max(2, Math.min(10, vol + fdi));
-                  })(),
-                  fitLabel: (score: number) => score >= 8 ? "Perfect fit" : score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
-                  fitReason: (score: number) =>
-                    score >= 8 ? "This game's structure is ideal for Casual players" :
-                    score >= 6 ? "This game works well for Casual players with minor caveats" :
-                    score >= 4 ? "This game challenges some Casual player expectations" :
-                    "This game may struggle to retain Casual players",
-                },
-                {
-                  id: "bonus",
-                  name: "Bonus-Seeking Player",
-                  emoji: null as string | null,
-                  icon: "bonus",
-                  description: "Sessions: 12–18 min, Loss tolerance: 68%, Expects features every 45 spins",
-                  primaryColor: "#3D6955",
-                  lightColor: "#EBF1ED",
-                  darkColor: "#1D3D2D",
-                  survivalAt: { spin10: 98, spin30: 92, spin50: 82, spin100: 65 },
-                  pressures: [
-                    "Feature trigger frequency — waiting too long kills motivation",
-                    "Feature RTP quality — if bonus wins are weak, abandonment spikes",
-                    "Pacing perception — need regular 'near-miss' triggers to sustain hope"
-                  ],
-                  fitScore: (() => {
-                    const fdi = results.inputMetrics.featureDependencyIndex >= 0.55 && results.inputMetrics.featureDependencyIndex <= 0.75 ? 9 : 6;
-                    const vol = game.volatility === "High" || game.volatility === "Very High" ? 1 : 0;
-                    return Math.max(4, Math.min(10, fdi + vol));
-                  })(),
-                  fitLabel: (score: number) => score >= 8 ? "Perfect fit" : score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
-                  fitReason: (score: number) =>
-                    score >= 8 ? "Your game is built for Bonus-Seeking players" :
-                    score >= 6 ? "Bonus-Seeking players will enjoy this game" :
-                    score >= 4 ? "Some adjustments would improve Bonus-Seeker engagement" :
-                    "This game doesn't align well with Bonus-Seeking expectations",
-                },
-                {
-                  id: "volatility",
-                  name: "Volatility-Seeking Player",
-                  emoji: null as string | null,
-                  icon: "volatility",
-                  description: "Sessions: 15–25 min, Loss tolerance: 85%, Expects 12×+ feature wins",
-                  primaryColor: "#2E8950",
-                  lightColor: "#E8F4EE",
-                  darkColor: "#145230",
-                  survivalAt: { spin10: 99, spin30: 95, spin50: 88, spin100: 72 },
-                  pressures: [
-                    "Top win potential — games with <5000× max win feel underwhelming",
-                    "Volatility authenticity — if variance is too low, feels boring despite label",
-                    "Feature multiplier quality — need massive wins to justify the grind"
-                  ],
-                  fitScore: (() => {
-                    const vol = game.volatility === "Very High" ? 10 : game.volatility === "High" ? 8 : 4;
-                    const topWin = game.topWin >= 5000 ? 1 : -2;
-                    return Math.max(3, Math.min(10, vol + topWin));
-                  })(),
-                  fitLabel: (score: number) => score >= 8 ? "Excellent fit" : score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
-                  fitReason: (score: number) =>
-                    score >= 8 ? "Volatility Seekers will be captivated by this game" :
-                    score >= 6 ? "This game appeals to Volatility-Seeking players" :
-                    score >= 4 ? "Missing elements that Volatility Seekers crave" :
-                    "This game doesn't meet Volatility-Seeker expectations",
-                },
-              ].map(arch => {
-                const isExpanded = expandedArchetype === arch.id;
-                return (
-                  <button
-                    key={arch.id}
-                    onClick={() => setExpandedArchetype(isExpanded ? null : arch.id)}
-                    className="group rounded-2xl border-2 bg-card p-6 text-left transition-all duration-200 hover:shadow-lg active:scale-[0.98]"
-                    style={{
-                      borderColor: isExpanded ? arch.primaryColor : "hsl(var(--border))",
-                      backgroundColor: isExpanded ? arch.lightColor : "hsl(var(--card))",
-                    }}
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-start gap-3 flex-1">
-                        <div className="pt-0.5">
-                          {arch.icon && ArchetypeIcons[arch.icon as keyof typeof ArchetypeIcons](arch.primaryColor)}
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-lg leading-tight">{arch.name}</h4>
-                          <p className="text-xs text-muted-foreground mt-0.5 font-medium">
-                            {arch.fitLabel(arch.fitScore)}
-                          </p>
-                        </div>
-                      </div>
-                      <div
-                        className="flex flex-col items-center justify-center rounded-xl p-4 min-w-[90px] text-center"
-                        style={{ backgroundColor: arch.primaryColor }}
-                      >
-                        <p className="text-3xl font-black text-white tabular-nums">
-                          {arch.fitScore.toFixed(1)}
-                        </p>
-                        <p className="text-xs font-bold text-white/90 mt-0.5">Fit Score</p>
-                      </div>
-                    </div>
-
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                      {arch.description}
-                    </p>
-
-                    <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="text-xs font-semibold text-muted-foreground">Session Depth</p>
-                        <p className="text-xs font-bold" style={{ color: arch.primaryColor }}>
-                          {arch.survivalAt.spin50}% active @ spin 50
-                        </p>
-                      </div>
-                      <div className="h-3 rounded-full bg-secondary overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${Math.max(30, Math.min(100, arch.survivalAt.spin50))}%`,
-                            backgroundColor: arch.primaryColor,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: arch.primaryColor }}
-                      />
-                      <p className="text-xs font-semibold" style={{ color: arch.darkColor }}>
-                        {arch.fitReason(arch.fitScore)}
-                      </p>
-                    </div>
-
-                    <p className="text-xs text-muted-foreground mt-3 pt-3 border-t border-border/50 group-hover:text-foreground transition-colors">
-                      {isExpanded ? "Click to collapse details" : "Click to view pressure points & survival data"}
-                    </p>
-
-                    {isExpanded && (
-                      <div className="mt-6 pt-6 border-t-2 space-y-5" style={{ borderTopColor: arch.primaryColor }}>
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                            Survival Curve
-                          </p>
-                          <div className="grid grid-cols-4 gap-2">
-                            {[
-                              { label: "Spin 10", val: arch.survivalAt.spin10 },
-                              { label: "Spin 30", val: arch.survivalAt.spin30 },
-                              { label: "Spin 50", val: arch.survivalAt.spin50 },
-                              { label: "Spin 100", val: arch.survivalAt.spin100 },
-                            ].map(pt => (
-                              <div
-                                key={pt.label}
-                                className="rounded-lg p-3 text-center border-2"
-                                style={{
-                                  borderColor: arch.lightColor,
-                                  backgroundColor: arch.lightColor,
-                                }}
-                              >
-                                <p className="text-2xl font-black tabular-nums" style={{ color: arch.primaryColor }}>
-                                  {pt.val}%
-                                </p>
-                                <p className="text-xs font-medium text-muted-foreground mt-1">{pt.label}</p>
-                              </div>
-                            ))}
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
-                            Percentage of {arch.name}s still actively playing at that spin count. Higher = more engaged.
-                          </p>
-                        </div>
-
-                        <div>
-                          <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-3">
-                            Why They Might Exit
-                          </p>
-                          <ul className="space-y-2.5">
-                            {arch.pressures.map((p, pi) => (
-                              <li key={pi} className="flex items-start gap-3">
-                                <div
-                                  className="h-2 w-2 rounded-full mt-2 shrink-0"
-                                  style={{ backgroundColor: arch.primaryColor }}
-                                />
-                                <span className="text-sm text-muted-foreground leading-relaxed">{p}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-
-                        <div
-                          className="rounded-lg p-3 text-sm"
-                          style={{ backgroundColor: arch.lightColor }}
-                        >
-                          <p style={{ color: arch.darkColor, fontWeight: 600 }}>
-                            💡 Consider: {
-                              arch.id === "casual"
-                                ? "Reduce volatility or increase base game hit frequency to match expectations"
-                                : arch.id === "bonus"
-                                ? "Ensure feature trigger frequency aligns with player anticipation window (45 spins max)"
-                                : arch.id === "volatility"
-                                ? "Increase maximum win potential and volatility authenticity to attract high-variance players"
-                                : ""
-                            }
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Edge Case Archetypes — clearer visual separation */}
-            <div className="mt-8 rounded-2xl border-2 border-border/30 bg-secondary/10 p-6">
-              <div className="mb-5">
-                <h3 className="text-sm font-bold uppercase tracking-widest text-muted-foreground">
-                  📊 Niche Segments
-                </h3>
-                <p className="text-xs text-muted-foreground mt-1">
-                  These archetypes represent smaller but important player segments. Review their fit scores if targeting these audiences.
-                </p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-6">
+              {/* Archetype Legend + Quick Fit Assessment */}
+              <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-3">
                 {[
                   {
-                    id: "budget",
-                    name: "Budget-Constrained",
-                    emoji: null as string | null,
-                    icon: "budget",
-                    description: "Strict bankroll limits (5–10× bet), low loss tolerance (22%), exits after 7 dead spins",
-                    primaryColor: "#7B8C6F",
-                    lightColor: "#F0F2ED",
-                    darkColor: "#3D4538",
+                    name: "Casual Player",
+                    color: "#5B9F8B",
                     fitScore: (() => {
-                      const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
-                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
-                      return Math.max(2, Math.min(9, vol + bgt));
+                      const vol = game.volatility === "Low" ? 9 : game.volatility === "Medium" ? 7 : game.volatility === "High" ? 5 : 2;
+                      const fdi = results.inputMetrics.featureDependencyIndex > 0.65 ? -2 : 0;
+                      return Math.max(2, Math.min(10, vol + fdi));
                     })(),
-                    fitLabel: (score: number) => score >= 7 ? "Good fit" : score >= 5 ? "Moderate fit" : "Challenging",
+                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
                   },
                   {
-                    id: "progress",
-                    name: "Progress-Oriented",
-                    emoji: null as string | null,
-                    icon: "progress",
-                    description: "Value achievement & cross-session goals, moderate loss tolerance (58%), need progression mechanics",
-                    primaryColor: "#4A7BA7",
-                    lightColor: "#EEF2F8",
-                    darkColor: "#1F3A52",
+                    name: "Bonus-Seeking Player",
+                    color: "#3D6955",
                     fitScore: (() => {
-                      const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
-                      return Math.max(3, Math.min(9, 5 + hasProgress));
+                      const fdi = results.inputMetrics.featureDependencyIndex >= 0.55 && results.inputMetrics.featureDependencyIndex <= 0.75 ? 9 : 6;
+                      const vol = game.volatility === "High" || game.volatility === "Very High" ? 1 : 0;
+                      return Math.max(4, Math.min(10, fdi + vol));
                     })(),
-                    fitLabel: (score: number) => score >= 7 ? "Good fit" : score >= 5 ? "Moderate fit" : "Challenging",
+                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
+                  },
+                  {
+                    name: "Volatility-Seeking Player",
+                    color: "#2E8950",
+                    fitScore: (() => {
+                      const vol = game.volatility === "Very High" ? 10 : game.volatility === "High" ? 8 : 4;
+                      const topWin = game.topWin >= 5000 ? 1 : -2;
+                      return Math.max(3, Math.min(10, vol + topWin));
+                    })(),
+                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
                   },
                 ].map(arch => (
-                  <div
-                    key={arch.id}
-                    className="rounded-xl border-2 bg-card p-4 hover:shadow-md transition-all"
-                    style={{
-                      borderColor: arch.lightColor,
-                      backgroundColor: arch.lightColor,
-                    }}
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start gap-2">
-                        <div className="pt-0.5">
-                          {arch.icon && ArchetypeIcons[arch.icon as keyof typeof ArchetypeIcons](arch.primaryColor)}
-                        </div>
-                        <div>
-                          <h5 className="font-bold text-sm">{arch.name}</h5>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {arch.fitLabel(arch.fitScore)}
-                          </p>
-                        </div>
-                      </div>
-                      <div
-                        className="rounded-lg px-3 py-2 text-center"
-                        style={{ backgroundColor: arch.primaryColor }}
-                      >
-                        <p className="text-2xl font-black text-white tabular-nums">
-                          {arch.fitScore.toFixed(1)}
-                        </p>
+                  <div key={arch.name} className="rounded-lg border p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: arch.color }} />
+                      <div>
+                        <p className="text-sm font-semibold">{arch.name}</p>
+                        <p className="text-xs text-muted-foreground">{arch.fit(arch.fitScore)}</p>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{arch.description}</p>
+                    <div className="text-right">
+                      <p className="text-lg font-bold tabular-nums" style={{ color: arch.color }}>
+                        {arch.fitScore.toFixed(1)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Fit</p>
+                    </div>
                   </div>
                 ))}
               </div>
-            </div>
 
-            {/* Actionable summary */}
-            <div className="mt-8 rounded-xl border p-5" style={{ backgroundColor: "#E8F4EE", borderColor: "#3D6955" }}>
-              <div className="flex items-start gap-3">
-                <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="14" cy="14" r="12" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-                  <circle cx="14" cy="14" r="8" stroke="hsl(var(--primary))" strokeWidth="1.5" />
-                  <circle cx="14" cy="14" r="4" fill="hsl(var(--primary))" />
-                </svg>
-                <div>
-                  <p className="text-sm font-bold text-foreground mb-2">Next Steps</p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Focus on the archetype(s) with the highest fit scores — these are your natural audience. For archetypes scoring below 5, consider structural adjustments (volatility, feature pacing, base game hit rate) or accept a narrower target market. Click core archetype cards to explore pressure points and survival data.
-                  </p>
+              {/* Main Chart — Session Survival */}
+              <div className="rounded-lg border bg-card p-5">
+                <div className="h-[320px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={behavioralSimulation.survivalData}
+                      margin={{ top: 5, right: 30, left: 0, bottom: 30 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis
+                        dataKey="spin"
+                        label={{
+                          value: "Spin Count",
+                          position: "insideBottom",
+                          offset: -20,
+                          style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 },
+                        }}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                      />
+                      <YAxis
+                        domain={[0, 100]}
+                        label={{
+                          value: "% Sessions Active",
+                          angle: -90,
+                          position: "insideLeft",
+                          offset: 10,
+                          style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 },
+                        }}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                          fontSize: 12,
+                        }}
+                        formatter={(value: number) => [`${value}%`, undefined]}
+                      />
+                      <Legend
+                        wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
+                        formatter={(value) => (
+                          <span style={{ color: "hsl(var(--foreground))" }}>{value}</span>
+                        )}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="casual_survival"
+                        name="Casual Player"
+                        stroke="#5B9F8B"
+                        strokeWidth={2.5}
+                        dot={{ r: 3 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="bonus_survival"
+                        name="Bonus-Seeking Player"
+                        stroke="#3D6955"
+                        strokeWidth={2.5}
+                        dot={{ r: 3 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="volatility_survival"
+                        name="Volatility-Seeking Player"
+                        stroke="#2E8950"
+                        strokeWidth={2.5}
+                        dot={{ r: 3 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
                 </div>
+              </div>
+
+              {/* Key Insights */}
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  {
+                    title: "Early Exits (Spins 0–30)",
+                    description: "Casual players drop fastest here due to dead spin clusters. Budget-Constrained players rarely make it past spin 20.",
+                    color: "#5B9F8B",
+                  },
+                  {
+                    title: "Mid-Session (Spins 30–70)",
+                    description: "Bonus-Seeking players stay engaged hunting for features. Volatility Seekers push past 50 spins. This is your feature trigger window.",
+                    color: "#3D6955",
+                  },
+                  {
+                    title: "Late Sessions (Spins 70+)",
+                    description: "Only Volatility Seekers make it here. If your max win or feature payouts disappoint, they exit. Retention collapses here for others.",
+                    color: "#2E8950",
+                  },
+                ].map((phase, i) => (
+                  <div
+                    key={i}
+                    className="rounded-lg border p-4"
+                    style={{
+                      backgroundColor: `${phase.color}08`,
+                      borderColor: `${phase.color}30`,
+                    }}
+                  >
+                    <p className="text-xs font-bold uppercase tracking-widest mb-2" style={{ color: phase.color }}>
+                      {phase.title}
+                    </p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{phase.description}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Edge Cases Callout */}
+              <div className="rounded-lg border border-border/30 bg-secondary/10 p-4">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                  📊 Niche Segments (Budget-Constrained, Progress-Oriented)
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Budget-Constrained players exit before spin 10 if volatility is high or hit rate is low. Progress-Oriented players persist longer if the game includes collection mechanics or unlockables. These curves aren't shown above but are factored into the fit scores.
+                </p>
               </div>
             </div>
           </SectionCard>
