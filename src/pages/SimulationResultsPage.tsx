@@ -432,7 +432,8 @@ export default function SimulationResultsPage() {
                 {
                   id: "casual",
                   name: "Casual Player",
-                  emoji: "😊",
+                  emoji: null as string | null,
+                  icon: "casual",
                   description: "Sessions: 8–12 min, Loss tolerance: 40%, Exits after 8 dead spins",
                   primaryColor: "hsl(186,70%,45%)",
                   lightColor: "hsl(186,70%,92%)",
