@@ -130,21 +130,71 @@ function buildStaticAnalysis(game: GameConcept, matches: MatchedGame[], saturati
     inferredVolatility: game.volatility || "Medium",
   };
 
-  const similarGames: SimilarGameEntry[] = top4.map(g => ({
-    name: g.name,
-    provider: g.provider,
-    releaseYear: g.releaseYear,
-    coreMechanics: g.gameplayStructures.join(", "),
-    marketPresence: g.marketPresence,
-    matchScore: g.matchScore,
-  }));
+  const inputFeatsNorm = fNames.map(f => f.toLowerCase());
+  const inputThemesNorm = (game.targetMarkets?.[0] ?? "").toLowerCase();
+
+  const similarGames: SimilarGameEntry[] = top4.map(g => {
+    const refFeatsNorm = g.features.map(f => f.toLowerCase());
+
+    // Per-dimension scoring
+    const gtNorm = (game.gameType || "").toLowerCase();
+    const structMatch = g.gameplayStructures.some(s => s.toLowerCase().includes(gtNorm) || gtNorm.includes(s.toLowerCase()));
+    const mechanicsScore = structMatch ? 100 : (g.gameplayStructures.some(s => s.toLowerCase().includes("pay")) && gtNorm.includes("pay")) ? 60 : 20;
+
+    const refThemes = g.themeCategories.map(t => t.toLowerCase());
+    const themeKeywords = inputThemesNorm.split(/[\s,]+/).filter(Boolean);
+    const themeHits = themeKeywords.length > 0
+      ? refThemes.filter(t => themeKeywords.some(k => t.includes(k) || k.includes(t))).length
+      : 0;
+    const themeScore = themeKeywords.length > 0
+      ? Math.min(100, Math.round((themeHits / Math.max(themeKeywords.length, 1)) * 100))
+      : Math.min(100, Math.round(g.matchScore * 0.8));
+
+    const featureHits = inputFeatsNorm.filter(f => refFeatsNorm.some(rf => rf.includes(f) || f.includes(rf))).length;
+    const featureScore = inputFeatsNorm.length > 0
+      ? Math.min(100, Math.round((featureHits / Math.max(inputFeatsNorm.length, 1)) * 100))
+      : 0;
+
+    const volTier: Record<string, number> = { "low": 0, "medium": 1, "high": 2, "very high": 3 };
+    const inputVol = volTier[(game.volatility || "medium").toLowerCase()] ?? 1;
+    const refVol = volTier[(g.volatility || "Medium").toLowerCase()] ?? 1;
+    const volatilityScore = Math.max(0, 100 - Math.abs(inputVol - refVol) * 40);
+
+    // Feature comparison
+    const sharedFeatures = inputFeatsNorm
+      .filter(f => refFeatsNorm.some(rf => rf.includes(f) || f.includes(rf)))
+      .map(f => fNames[inputFeatsNorm.indexOf(f)] || f);
+    const missingFeatures = inputFeatsNorm
+      .filter(f => !refFeatsNorm.some(rf => rf.includes(f) || f.includes(rf)))
+      .map(f => fNames[inputFeatsNorm.indexOf(f)] || f);
+    const uniqueFeatures = refFeatsNorm
+      .filter(rf => !inputFeatsNorm.some(f => f.includes(rf) || rf.includes(f)))
+      .map(rf => g.features[refFeatsNorm.indexOf(rf)] || rf);
+
+    return {
+      name: g.name,
+      provider: g.provider,
+      releaseYear: g.releaseYear,
+      coreMechanics: g.gameplayStructures.join(", "),
+      marketPresence: g.marketPresence,
+      matchScore: g.matchScore,
+      themeScore,
+      mechanicsScore,
+      featureScore,
+      volatilityScore,
+      sharedFeatures,
+      missingFeatures: missingFeatures.slice(0, 5),
+      uniqueFeatures: uniqueFeatures.slice(0, 5),
+    };
+  });
 
   const similarityMatrix: SimilarityMatrix = {
-    games: top3.map(g => ({
+    games: similarGames.slice(0, 3).map(g => ({
       name: g.name,
-      themeScore: Math.min(100, Math.round(g.matchScore * 0.9)),
-      mechanicsScore: Math.min(100, Math.round(g.matchScore * 1.05)),
-      featureScore: Math.min(100, Math.round(g.matchScore * 0.8)),
+      themeScore: g.themeScore,
+      mechanicsScore: g.mechanicsScore,
+      featureScore: g.featureScore,
+      volatilityScore: g.volatilityScore,
     })),
   };
 
