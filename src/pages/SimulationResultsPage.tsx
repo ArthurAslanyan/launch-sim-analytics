@@ -390,7 +390,7 @@ export default function SimulationResultsPage() {
                               <p className="text-xs font-semibold text-muted-foreground mb-1.5">Your Concept Has (They Don't)</p>
                               <div className="flex flex-wrap gap-1">
                                 {g.missingFeatures.map((f, fi) => (
-                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-xs text-blue-700 dark:text-blue-400">
+                                  <span key={fi} className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs" style={{ backgroundColor: "#EEF2F8", borderColor: "#4A7BA7", color: "#4A7BA7" }}>
                                     <Zap className="h-3 w-3" /> {f}
                                   </span>
                                 ))}
