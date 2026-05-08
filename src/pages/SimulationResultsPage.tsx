@@ -688,9 +688,9 @@ export default function SimulationResultsPage() {
                     emoji: null as string | null,
                     icon: "progress",
                     description: "Value achievement & cross-session goals, moderate loss tolerance (58%), need progression mechanics",
-                    primaryColor: "hsl(210,80%,50%)",
-                    lightColor: "hsl(210,80%,92%)",
-                    darkColor: "hsl(210,80%,30%)",
+                    primaryColor: "#4A7BA7",
+                    lightColor: "#EEF2F8",
+                    darkColor: "#1F3A52",
                     fitScore: (() => {
                       const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
                       return Math.max(3, Math.min(9, 5 + hasProgress));
