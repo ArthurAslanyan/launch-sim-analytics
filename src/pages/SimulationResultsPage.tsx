@@ -462,9 +462,9 @@ export default function SimulationResultsPage() {
                   emoji: null as string | null,
                   icon: "bonus",
                   description: "Sessions: 12–18 min, Loss tolerance: 68%, Expects features every 45 spins",
-                  primaryColor: "hsl(160,65%,42%)",
-                  lightColor: "hsl(160,65%,92%)",
-                  darkColor: "hsl(160,65%,22%)",
+                  primaryColor: "#3D6955",
+                  lightColor: "#EBF1ED",
+                  darkColor: "#1D3D2D",
                   survivalAt: { spin10: 98, spin30: 92, spin50: 82, spin100: 65 },
                   pressures: [
                     "Feature trigger frequency — waiting too long kills motivation",
