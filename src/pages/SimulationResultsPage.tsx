@@ -172,8 +172,6 @@ export default function SimulationResultsPage() {
   const [results, setResults] = useState<SimulationResults | null>(null);
   const [market, setMarket] = useState<MarketAnalysis | null>(null);
   const [marketLoading, setMarketLoading] = useState(false);
-  const [showAllArchetypes, setShowAllArchetypes] = useState(false);
-  const [expandedArchetype, setExpandedArchetype] = useState<string | null>(null);
 
   useEffect(() => {
     try {
