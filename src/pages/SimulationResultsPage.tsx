@@ -489,9 +489,9 @@ export default function SimulationResultsPage() {
                   emoji: null as string | null,
                   icon: "volatility",
                   description: "Sessions: 15–25 min, Loss tolerance: 85%, Expects 12×+ feature wins",
-                  primaryColor: "hsl(120,70%,48%)",
-                  lightColor: "hsl(120,70%,92%)",
-                  darkColor: "hsl(120,70%,28%)",
+                  primaryColor: "#2E8950",
+                  lightColor: "#E8F4EE",
+                  darkColor: "#145230",
                   survivalAt: { spin10: 99, spin30: 95, spin50: 88, spin100: 72 },
                   pressures: [
                     "Top win potential — games with <5000× max win feel underwhelming",
