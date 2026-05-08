@@ -562,7 +562,7 @@ export default function SimulationResultsPage() {
                     color: "hsl(40,80%,52%)",
                     fitScore: (() => {
                       const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
-                      const bgt = game.baseGameRtp < 0.45 ? -3 : 0;
+                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
                       return Math.max(2, Math.min(9, vol + bgt));
                     })(),
                   },
