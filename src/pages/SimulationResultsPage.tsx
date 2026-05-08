@@ -129,6 +129,41 @@ function PresenceBadge({ level }: { level: string }) {
   return <span className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${cls}`}>{level}</span>;
 }
 
+// Minimal Archetype Icons
+const ArchetypeIcons = {
+  casual: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="8" r="3.5" stroke={color} strokeWidth="1.5" />
+      <path d="M14 12V20M8 15C8 15 8 18 14 18C20 18 20 15 20 15" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  bonus: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="10" stroke={color} strokeWidth="1.5" />
+      <path d="M14 9V19M9 14H19" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  volatility: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="6,18 10,10 14,15 18,8 22,16" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <line x1="18" y1="8" x2="22" y2="4" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  ),
+  budget: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="6" y="8" width="16" height="12" rx="1.5" stroke={color} strokeWidth="1.5" />
+      <line x1="14" y1="8" x2="14" y2="20" stroke={color} strokeWidth="1.5" />
+      <circle cx="14" cy="14" r="1.5" fill={color} />
+    </svg>
+  ),
+  progress: (color: string) => (
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polyline points="8,18 12,12 16,16 20,8" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18,8H22V12" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+};
+
 // ─── Main Page ───────────────────────────────────────────────
 
 export default function SimulationResultsPage() {
