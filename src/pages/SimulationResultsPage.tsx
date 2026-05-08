@@ -435,9 +435,9 @@ export default function SimulationResultsPage() {
                   emoji: null as string | null,
                   icon: "casual",
                   description: "Sessions: 8–12 min, Loss tolerance: 40%, Exits after 8 dead spins",
-                  primaryColor: "hsl(186,70%,45%)",
-                  lightColor: "hsl(186,70%,92%)",
-                  darkColor: "hsl(186,70%,25%)",
+                  primaryColor: "#5B9F8B",
+                  lightColor: "#E8F3F0",
+                  darkColor: "#2D5047",
                   survivalAt: { spin10: 95, spin30: 85, spin50: 72, spin100: 48 },
                   pressures: [
                     "Dead spin frequency — too many non-wins exhaust bankroll",
