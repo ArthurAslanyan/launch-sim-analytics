@@ -1065,9 +1065,18 @@ export function computePerformanceScore(
   const featureEncounterRate = Math.max(10, Math.min(90,
     100 - (metrics.featureDependencyIndex * 40) - (earlyRiskScore * 0.3)
   ));
+  const fdiBonus = (() => {
+    const fdi = metrics.featureDependencyIndex;
+    if (fdi >= 0.55 && fdi <= 0.75) return 3;
+    if (fdi >= 0.40 && fdi < 0.55) return 2;
+    if (fdi >= 0.30 && fdi < 0.40) return 1;
+    if (fdi > 0.75) return 1.5;
+    return 0.5;
+  })();
+
   const featureEfficiency = Math.round(Math.max(0, Math.min(10,
     (featureEncounterRate / 100) * 5 +
-    (metrics.featureDependencyIndex > 0.4 && metrics.featureDependencyIndex < 0.7 ? 3 : 1) +
+    fdiBonus +
     (game.features.length > 0 && game.features.length <= 3 ? 2 : 1)
   )) * 10) / 10;
 
