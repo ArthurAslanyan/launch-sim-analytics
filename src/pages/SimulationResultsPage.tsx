@@ -478,19 +478,18 @@ export default function SimulationResultsPage() {
                     fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
                   },
                 ].map(arch => (
-                  <div key={arch.name} className="rounded-lg border p-3 flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: arch.color }} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate">{arch.name}</p>
-                        <p className="text-xs text-muted-foreground">{arch.fit(arch.fitScore)}</p>
-                      </div>
+                  <div key={arch.name} className="rounded-lg border p-3 flex flex-col gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: arch.color }} />
+                      <p className="text-sm font-semibold leading-tight truncate" title={arch.name}>
+                        {arch.name.replace(" Player", "")}
+                      </p>
                     </div>
-                    <div className="text-right ml-2 shrink-0">
-                      <p className="text-lg font-bold tabular-nums" style={{ color: arch.color }}>
+                    <div className="flex items-end justify-between gap-2">
+                      <p className="text-xs text-muted-foreground truncate">{arch.fit(arch.fitScore)}</p>
+                      <p className="text-xl font-bold tabular-nums leading-none shrink-0" style={{ color: arch.color }}>
                         {arch.fitScore.toFixed(1)}
                       </p>
-                      <p className="text-xs text-muted-foreground">Fit</p>
                     </div>
                   </div>
                 ))}
