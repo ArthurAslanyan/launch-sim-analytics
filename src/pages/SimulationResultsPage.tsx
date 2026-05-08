@@ -734,7 +734,7 @@ export default function SimulationResultsPage() {
             </div>
 
             {/* Actionable summary */}
-            <div className="mt-8 rounded-xl border border-primary/30 bg-primary/5 p-5">
+            <div className="mt-8 rounded-xl border p-5" style={{ backgroundColor: "#E8F4EE", borderColor: "#3D6955" }}>
               <div className="flex items-start gap-3">
                 <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <circle cx="14" cy="14" r="12" stroke="hsl(var(--primary))" strokeWidth="1.5" />
