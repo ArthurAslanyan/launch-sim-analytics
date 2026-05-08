@@ -669,7 +669,8 @@ export default function SimulationResultsPage() {
                   {
                     id: "budget",
                     name: "Budget-Constrained",
-                    emoji: "💰",
+                    emoji: null as string | null,
+                    icon: "budget",
                     description: "Strict bankroll limits (5–10× bet), low loss tolerance (22%), exits after 7 dead spins",
                     primaryColor: "hsl(35,85%,52%)",
                     lightColor: "hsl(35,85%,92%)",
