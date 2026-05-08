@@ -386,10 +386,28 @@ export default function SimulationResultsPage() {
         {/* ────── Section 3 — Behavioral Simulation ────── */}
         {behavioralSimulation && (
           <SectionCard title="Session Survival by Player Archetype" icon={<Users className="h-5 w-5 text-primary" />}>
-            <p className="mb-4 text-sm text-muted-foreground">Deterministic decay model showing estimated session survival across player archetypes.</p>
+            <p className="mb-4 text-sm text-muted-foreground">
+              Session survival showing how likely each player type is to stay active across spin counts. Higher = more engaged players continuing to play.
+              {!showAllArchetypes && <span className="block mt-1 text-xs italic">Showing 3 core archetypes.</span>}
+            </p>
             <div className="h-[380px] w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={behavioralSimulation.survivalData} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+                <LineChart
+                  data={(() => {
+                    if (!behavioralSimulation) return [];
+                    return behavioralSimulation.survivalData.map(d => ({
+                      spin: d.spin,
+                      casual_survival: d.casual_survival,
+                      bonus_survival: d.bonus_survival,
+                      volatility_survival: d.volatility_survival,
+                      ...(showAllArchetypes ? {
+                        budget_survival: d.budget_survival,
+                        progress_survival: d.progress_survival,
+                      } : {}),
+                    }));
+                  })()}
+                  margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+                >
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                   <XAxis dataKey="spin" label={{ value: "Spin Count", position: "insideBottom", offset: -2, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
                   <YAxis domain={[0, 100]} label={{ value: "% Sessions Active", angle: -90, position: "insideLeft", offset: 10, style: { fill: "hsl(var(--muted-foreground))", fontSize: 12 } }} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }} />
@@ -398,14 +416,31 @@ export default function SimulationResultsPage() {
                     wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
                     iconSize={10}
                     formatter={(value) => <span style={{ color: "hsl(var(--foreground))", marginRight: 8 }}>{value}</span>}
+                    verticalAlign="top"
+                    height={showAllArchetypes ? 60 : 40}
                   />
                   <Line type="monotone" dataKey="casual_survival" name="Casual Player" stroke="hsl(160,45%,30%)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="bonus_survival" name="Bonus-Seeking Player" stroke="hsl(160,40%,50%)" strokeWidth={2.5} dot={{ r: 3 }} />
                   <Line type="monotone" dataKey="volatility_survival" name="Volatility-Seeking Player" stroke="hsl(155,35%,70%)" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="budget_survival" name="Budget-Constrained Player" stroke="hsl(40,80%,52%)" strokeWidth={2} strokeDasharray="4 2" dot={{ r: 2.5 }} />
-                  <Line type="monotone" dataKey="progress_survival" name="Progress-Oriented Player" stroke="hsl(200,60%,50%)" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 2.5 }} />
+                  {showAllArchetypes && (
+                    <>
+                      <Line type="monotone" dataKey="budget_survival" name="Budget-Constrained Player" stroke="hsl(40,80%,52%)" strokeWidth={2} strokeDasharray="4 2" dot={{ r: 2.5 }} />
+                      <Line type="monotone" dataKey="progress_survival" name="Progress-Oriented Player" stroke="hsl(200,60%,50%)" strokeWidth={2} strokeDasharray="6 3" dot={{ r: 2.5 }} />
+                    </>
+                  )}
                 </LineChart>
               </ResponsiveContainer>
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAllArchetypes(!showAllArchetypes)}
+                className="gap-2"
+              >
+                {showAllArchetypes ? "← Show Core Archetypes Only" : "Show All 5 Archetypes →"}
+              </Button>
             </div>
 
             {/* Below chart: stop reasons + early fragility */}
