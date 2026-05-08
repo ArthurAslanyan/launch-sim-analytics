@@ -978,54 +978,73 @@ const POPULATION_LABELS: Record<PopulationRange, string> = {
 export function computeSimulatedPopulation(
   game: GameConcept,
   sessionBehavior: SessionBehavior,
-  metrics: ComputedInputMetrics
+  metrics: ComputedInputMetrics,
+  behavioralSim: BehavioralSimulation,
+  archetypeStopReasons: Array<{ archetype: string; [key: string]: any }>
 ): SimulatedPopulation {
   const range = game.populationRange ?? "10000-50000";
   const midpoint = POPULATION_MIDPOINTS[range];
   const rangeLabel = POPULATION_LABELS[range];
 
+  // ═══ Variance Multiplier ═══
+  // Add realistic ±5–10% variance so same concept produces different results on each run
+  const varianceMultiplier = 0.95 + Math.random() * 0.1; // 0.95 to 1.05
+
+  // ═══ Derive actual session metrics from simulation ═══
   const avgSessionMinutes = sessionBehavior.adjustedSessionLength;
-  const spinsPerMinute = 6;
+  const spinsPerMinute = 6; // industry standard
   const avgRoundsPerSession = Math.round(avgSessionMinutes * spinsPerMinute);
 
-  const avgSessionsPerPlayer = 1.2 + (1 - metrics.featureDependencyIndex) * 0.8;
+  // ═══ Compute rounds per unique player from survival curve ═══
+  // Use the median spin count where 50% of players are still active as a proxy
+  const survivalCurve = behavioralSim.survivalData;
+  const medianSpinIndex = survivalCurve.findIndex(d => d.casual_survival <= 50);
+  const medianSpinCount = medianSpinIndex >= 0 ? survivalCurve[medianSpinIndex].spin : 60;
+
+  // Average sessions per player: derived from how deep they go into the survival curve
+  const avgSessionsPerPlayer =
+    medianSpinCount > 70 ? 2.2 + (1 - metrics.featureDependencyIndex) * 0.8 :
+    medianSpinCount > 50 ? 1.8 + (1 - metrics.featureDependencyIndex) * 0.6 :
+    1.2 + (1 - metrics.featureDependencyIndex) * 0.4;
+
   const roundsPerUniquePlayer = Math.round(avgRoundsPerSession * avgSessionsPerPlayer);
 
-  const totalRounds = Math.round(midpoint * roundsPerUniquePlayer);
+  // ═══ Total rounds and bets ═══
+  const totalRounds = Math.round(midpoint * roundsPerUniquePlayer * varianceMultiplier);
   const totalBets = totalRounds;
 
-  // Early exit should consider archetype match with FDI
-  const fdi = metrics.featureDependencyIndex;
-  const archetype = game.features.some(f => f.type.includes("Hold") || f.type.includes("Respin"))
-    ? "Bonus-Seeking Player"
-    : "Casual Player"; // simplified archetype proxy for this calc
+  // ═══ Early Churn — derived from archetypeStopReasons ═══
+  let earlyChurnRate = 0;
+  if (archetypeStopReasons && archetypeStopReasons.length > 0) {
+    const avgBoredomRate = archetypeStopReasons.reduce((sum, arch) => {
+      return sum + (arch.boredomLowEngagement ?? arch.boredom ?? 0);
+    }, 0) / archetypeStopReasons.length;
+    earlyChurnRate = Math.round(avgBoredomRate * varianceMultiplier);
+  } else {
+    earlyChurnRate = Math.round((metrics.featureDependencyIndex > 0.65 ? 45 : 25) * varianceMultiplier);
+  }
 
-  const earlyExitRate = (() => {
-    if (archetype.includes("Bonus") || archetype.includes("Volatility")) {
-      if (fdi > 0.7 && sessionBehavior.adjustedSessionLength < 8) {
-        return 0.5 + (fdi - 0.7) * 0.4;
-      }
-      return 0.20 + fdi * 0.25;
-    }
-    if (fdi > 0.6) {
-      return 0.45 + (fdi - 0.6) * 0.5;
-    }
-    return 0.25 + fdi * 0.3;
-  })();
+  // ═══ D1 Retention — derived from survival at deep spins ═══
+  const deepSpinData = survivalCurve[survivalCurve.length - 1] || survivalCurve[survivalCurve.length - 2];
+  const casualDeepSurvival = deepSpinData?.casual_survival ?? 50;
+  const bonusDeepSurvival = deepSpinData?.bonus_survival ?? 65;
+  const volDeepSurvival = deepSpinData?.volatility_survival ?? 72;
 
-  const volMap: Record<string, number> = {
-    Low: 0.05, Medium: 0.08, High: 0.12, "Very High": 0.18
-  };
-  const volPenalty = volMap[game.volatility] ?? 0.1;
+  const d1Base = Math.round((casualDeepSurvival * 0.3 + bonusDeepSurvival * 0.4 + volDeepSurvival * 0.3) * 0.7);
+  const retentionD1 = Math.max(10, Math.min(85, Math.round(d1Base * varianceMultiplier)));
 
-  const retentionD1 = Math.max(15, Math.min(75,
-    Math.round((1 - earlyExitRate) * 100 - volPenalty * 100 + (avgSessionMinutes / 3))
-  ));
-  const retentionD7 = Math.max(5, Math.min(40,
-    Math.round(retentionD1 * (0.25 + (1 - metrics.featureDependencyIndex) * 0.2))
-  ));
+  // ═══ D7 Retention — derived from D1 with volatility decay ═══
+  const volDecayFactor =
+    game.volatility === "Very High" ? 0.15 :
+    game.volatility === "High" ? 0.25 :
+    game.volatility === "Medium" ? 0.35 :
+    0.45;
 
-  const churnRate = Math.round(earlyExitRate * 100);
+  const d7Base = Math.round(retentionD1 * (volDecayFactor + (1 - metrics.featureDependencyIndex) * 0.15));
+  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7Base * varianceMultiplier)));
+
+  // ═══ Churn Rate ═══
+  const churnRate = Math.max(15, Math.min(95, earlyChurnRate));
 
   return {
     rangeLabel,
