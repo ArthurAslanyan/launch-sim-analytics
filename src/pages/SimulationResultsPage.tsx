@@ -315,12 +315,12 @@ export default function SimulationResultsPage() {
               <div className="space-y-4">
                 {market.similarGames.slice(0, 4).map((g, i) => {
                   const overallPct = Math.round(g.matchScore);
-                  const overallColor = overallPct >= 75 ? "hsl(160,45%,35%)" : overallPct >= 50 ? "hsl(40,85%,52%)" : "hsl(0,65%,50%)";
+                  const overallColor = overallPct >= 75 ? "#2E8950" : overallPct >= 50 ? "#5B9F8B" : "#7B8C6F";
                   const dimensions = [
-                    { label: "Theme", score: g.themeScore, color: "hsl(270,50%,55%)" },
-                    { label: "Mechanics", score: g.mechanicsScore, color: "hsl(200,60%,50%)" },
-                    { label: "Features", score: g.featureScore, color: "hsl(160,45%,42%)" },
-                    { label: "Volatility", score: g.volatilityScore, color: "hsl(35,85%,52%)" },
+                    { label: "Theme", score: g.themeScore, color: "#5B9F8B" },
+                    { label: "Mechanics", score: g.mechanicsScore, color: "#3D6955" },
+                    { label: "Features", score: g.featureScore, color: "#2E8950" },
+                    { label: "Volatility", score: g.volatilityScore, color: "#4A7BA7" },
                   ];
                   return (
                     <div key={i} className="rounded-xl border bg-card p-5">
