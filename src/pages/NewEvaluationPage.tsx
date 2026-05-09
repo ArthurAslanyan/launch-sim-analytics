@@ -205,7 +205,7 @@ export default function NewEvaluationPage() {
   const [win100plus, setWin100plus] = useState("2");
 
   // Features
-  const [features, setFeatures] = useState<Feature[]>([createEmptyFeature()]);
+  const [features, setFeatures] = useState<ExtendedFeature[]>([createEmptyFeature()]);
 
   // Base Game Strength
   const [baseGameStrength, setBaseGameStrength] = useState("");
