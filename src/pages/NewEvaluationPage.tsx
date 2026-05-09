@@ -1978,8 +1978,13 @@ export default function NewEvaluationPage() {
         )}
 
         {/* Submit */}
-        <div className="flex justify-end border-t pt-6">
-          <Button type="submit" size="lg" disabled={isSubmitting || !gameName} className="min-w-48">
+        <div className="flex flex-col items-end gap-2 border-t pt-6">
+          {!isFormValid && validationMessage && (
+            <p className="text-xs text-[hsl(var(--badge-warning-text))]">
+              ⚠ {validationMessage}
+            </p>
+          )}
+          <Button type="submit" size="lg" disabled={isSubmitting || !isFormValid} className="min-w-48">
             {isSubmitting ? (
               <>
                 <span className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
