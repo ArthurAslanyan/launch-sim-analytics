@@ -49,6 +49,7 @@ const FEATURE_TRIGGER_OPTIONS = ["1 in 50", "1 in 75", "1 in 100", "1 in 150", "
 const FEATURE_TYPES_LIST = [
   "Free Spins", "Respins", "Hold & Spin", "Pick Bonus",
   "Progressive Jackpot", "Collection Mechanic", "Cascading Mode", "Bonus Buy Entry",
+  "Pot / Perceived Persistent", "Progress Meter / True Persistent",
 ];
 const FEATURE_VOL = ["Low", "Medium", "High"];
 const WILD_TYPES = ["Standard", "Expanding", "Sticky", "Multiplier", "Expanding + Multiplier", "Sticky + Multiplier"];
