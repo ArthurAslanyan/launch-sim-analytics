@@ -891,28 +891,37 @@ export default function SimulationResultsPage() {
                   <h4 className="text-sm font-semibold">Simulated Player Retention</h4>
                 </div>
                 <div style={{ width: "100%", height: 240 }}>
-                  <ResponsiveContainer>
-                    <BarChart
-                      data={[
-                        { label: "Session Start", value: 100 },
-                        { label: "Spin 30", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 30)?.casual_survival ?? 100) },
-                        { label: "Spin 60", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 60)?.casual_survival ?? 100) },
-                        { label: "D1 Return", value: results.simulatedPopulation.retentionD1 },
-                        { label: "D7 Return", value: results.simulatedPopulation.retentionD7 },
-                      ]}
-                      margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-                      <Tooltip formatter={(v: number) => [`${v}%`, "Players remaining"]} />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <Cell key={i} fill={i < 2 ? "hsl(160,45%,35%)" : "hsl(40,85%,52%)"} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {(() => {
+                    const retentionData = [
+                      { label: "Session Start", value: 100 },
+                      { label: "Spin 30", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 30)?.casual_survival ?? 100) },
+                      { label: "Spin 60", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 60)?.casual_survival ?? 100) },
+                      { label: "D1 Return", value: results.simulatedPopulation.retentionD1 },
+                      { label: "D7 Return", value: results.simulatedPopulation.retentionD7 },
+                    ];
+                    return (
+                      <ResponsiveContainer>
+                        <BarChart data={retentionData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                          <Tooltip formatter={(v: number) => [`${v}%`, "Players remaining"]} />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                            {retentionData.map((d, i) => (
+                              <Cell
+                                key={i}
+                                fill={
+                                  d.value >= 60 ? "#2E8950" :
+                                  d.value >= 30 ? "#E6A933" :
+                                  "#C84B4B"
+                                }
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   Session survival uses Casual Player archetype as the retention baseline. D1/D7 are structurally derived estimates.
