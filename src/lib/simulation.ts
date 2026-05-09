@@ -502,7 +502,7 @@ export function computeArchetypeStopReasons(
       time:       15 - bankrollPressure * 5,
     },
     {
-      archetype: "Progress-Oriented",
+      archetype: "Progress-Oriented Player",
       boredom:    28 + deadSpinPressure * 8 + (featurePressure * 5),
       loss:       30 + lossPressure * 8,
       bankroll:   18 + bankrollPressure * 5,
