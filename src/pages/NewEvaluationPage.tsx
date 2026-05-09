@@ -1461,7 +1461,7 @@ export default function NewEvaluationPage() {
                         </p>
                       </FormField>
                     </div>
-                    <FormField label="Progression Style">
+                    <FormField label={<span className="inline-flex items-center gap-1.5">Progression Style <Tip text="Single Threshold = one final reward when the meter fills. Multi-Threshold = multiple milestones along the way, each granting an upgrade." /></span>}>
                       <div className="flex gap-4">
                         <label className="flex items-center gap-2 cursor-pointer">
                           <input
