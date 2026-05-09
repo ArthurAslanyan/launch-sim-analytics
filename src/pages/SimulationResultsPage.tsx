@@ -463,7 +463,8 @@ export default function SimulationResultsPage() {
                     color: "#7B8C6F",
                     fitScore: (() => {
                       const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
-                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
+                      // baseGameRtp is stored as percentage (e.g., 45 for 45%), not a decimal ratio
+                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 45 ? -3 : 0;
                       return Math.max(2, Math.min(9, vol + bgt));
                     })(),
                     fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
