@@ -810,7 +810,7 @@ export interface BehavioralSimulation {
 }
 
 export function computeBehavioralSimulation(game: GameConcept): BehavioralSimulation {
-  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, "Medium-High": 0.65, High: 0.8, "Very High": 1.0 };
+  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, High: 0.8, "Very High": 1.0 };
   const hitScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, High: 0.7 };
 
   function sdToScore(sd: number): number {
