@@ -107,7 +107,7 @@ export interface GameConcept {
   maxExposureCategory: string;
   rtpBreakdown: RtpBreakdown;
   winDistribution: WinDistribution;
-  features: Feature[];
+  features: ExtendedFeature[];
   baseGameStrength: string;
   averageBaseWin: number;
   deadSpinFrequency: string;
