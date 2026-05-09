@@ -2,8 +2,14 @@
 // Endpoint: https://api.slotcatalog.com/api/v1.0/getGamesData
 // Returns top-ranked live games. Merged with static reference DB.
 
-const API_URL =
-  "https://api.slotcatalog.com/api/v1.0/getGamesData?clientId=1030&token=efouGHBrUndOUsTrYaRDitackSITletH";
+// API token must be configured via environment variable VITE_SLOTCATALOG_TOKEN
+// in your Lovable environment settings or .env file
+const SLOTCATALOG_CLIENT_ID = import.meta.env.VITE_SLOTCATALOG_CLIENT_ID || "1030";
+const SLOTCATALOG_TOKEN = import.meta.env.VITE_SLOTCATALOG_TOKEN || "";
+
+const API_URL = SLOTCATALOG_TOKEN
+  ? `https://api.slotcatalog.com/api/v1.0/getGamesData?clientId=${SLOTCATALOG_CLIENT_ID}&token=${SLOTCATALOG_TOKEN}`
+  : "";
 
 const CACHE_KEY = "launchindex_slotcatalog_cache";
 const CACHE_TTL_MS = 1000 * 60 * 60 * 6; // 6 hours
