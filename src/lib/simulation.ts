@@ -474,7 +474,7 @@ export function computeArchetypeStopReasons(
 
   const archetypes = [
     {
-      archetype: "Casual",
+      archetype: "Casual Player",
       boredom:    50 + deadSpinPressure * 15,
       loss:       20 + lossPressure * 12,
       bankroll:   10 + bankrollPressure * 5,
