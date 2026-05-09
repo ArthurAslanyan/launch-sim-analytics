@@ -1427,7 +1427,8 @@ export default function NewEvaluationPage() {
                       />
                     </FormField>
                     <div className="grid gap-4 sm:grid-cols-2">
-                      <FormField label="Collection Positions Needed">
+                      <FormField label={<span className="inline-flex items-center gap-1.5">Collection Positions Needed <Tip text="Total collected symbols required to fill the meter and trigger the persistent reward." /></span>}>
+
                         <Input
                           type="number"
                           min="1"
