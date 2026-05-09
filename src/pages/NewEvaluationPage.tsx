@@ -1485,7 +1485,7 @@ export default function NewEvaluationPage() {
                               setFeatures(updated);
                             }}
                           />
-                          <span className="text-sm">Multi-Threshold (Tomb of Insanity style)</span>
+                          <span className="text-sm">Multi-Threshold</span>
                         </label>
                       </div>
                     </FormField>
