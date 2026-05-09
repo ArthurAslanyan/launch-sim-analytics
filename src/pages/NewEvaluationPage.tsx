@@ -630,12 +630,6 @@ export default function NewEvaluationPage() {
               </div>
             )}
           </FormField>
-
-          {(gameType === "Paylines" || gameType === "Payways") && (
-            <FormField label={waysLinesLabel}>
-              <Input type="number" min="1" value={waysOrLines} onChange={e => setWaysOrLines(e.target.value)} className="max-w-32" />
-            </FormField>
-          )}
         </CollapsibleSection>
 
         {/* SECTION 4 — Symbol Configuration */}
