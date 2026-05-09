@@ -483,86 +483,89 @@ export default function NewEvaluationPage() {
           </FormRow>
 
           {/* Dynamic Grid Preview */}
-          {showGridPreview && (
-            <div className="mt-6 rounded-lg border bg-card p-5">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-sm font-semibold">Grid Preview</h4>
-                <button
-                  type="button"
-                  onClick={() => setShowGridPreview(false)}
-                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  Hide
-                </button>
-              </div>
+          <div className="mt-6 rounded-lg border bg-card p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h4 className="text-sm font-semibold">Grid Preview</h4>
+              <button
+                type="button"
+                onClick={() => setShowGridPreview(v => !v)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showGridPreview ? "Hide" : "Show"}
+              </button>
+            </div>
 
-              <div className="overflow-auto">
-                <div className="inline-block">
-                  <div className="flex gap-0.5 mb-0.5 ml-12">
-                    {Array.from({ length: parseInt(gridColumns) || 0 }).map((_, colIdx) => (
-                      <div
-                        key={`col-header-${colIdx}`}
-                        className="w-8 h-8 flex items-center justify-center text-xs font-bold text-muted-foreground"
-                      >
-                        C{colIdx + 1}
+            {showGridPreview && (
+              <>
+                <div className="overflow-auto">
+                  <div className="inline-block">
+                    <div className="flex gap-0.5 mb-0.5 ml-12">
+                      {Array.from({ length: parseInt(gridColumns) || 0 }).map((_, colIdx) => (
+                        <div
+                          key={`col-header-${colIdx}`}
+                          className="w-8 h-8 flex items-center justify-center text-xs font-bold text-muted-foreground"
+                        >
+                          C{colIdx + 1}
+                        </div>
+                      ))}
+                    </div>
+
+                    {Array.from({ length: parseInt(gridRows) || 0 }).map((_, rowIdx) => (
+                      <div key={`row-${rowIdx}`} className="flex gap-0.5 mb-0.5 items-center">
+                        <div className="w-10 h-8 flex items-center justify-center text-xs font-bold text-muted-foreground border-r pr-2">
+                          R{rowIdx + 1}
+                        </div>
+                        <div className="flex gap-0.5">
+                          {Array.from({ length: parseInt(gridColumns) || 0 }).map((_, colIdx) => (
+                            <div
+                              key={`cell-${rowIdx}-${colIdx}`}
+                              className="w-8 h-8 rounded-sm border-2 transition-colors"
+                              style={{
+                                borderColor: "hsl(var(--border))",
+                                backgroundColor: "hsl(160,45%,35%,0.08)",
+                              }}
+                            />
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>
+                </div>
 
-                  {Array.from({ length: parseInt(gridRows) || 0 }).map((_, rowIdx) => (
-                    <div key={`row-${rowIdx}`} className="flex gap-0.5 mb-0.5 items-center">
-                      <div className="w-10 h-8 flex items-center justify-center text-xs font-bold text-muted-foreground border-r pr-2">
-                        R{rowIdx + 1}
-                      </div>
-                      <div className="flex gap-0.5">
-                        {Array.from({ length: parseInt(gridColumns) || 0 }).map((_, colIdx) => (
-                          <div
-                            key={`cell-${rowIdx}-${colIdx}`}
-                            className="w-8 h-8 rounded-sm border-2 transition-colors"
-                            style={{
-                              borderColor: "hsl(var(--border))",
-                              backgroundColor: "hsl(160,45%,35%,0.08)",
-                            }}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                <div className="mt-4 pt-4 border-t flex flex-wrap gap-6 text-xs">
+                  <div className="flex items-center gap-2">
+                    <div className="text-muted-foreground font-bold">R1, R2, R3...</div>
+                    <span className="text-muted-foreground">= Rows (vertical)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="text-muted-foreground font-bold">C1, C2, C3...</div>
+                    <span className="text-muted-foreground">= Columns (horizontal)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-6 h-6 rounded-sm border-2"
+                      style={{
+                        borderColor: "hsl(var(--border))",
+                        backgroundColor: "hsl(160,45%,35%,0.08)",
+                      }}
+                    />
+                    <span className="text-muted-foreground">= Symbol Position</span>
+                  </div>
                 </div>
-              </div>
 
-              <div className="mt-4 pt-4 border-t flex flex-wrap gap-6 text-xs">
-                <div className="flex items-center gap-2">
-                  <div className="text-muted-foreground font-bold">R1, R2, R3...</div>
-                  <span className="text-muted-foreground">= Rows (vertical)</span>
+                <div className="mt-3 p-2 rounded bg-secondary/30 text-xs text-muted-foreground">
+                  {(parseInt(gridColumns) || 0) > 0 && (parseInt(gridRows) || 0) > 0 ? (
+                    <>
+                      Your grid is <span className="font-bold text-foreground">{gridColumns} columns × {gridRows} rows</span> = <span className="font-bold text-foreground">{(parseInt(gridColumns) || 0) * (parseInt(gridRows) || 0)}</span> total symbol positions
+                    </>
+                  ) : (
+                    "Enter grid dimensions above to see preview"
+                  )}
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="text-muted-foreground font-bold">C1, C2, C3...</div>
-                  <span className="text-muted-foreground">= Columns (horizontal)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-6 h-6 rounded-sm border-2"
-                    style={{
-                      borderColor: "hsl(var(--border))",
-                      backgroundColor: "hsl(160,45%,35%,0.08)",
-                    }}
-                  />
-                  <span className="text-muted-foreground">= Symbol Position</span>
-                </div>
-              </div>
+              </>
+            )}
+          </div>
 
-              <div className="mt-3 p-2 rounded bg-secondary/30 text-xs text-muted-foreground">
-                {(parseInt(gridColumns) || 0) > 0 && (parseInt(gridRows) || 0) > 0 ? (
-                  <>
-                    Your grid is <span className="font-bold text-foreground">{gridColumns} columns × {gridRows} rows</span> = <span className="font-bold text-foreground">{(parseInt(gridColumns) || 0) * (parseInt(gridRows) || 0)}</span> total symbol positions
-                  </>
-                ) : (
-                  "Enter grid dimensions above to see preview"
-                )}
-              </div>
-            </div>
-          )}
 
           {gameType === "Paylines" && (
             <FormField label={<span className="inline-flex items-center gap-1.5">Number of Paylines * <Tip text="Standard 5×3: 20–40 paylines. Max theoretical for 5×3: 243." /></span>} required>
