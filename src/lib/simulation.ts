@@ -88,6 +88,20 @@ export interface WinDistribution {
   x100plus: number;
 }
 
+export interface GambleFeature {
+  enabled: boolean;
+  triggerMode: "Per-Win" | "Feature-End" | "Both";
+  styles: {
+    color: boolean;  // 50/50, 2× multiplier (Red/Black)
+    suit: boolean;   // 25%, 4× multiplier (Spade/Heart/Diamond/Club)
+  };
+  multiStep: {
+    enabled: boolean;
+    maxRounds?: number;
+    winCap?: number;
+  };
+}
+
 export interface GameConcept {
   gameName: string;
   targetMarkets: string[];
@@ -163,6 +177,7 @@ export interface GameConcept {
   // Session
   winPacing?: "Front-loaded" | "Even" | "Bonus-dependent";
   requiresSimulation?: boolean;
+  gambleFeature?: GambleFeature;
   populationRange?: PopulationRange;
   referenceGame?: string;
 }
@@ -306,6 +321,66 @@ export function selectArchetype(game: GameConcept, metrics: ComputedInputMetrics
   return {
     archetype: "Casual Player",
     reason: "Balanced profile with no dominant structural signal. Broad player appeal with casual-friendly characteristics.",
+  };
+}
+
+// ============================================
+// GAMBLE FEATURE BEHAVIORAL IMPACT
+// ============================================
+
+export interface GambleImpact {
+  archetypeFitAdjustments: Record<string, number>;
+  sessionVarianceMultiplier: number;
+  retentionD7Adjustment: number;
+  notes: string[];
+}
+
+export function computeGambleImpact(game: GameConcept): GambleImpact {
+  const gamble = game.gambleFeature;
+
+  if (!gamble || !gamble.enabled) {
+    return {
+      archetypeFitAdjustments: {},
+      sessionVarianceMultiplier: 1.0,
+      retentionD7Adjustment: 0,
+      notes: [],
+    };
+  }
+
+  const notes: string[] = [];
+  notes.push(`Gamble Feature enabled (${gamble.triggerMode} mode)`);
+
+  if (gamble.styles.color && gamble.styles.suit) {
+    notes.push("Both Color (50/50, 2×) and Suit (25%, 4×) gamble styles available");
+  } else if (gamble.styles.color) {
+    notes.push("Color gamble only (50/50, 2×)");
+  } else if (gamble.styles.suit) {
+    notes.push("Suit gamble only (25%, 4×)");
+  }
+
+  if (gamble.multiStep.enabled) {
+    const rounds = gamble.multiStep.maxRounds ? `${gamble.multiStep.maxRounds} max rounds` : "unlimited rounds";
+    const cap = gamble.multiStep.winCap ? `, capped at ${gamble.multiStep.winCap}×` : ", no win cap";
+    notes.push(`Multi-step gamble: ${rounds}${cap}`);
+  }
+
+  const archetypeFitAdjustments: Record<string, number> = {
+    "Volatility-Seeking Player": 1.5,
+    "Bonus-Seeking Player": 0.5,
+    "Casual Player": -1.0,
+    "Budget-Constrained Player": -2.0,
+    "Progress-Oriented Player": -0.5,
+    "Feature-Focused Player": 0.0,
+  };
+
+  const sessionVarianceMultiplier = 1.15;
+  const retentionD7Adjustment = -3;
+
+  return {
+    archetypeFitAdjustments,
+    sessionVarianceMultiplier,
+    retentionD7Adjustment,
+    notes,
   };
 }
 
@@ -1037,6 +1112,7 @@ export interface SimulationResults {
   simulatedPopulation: SimulatedPopulation;
   performanceScore: PerformanceScore;
   dataInterpretation: DataInterpretation[];
+  gambleImpact?: GambleImpact;
 }
 
 const POPULATION_MIDPOINTS: Record<PopulationRange, number> = {
@@ -1127,7 +1203,9 @@ export function computeSimulatedPopulation(
     0.45;
 
   const d7Base = Math.round(retentionD1 * (volDecayFactor + (1 - metrics.featureDependencyIndex) * 0.15));
-  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7Base * varianceMultiplier)));
+  const gambleImpact = computeGambleImpact(game);
+  const d7WithGamble = d7Base + gambleImpact.retentionD7Adjustment;
+  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7WithGamble * varianceMultiplier)));
 
   // ═══ Churn Rate ═══
   const churnRate = Math.max(15, Math.min(95, earlyChurnRate));
@@ -1463,6 +1541,7 @@ export function generateDataInterpretation(
 export function runSimulation(game: GameConcept): SimulationResults {
   const behavioralSimulation = computeBehavioralSimulation(game);
   const inputMetrics = computeInputMetrics(game);
+  const gambleImpact = computeGambleImpact(game);
   const archetypeSelection = selectArchetype(game, inputMetrics);
   const sessionBehavior = computeSessionBehavior(game, inputMetrics);
   const featureInteraction = computeFeatureInteraction(game, inputMetrics);
@@ -1542,5 +1621,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     simulatedPopulation,
     performanceScore,
     dataInterpretation,
+    gambleImpact,
   };
 }

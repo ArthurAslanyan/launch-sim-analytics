@@ -1010,6 +1010,86 @@ export default function SimulationResultsPage() {
           </SectionCard>
         )}
 
+        {/* ────── Gamble Feature Impact ────── */}
+        {results.gambleImpact && results.gambleImpact.notes.length > 0 && (
+          <SectionCard title="Gamble Feature Impact" icon={<Zap className="h-5 w-5 text-primary" />}>
+            <p className="text-sm text-muted-foreground mb-4">
+              Behavioral effect of the gamble feature on player archetypes and retention metrics.
+            </p>
+
+            <div className="grid gap-4 sm:grid-cols-2 mb-4">
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Configuration
+                </p>
+                <ul className="space-y-1.5">
+                  {results.gambleImpact.notes.map((note, i) => (
+                    <li key={i} className="text-sm flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span>{note}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Quantitative Impact
+                </p>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Session Variance</span>
+                    <span className="font-bold text-foreground">
+                      ×{results.gambleImpact.sessionVarianceMultiplier.toFixed(2)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">D7 Retention</span>
+                    <span className={cn(
+                      "font-bold",
+                      results.gambleImpact.retentionD7Adjustment >= 0 ? "text-green-600" : "text-red-600"
+                    )}>
+                      {results.gambleImpact.retentionD7Adjustment >= 0 ? "+" : ""}
+                      {results.gambleImpact.retentionD7Adjustment} pts
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Per-Archetype Fit Adjustment
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {Object.entries(results.gambleImpact.archetypeFitAdjustments).map(([archetype, adjustment]) => {
+                  if (adjustment === 0) return null;
+                  const isPositive = adjustment > 0;
+                  return (
+                    <div
+                      key={archetype}
+                      className={cn(
+                        "rounded-lg border p-3 flex items-center justify-between",
+                        isPositive ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5"
+                      )}
+                    >
+                      <span className="text-sm font-medium">
+                        {archetype.replace(" Player", "")}
+                      </span>
+                      <span className={cn(
+                        "text-sm font-bold tabular-nums",
+                        isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                      )}>
+                        {isPositive ? "+" : ""}{adjustment.toFixed(1)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </SectionCard>
+        )}
+
         {/* ────── Behavioral Insights (kept) ────── */}
         <SectionCard title="Behavioral Interpretation" icon={<Info className="h-5 w-5 text-primary" />}>
           <div className="space-y-3">
