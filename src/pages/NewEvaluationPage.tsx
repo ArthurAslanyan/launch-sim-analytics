@@ -459,13 +459,6 @@ export default function NewEvaluationPage() {
           icon={<Grid3X3 className="h-5 w-5" />}
           description="Defines the pay calculation model and determines whether analytical math or simulation is required."
         >
-          <div className="rounded-lg border-l-4 border-primary bg-primary/5 p-3 text-sm">
-            <p className="text-foreground/90">
-              <span className="font-medium">Lines & Ways</span> can be fully modelled analytically in Excel.{" "}
-              <span className="font-medium">Megaways, Cluster Pays, and Grid</span> require Monte Carlo simulation when cascades are enabled — analytical RTP can only be used as a no-cascade baseline.
-            </p>
-          </div>
-
           <FormField label="Game Type *" required>
             <SelectButtons options={GAME_TYPES} value={gameType} onChange={setGameType} />
           </FormField>
