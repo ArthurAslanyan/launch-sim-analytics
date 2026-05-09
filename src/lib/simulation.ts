@@ -495,7 +495,7 @@ export function computeArchetypeStopReasons(
       time:       12,
     },
     {
-      archetype: "Budget-Constrained",
+      archetype: "Budget-Constrained Player",
       boredom:    8 + deadSpinPressure * 5,
       loss:       22 + lossPressure * 15,
       bankroll:   55 + bankrollPressure * 10,
