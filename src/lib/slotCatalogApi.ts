@@ -229,6 +229,12 @@ interface CacheEntry {
 }
 
 export async function fetchLiveGames(): Promise<LiveReferenceGame[]> {
+  // If no API token configured, skip live fetch and use static data only
+  if (!SLOTCATALOG_TOKEN || !API_URL) {
+    console.warn("SlotCatalog API token not configured — using static reference data only. Set VITE_SLOTCATALOG_TOKEN environment variable.");
+    return [];
+  }
+
   try {
     const cached = sessionStorage.getItem(CACHE_KEY);
     if (cached) {
