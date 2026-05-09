@@ -219,6 +219,15 @@ export default function NewEvaluationPage() {
   // Special Mechanics
   const [specialMechanics, setSpecialMechanics] = useState<string[]>([]);
 
+  // Gamble Feature
+  const [gambleEnabled, setGambleEnabled] = useState(false);
+  const [gambleTriggerMode, setGambleTriggerMode] = useState<"Per-Win" | "Feature-End" | "Both">("Per-Win");
+  const [gambleColorEnabled, setGambleColorEnabled] = useState(true);
+  const [gambleSuitEnabled, setGambleSuitEnabled] = useState(false);
+  const [gambleMultiStepEnabled, setGambleMultiStepEnabled] = useState(false);
+  const [gambleMaxRounds, setGambleMaxRounds] = useState("");
+  const [gambleWinCap, setGambleWinCap] = useState("");
+
   // Design Intent
   const [primaryGoal, setPrimaryGoal] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
@@ -409,6 +418,19 @@ export default function NewEvaluationPage() {
       anteBetAvailable,
       winPacing: winPacing as GameConcept["winPacing"],
       requiresSimulation,
+      gambleFeature: {
+        enabled: gambleEnabled,
+        triggerMode: gambleTriggerMode,
+        styles: {
+          color: gambleColorEnabled,
+          suit: gambleSuitEnabled,
+        },
+        multiStep: {
+          enabled: gambleMultiStepEnabled,
+          maxRounds: gambleMaxRounds ? parseInt(gambleMaxRounds) : undefined,
+          winCap: gambleWinCap ? parseInt(gambleWinCap) : undefined,
+        },
+      },
       populationRange,
       referenceGame,
     };
@@ -1827,6 +1849,152 @@ export default function NewEvaluationPage() {
                 <span className="text-sm font-medium">{mech}</span>
               </label>
             ))}
+          </div>
+
+          {/* Gamble Feature */}
+          <div className="mt-6 rounded-lg border bg-secondary/10 p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h4 className="text-sm font-semibold flex items-center gap-2">
+                  <Zap className="h-4 w-4 text-primary" />
+                  Gamble Feature
+                </h4>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Allows players to risk wins for a chance to multiply them
+                </p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={gambleEnabled}
+                  onCheckedChange={(c) => setGambleEnabled(!!c)}
+                />
+                <span className="text-sm font-medium">Enable</span>
+              </label>
+            </div>
+
+            {gambleEnabled && (
+              <div className="space-y-4 pt-3 border-t">
+                <FormField label="Trigger Mode">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {(["Per-Win", "Feature-End", "Both"] as const).map(mode => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setGambleTriggerMode(mode)}
+                        className={cn(
+                          "rounded-lg border px-3 py-2 text-sm transition-colors text-left",
+                          gambleTriggerMode === mode
+                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                            : "border-border bg-card text-foreground hover:bg-secondary/50"
+                        )}
+                      >
+                        <div className="font-medium">{mode}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {mode === "Per-Win" && "After every base game win"}
+                          {mode === "Feature-End" && "After feature completion"}
+                          {mode === "Both" && "Per-win AND feature-end"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </FormField>
+
+                <FormField label="Available Gamble Styles">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <label className="flex items-start gap-3 rounded-lg border bg-card p-3 cursor-pointer hover:bg-secondary/30 transition-colors">
+                      <Checkbox
+                        checked={gambleColorEnabled}
+                        onCheckedChange={(c) => setGambleColorEnabled(!!c)}
+                      />
+                      <div>
+                        <div className="text-sm font-semibold">Color (Red/Black)</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          50/50 odds · 2× multiplier · Lower risk
+                        </div>
+                      </div>
+                    </label>
+
+                    <label className="flex items-start gap-3 rounded-lg border bg-card p-3 cursor-pointer hover:bg-secondary/30 transition-colors">
+                      <Checkbox
+                        checked={gambleSuitEnabled}
+                        onCheckedChange={(c) => setGambleSuitEnabled(!!c)}
+                      />
+                      <div>
+                        <div className="text-sm font-semibold">Suit (♠♥♦♣)</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          25% odds · 4× multiplier · Higher risk
+                        </div>
+                      </div>
+                    </label>
+                  </div>
+                  {!gambleColorEnabled && !gambleSuitEnabled && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
+                      ⚠ At least one gamble style should be enabled
+                    </p>
+                  )}
+                </FormField>
+
+                <FormField
+                  label={
+                    <span className="inline-flex items-center gap-1.5">
+                      Multi-Step Gamble
+                      <Tip text="Allow players to gamble winnings consecutively up to N rounds" />
+                    </span>
+                  }
+                >
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <Checkbox
+                      checked={gambleMultiStepEnabled}
+                      onCheckedChange={(c) => setGambleMultiStepEnabled(!!c)}
+                    />
+                    <span className="text-sm">Allow consecutive gambles</span>
+                  </label>
+
+                  {gambleMultiStepEnabled && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3 pl-6">
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground block mb-1">
+                          Max Rounds (leave empty for unlimited)
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="e.g., 5"
+                          value={gambleMaxRounds}
+                          onChange={(e) => setGambleMaxRounds(e.target.value)}
+                          className="max-w-32"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-muted-foreground block mb-1">
+                          Win Cap × bet (leave empty for no cap)
+                        </label>
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="e.g., 2500"
+                          value={gambleWinCap}
+                          onChange={(e) => setGambleWinCap(e.target.value)}
+                          className="max-w-32"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </FormField>
+
+                <div className="rounded-lg border-l-4 border-primary bg-primary/5 p-3 text-sm">
+                  <p className="font-semibold text-foreground mb-1">📊 Behavioral Impact Preview</p>
+                  <ul className="text-xs text-muted-foreground space-y-0.5">
+                    <li>• Volatility-Seeking players: +1.5 fit score</li>
+                    <li>• Bonus-Seeking players: +0.5 fit score</li>
+                    <li>• Casual players: −1.0 fit score</li>
+                    <li>• Budget-Constrained players: −2.0 fit score</li>
+                    <li>• Session variance: +15%</li>
+                    <li>• D7 retention: −3 percentage points</li>
+                  </ul>
+                </div>
+              </div>
+            )}
           </div>
         </CollapsibleSection>
 
