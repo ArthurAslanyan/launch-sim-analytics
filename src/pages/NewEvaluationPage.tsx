@@ -320,8 +320,8 @@ export default function NewEvaluationPage() {
 
   const addFeature = () => setFeatures([...features, createEmptyFeature()]);
   const removeFeature = (id: string) => { if (features.length > 1) setFeatures(features.filter(f => f.id !== id)); };
-  const updateFeature = (id: string, field: keyof Feature, value: string | number) => {
-    setFeatures(features.map(f => f.id === id ? { ...f, [field]: value } : f));
+  const updateFeature = (id: string, field: string, value: string | number) => {
+    setFeatures(features.map(f => f.id === id ? { ...f, [field]: value } as ExtendedFeature : f));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
