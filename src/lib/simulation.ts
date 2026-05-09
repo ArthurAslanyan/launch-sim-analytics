@@ -481,7 +481,7 @@ export function computeArchetypeStopReasons(
       time:       20 - deadSpinPressure * 5,
     },
     {
-      archetype: "Bonus-Seeking",
+      archetype: "Bonus-Seeking Player",
       boredom:    45 + featurePressure * 10,
       loss:       25 + lossPressure * 8,
       bankroll:   12 + bankrollPressure * 5,
