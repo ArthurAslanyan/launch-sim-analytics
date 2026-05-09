@@ -144,6 +144,7 @@ export default function NewEvaluationPage() {
   const [gameType, setGameType] = useState("");
   const [gridRows, setGridRows] = useState("3");
   const [gridColumns, setGridColumns] = useState("5");
+  const [showGridPreview, setShowGridPreview] = useState(true);
   const [waysOrLines, setWaysOrLines] = useState("243");
 
   // Structure (new)
