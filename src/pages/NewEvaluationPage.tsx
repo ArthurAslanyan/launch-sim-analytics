@@ -1119,6 +1119,642 @@ export default function NewEvaluationPage() {
                     </FormField>
                   </div>
                 )}
+                {feature.type === "Pot / Perceived Persistent" && (
+                  <div className="space-y-4 mt-4 p-4 rounded-lg border bg-secondary/10">
+                    <FormField label="Collector (what's being collected)">
+                      <Input
+                        placeholder="e.g., Coins, Fish, Scarabs"
+                        value={(feature as PersistentPotFeature).collector || ""}
+                        onChange={(e) => {
+                          const updated = [...features];
+                          (updated[index] as PersistentPotFeature).collector = e.target.value;
+                          setFeatures(updated);
+                        }}
+                      />
+                    </FormField>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <FormField label="Collection Positions Needed">
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="e.g., 15"
+                          value={(feature as PersistentPotFeature).collectionPositionsNeeded || ""}
+                          onChange={(e) => {
+                            const updated = [...features];
+                            (updated[index] as PersistentPotFeature).collectionPositionsNeeded = parseInt(e.target.value);
+                            setFeatures(updated);
+                          }}
+                        />
+                      </FormField>
+                      <FormField label="Avg Symbols Per Spin">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          placeholder="e.g., 2.5"
+                          value={(feature as PersistentPotFeature).averageSymbolsPerSpin || ""}
+                          onChange={(e) => {
+                            const updated = [...features];
+                            (updated[index] as PersistentPotFeature).averageSymbolsPerSpin = parseFloat(e.target.value);
+                            setFeatures(updated);
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {(feature as PersistentPotFeature).collectionPositionsNeeded && (feature as PersistentPotFeature).averageSymbolsPerSpin
+                            ? `Estimated trigger: every ${Math.ceil((feature as PersistentPotFeature).collectionPositionsNeeded / (feature as PersistentPotFeature).averageSymbolsPerSpin)} spins`
+                            : ""}
+                        </p>
+                      </FormField>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-sm font-semibold">Pots</h5>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const updated = [...features];
+                            const f = updated[index] as PersistentPotFeature;
+                            if (!f.pots) f.pots = [];
+                            f.pots.push({
+                              name: `Pot ${f.pots.length + 1}`,
+                              prizeType: "Instant Win",
+                              averageValue: 10,
+                            });
+                            setFeatures(updated);
+                          }}
+                        >
+                          + Add Pot
+                        </Button>
+                      </div>
+                      {((feature as PersistentPotFeature).pots || []).map((pot, potIndex) => (
+                        <div key={potIndex} className="p-3 rounded border bg-card space-y-3">
+                          <div className="flex items-center justify-between">
+                            <Input
+                              placeholder="Pot name (e.g., Mini, Major)"
+                              value={pot.name}
+                              onChange={(e) => {
+                                const updated = [...features];
+                                (updated[index] as PersistentPotFeature).pots[potIndex].name = e.target.value;
+                                setFeatures(updated);
+                              }}
+                              className="max-w-[200px]"
+                            />
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                const updated = [...features];
+                                (updated[index] as PersistentPotFeature).pots.splice(potIndex, 1);
+                                setFeatures(updated);
+                              }}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                          <FormField label="Prize Type">
+                            <select
+                              value={pot.prizeType}
+                              onChange={(e) => {
+                                const updated = [...features];
+                                (updated[index] as PersistentPotFeature).pots[potIndex].prizeType = e.target.value;
+                                setFeatures(updated);
+                              }}
+                              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                            >
+                              <option value="Instant Win">Instant Win</option>
+                              <option value="Free Spins">Free Spins</option>
+                              <option value="Hold & Spin">Hold & Spin</option>
+                              <option value="Respins">Respins</option>
+                              <option value="Wild Transforms">Wild Transforms</option>
+                              <option value="Multiplier Upgrade">Multiplier Upgrade</option>
+                              <option value="Grid Shuffle">Grid Shuffle</option>
+                              <option value="Symbol Upgrade">Symbol Upgrade</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </FormField>
+                          {(pot.prizeType === "Instant Win" || pot.prizeType === "Free Spins" || pot.prizeType === "Hold & Spin") && (
+                            <FormField label="Average Value (× bet)">
+                              <Input
+                                type="number"
+                                min="1"
+                                value={pot.averageValue || ""}
+                                onChange={(e) => {
+                                  const updated = [...features];
+                                  (updated[index] as PersistentPotFeature).pots[potIndex].averageValue = parseInt(e.target.value);
+                                  setFeatures(updated);
+                                }}
+                              />
+                            </FormField>
+                          )}
+                          {(pot.prizeType === "Free Spins" || pot.prizeType === "Hold & Spin" || pot.prizeType === "Respins") && (
+                            <FormField label={pot.prizeType === "Respins" ? "Number of Respins" : "Number of Spins"}>
+                              <Input
+                                type="number"
+                                min="1"
+                                value={pot.numberOfSpins || ""}
+                                onChange={(e) => {
+                                  const updated = [...features];
+                                  (updated[index] as PersistentPotFeature).pots[potIndex].numberOfSpins = parseInt(e.target.value);
+                                  setFeatures(updated);
+                                }}
+                              />
+                            </FormField>
+                          )}
+                          {pot.prizeType === "Wild Transforms" && (
+                            <>
+                              <FormField label="Number of Wilds Added">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={pot.numberOfWilds || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as PersistentPotFeature).pots[potIndex].numberOfWilds = parseInt(e.target.value);
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                              <FormField label="Duration (spins)">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={pot.duration || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as PersistentPotFeature).pots[potIndex].duration = parseInt(e.target.value);
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                            </>
+                          )}
+                          {pot.prizeType === "Multiplier Upgrade" && (
+                            <>
+                              <FormField label="Multiplier Value (e.g., 2, 5)">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={pot.multiplierValue || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as PersistentPotFeature).pots[potIndex].multiplierValue = parseInt(e.target.value);
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                              <FormField label="Duration (spins)">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={pot.duration || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as PersistentPotFeature).pots[potIndex].duration = parseInt(e.target.value);
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                            </>
+                          )}
+                          {pot.prizeType === "Grid Shuffle" && (
+                            <FormField label="Re-evaluation Count">
+                              <Input
+                                type="number"
+                                min="1"
+                                value={pot.reEvaluationCount || ""}
+                                onChange={(e) => {
+                                  const updated = [...features];
+                                  (updated[index] as PersistentPotFeature).pots[potIndex].reEvaluationCount = parseInt(e.target.value);
+                                  setFeatures(updated);
+                                }}
+                              />
+                            </FormField>
+                          )}
+                          {(pot.prizeType === "Symbol Upgrade" || pot.prizeType === "Other") && (
+                            <>
+                              <FormField label="Description">
+                                <Input
+                                  placeholder="Describe what this does"
+                                  value={pot.description || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as PersistentPotFeature).pots[potIndex].description = e.target.value;
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                              {pot.prizeType === "Symbol Upgrade" && (
+                                <FormField label="Duration (spins)">
+                                  <Input
+                                    type="number"
+                                    min="1"
+                                    value={pot.duration || ""}
+                                    onChange={(e) => {
+                                      const updated = [...features];
+                                      (updated[index] as PersistentPotFeature).pots[potIndex].duration = parseInt(e.target.value);
+                                      setFeatures(updated);
+                                    }}
+                                  />
+                                </FormField>
+                              )}
+                            </>
+                          )}
+                          {pot.prizeType === "Other" && (
+                            <FormField label="Impact Category">
+                              <select
+                                value={pot.impactCategory || ""}
+                                onChange={(e) => {
+                                  const updated = [...features];
+                                  (updated[index] as PersistentPotFeature).pots[potIndex].impactCategory = e.target.value;
+                                  setFeatures(updated);
+                                }}
+                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              >
+                                <option value="">Select category</option>
+                                <option value="Cash Prize">Cash Prize</option>
+                                <option value="Session Extension">Session Extension</option>
+                                <option value="Modifier">Modifier</option>
+                              </select>
+                            </FormField>
+                          )}
+                          {pot.prizeType === "Other" && pot.impactCategory === "Cash Prize" && (
+                            <FormField label="Average Value (× bet)">
+                              <Input
+                                type="number"
+                                min="1"
+                                value={pot.averageValue || ""}
+                                onChange={(e) => {
+                                  const updated = [...features];
+                                  (updated[index] as PersistentPotFeature).pots[potIndex].averageValue = parseInt(e.target.value);
+                                  setFeatures(updated);
+                                }}
+                              />
+                            </FormField>
+                          )}
+                          {pot.prizeType === "Other" && pot.impactCategory === "Session Extension" && (
+                            <FormField label="Session Extension (spins/respins)">
+                              <Input
+                                type="number"
+                                min="1"
+                                value={pot.numberOfSpins || ""}
+                                onChange={(e) => {
+                                  const updated = [...features];
+                                  (updated[index] as PersistentPotFeature).pots[potIndex].numberOfSpins = parseInt(e.target.value);
+                                  setFeatures(updated);
+                                }}
+                              />
+                            </FormField>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {feature.type === "Progress Meter / True Persistent" && (
+                  <div className="space-y-4 mt-4 p-4 rounded-lg border bg-secondary/10">
+                    <FormField label="Collector (what's being collected)">
+                      <Input
+                        placeholder="e.g., Scarabs, Gems, Symbols"
+                        value={(feature as TruePersistentFeature).collector || ""}
+                        onChange={(e) => {
+                          const updated = [...features];
+                          (updated[index] as TruePersistentFeature).collector = e.target.value;
+                          setFeatures(updated);
+                        }}
+                      />
+                    </FormField>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <FormField label="Collection Positions Needed">
+                        <Input
+                          type="number"
+                          min="1"
+                          placeholder="e.g., 48"
+                          value={(feature as TruePersistentFeature).collectionPositionsNeeded || ""}
+                          onChange={(e) => {
+                            const updated = [...features];
+                            (updated[index] as TruePersistentFeature).collectionPositionsNeeded = parseInt(e.target.value);
+                            setFeatures(updated);
+                          }}
+                        />
+                      </FormField>
+                      <FormField label="Avg Symbols Per Spin">
+                        <Input
+                          type="number"
+                          step="0.1"
+                          min="0.1"
+                          placeholder="e.g., 1.5"
+                          value={(feature as TruePersistentFeature).averageSymbolsPerSpin || ""}
+                          onChange={(e) => {
+                            const updated = [...features];
+                            (updated[index] as TruePersistentFeature).averageSymbolsPerSpin = parseFloat(e.target.value);
+                            setFeatures(updated);
+                          }}
+                        />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {(feature as TruePersistentFeature).collectionPositionsNeeded && (feature as TruePersistentFeature).averageSymbolsPerSpin
+                            ? `Estimated trigger: every ${Math.ceil((feature as TruePersistentFeature).collectionPositionsNeeded / (feature as TruePersistentFeature).averageSymbolsPerSpin)} spins`
+                            : ""}
+                        </p>
+                      </FormField>
+                    </div>
+                    <FormField label="Progression Style">
+                      <div className="flex gap-4">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={(feature as TruePersistentFeature).progressionStyle === "Single Threshold"}
+                            onChange={() => {
+                              const updated = [...features];
+                              (updated[index] as TruePersistentFeature).progressionStyle = "Single Threshold";
+                              setFeatures(updated);
+                            }}
+                          />
+                          <span className="text-sm">Single Threshold</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            checked={(feature as TruePersistentFeature).progressionStyle === "Multi-Threshold"}
+                            onChange={() => {
+                              const updated = [...features];
+                              (updated[index] as TruePersistentFeature).progressionStyle = "Multi-Threshold";
+                              setFeatures(updated);
+                            }}
+                          />
+                          <span className="text-sm">Multi-Threshold (Tomb of Insanity style)</span>
+                        </label>
+                      </div>
+                    </FormField>
+                    {(feature as TruePersistentFeature).progressionStyle === "Multi-Threshold" && (
+                      <>
+                        <FormField label="Entry Mode">
+                          <div className="flex gap-4">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                checked={(feature as TruePersistentFeature).entryMode === "Quick Setup"}
+                                onChange={() => {
+                                  const updated = [...features];
+                                  (updated[index] as TruePersistentFeature).entryMode = "Quick Setup";
+                                  setFeatures(updated);
+                                }}
+                              />
+                              <span className="text-sm">Quick Setup (formula-based)</span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                checked={(feature as TruePersistentFeature).entryMode === "Manual Milestones"}
+                                onChange={() => {
+                                  const updated = [...features];
+                                  (updated[index] as TruePersistentFeature).entryMode = "Manual Milestones";
+                                  setFeatures(updated);
+                                }}
+                              />
+                              <span className="text-sm">Manual Milestones (define each)</span>
+                            </label>
+                          </div>
+                        </FormField>
+                        {(feature as TruePersistentFeature).entryMode === "Quick Setup" && (
+                          <div className="space-y-3 p-3 rounded border">
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <FormField label="Total Sections">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={(feature as TruePersistentFeature).totalSections || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as TruePersistentFeature).totalSections = parseInt(e.target.value);
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                              <FormField label="Escalation Type">
+                                <select
+                                  value={(feature as TruePersistentFeature).escalationType || "Linear"}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as TruePersistentFeature).escalationType = e.target.value as "Linear" | "Exponential";
+                                    setFeatures(updated);
+                                  }}
+                                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                >
+                                  <option value="Linear">Linear</option>
+                                  <option value="Exponential">Exponential</option>
+                                </select>
+                              </FormField>
+                            </div>
+                            <div className="grid gap-3 sm:grid-cols-2">
+                              <FormField label="Starting Prize (× multiplier)">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={(feature as TruePersistentFeature).startingPrize || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as TruePersistentFeature).startingPrize = parseInt(e.target.value);
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                              <FormField label="Final Prize (× multiplier)">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={(feature as TruePersistentFeature).finalPrize || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as TruePersistentFeature).finalPrize = parseInt(e.target.value);
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                            </div>
+                            <FormField label="Final Trigger Award">
+                              <select
+                                value={(feature as TruePersistentFeature).finalTriggerAward || ""}
+                                onChange={(e) => {
+                                  const updated = [...features];
+                                  (updated[index] as TruePersistentFeature).finalTriggerAward = e.target.value;
+                                  setFeatures(updated);
+                                }}
+                                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                              >
+                                <option value="">Select award type</option>
+                                <option value="Free Spins">Free Spins</option>
+                                <option value="Mega Free Spins">Mega Free Spins</option>
+                                <option value="Respins">Respins</option>
+                                <option value="Hold & Spin">Hold & Spin</option>
+                              </select>
+                            </FormField>
+                            {(feature as TruePersistentFeature).finalTriggerAward && (
+                              <FormField label="Number of Spins">
+                                <Input
+                                  type="number"
+                                  min="1"
+                                  value={(feature as TruePersistentFeature).finalTriggerSpins || ""}
+                                  onChange={(e) => {
+                                    const updated = [...features];
+                                    (updated[index] as TruePersistentFeature).finalTriggerSpins = parseInt(e.target.value);
+                                    setFeatures(updated);
+                                  }}
+                                />
+                              </FormField>
+                            )}
+                          </div>
+                        )}
+                        {(feature as TruePersistentFeature).entryMode === "Manual Milestones" && (
+                          <div className="space-y-3">
+                            <div className="flex items-center justify-between">
+                              <h5 className="text-sm font-semibold">Milestones</h5>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const updated = [...features];
+                                  const f = updated[index] as TruePersistentFeature;
+                                  if (!f.thresholds) f.thresholds = [];
+                                  f.thresholds.push({
+                                    symbolsRequired: 12,
+                                    awardType: "Multiplier Upgrade",
+                                    multiplierValue: 2,
+                                  });
+                                  setFeatures(updated);
+                                }}
+                              >
+                                + Add Milestone
+                              </Button>
+                            </div>
+                            {((feature as TruePersistentFeature).thresholds || []).map((threshold, thresholdIndex) => (
+                              <div key={thresholdIndex} className="p-3 rounded border bg-card space-y-3">
+                                <div className="flex items-center justify-between">
+                                  <FormField label="Symbols Required">
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      value={threshold.symbolsRequired}
+                                      onChange={(e) => {
+                                        const updated = [...features];
+                                        (updated[index] as TruePersistentFeature).thresholds![thresholdIndex].symbolsRequired = parseInt(e.target.value);
+                                        setFeatures(updated);
+                                      }}
+                                      className="max-w-[120px]"
+                                    />
+                                  </FormField>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      const updated = [...features];
+                                      (updated[index] as TruePersistentFeature).thresholds!.splice(thresholdIndex, 1);
+                                      setFeatures(updated);
+                                    }}
+                                  >
+                                    Remove
+                                  </Button>
+                                </div>
+                                <FormField label="Award Type">
+                                  <select
+                                    value={threshold.awardType}
+                                    onChange={(e) => {
+                                      const updated = [...features];
+                                      (updated[index] as TruePersistentFeature).thresholds![thresholdIndex].awardType = e.target.value;
+                                      setFeatures(updated);
+                                    }}
+                                    className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                                  >
+                                    <option value="Multiplier Upgrade">Multiplier Upgrade</option>
+                                    <option value="Free Spins">Free Spins</option>
+                                    <option value="Respins">Respins</option>
+                                    <option value="Wild Transforms">Wild Transforms</option>
+                                    <option value="Grid Shuffle">Grid Shuffle</option>
+                                    <option value="Symbol Upgrade">Symbol Upgrade</option>
+                                    <option value="Other">Other</option>
+                                  </select>
+                                </FormField>
+                                {threshold.awardType === "Multiplier Upgrade" && (
+                                  <FormField label="Multiplier Value">
+                                    <Input
+                                      type="number"
+                                      min="1"
+                                      value={threshold.multiplierValue || ""}
+                                      onChange={(e) => {
+                                        const updated = [...features];
+                                        (updated[index] as TruePersistentFeature).thresholds![thresholdIndex].multiplierValue = parseInt(e.target.value);
+                                        setFeatures(updated);
+                                      }}
+                                    />
+                                  </FormField>
+                                )}
+                                {(threshold.awardType === "Free Spins" || threshold.awardType === "Respins") && (
+                                  <>
+                                    <FormField label="Award Value (× bet)">
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        value={threshold.awardValue || ""}
+                                        onChange={(e) => {
+                                          const updated = [...features];
+                                          (updated[index] as TruePersistentFeature).thresholds![thresholdIndex].awardValue = parseInt(e.target.value);
+                                          setFeatures(updated);
+                                        }}
+                                      />
+                                    </FormField>
+                                    <FormField label="Number of Spins">
+                                      <Input
+                                        type="number"
+                                        min="1"
+                                        value={threshold.numberOfSpins || ""}
+                                        onChange={(e) => {
+                                          const updated = [...features];
+                                          (updated[index] as TruePersistentFeature).thresholds![thresholdIndex].numberOfSpins = parseInt(e.target.value);
+                                          setFeatures(updated);
+                                        }}
+                                      />
+                                    </FormField>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    )}
+                    {(feature as TruePersistentFeature).progressionStyle === "Single Threshold" && (
+                      <div className="space-y-3 p-3 rounded border">
+                        <FormField label="Award Type">
+                          <select
+                            value={((feature as TruePersistentFeature).thresholds?.[0]?.awardType) || ""}
+                            onChange={(e) => {
+                              const updated = [...features];
+                              const f = updated[index] as TruePersistentFeature;
+                              if (!f.thresholds) {
+                                f.thresholds = [{ symbolsRequired: 0, awardType: e.target.value }];
+                              } else {
+                                f.thresholds[0].awardType = e.target.value;
+                              }
+                              setFeatures(updated);
+                            }}
+                            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          >
+                            <option value="">Select type</option>
+                            <option value="Free Spins">Free Spins</option>
+                            <option value="Respins">Respins</option>
+                            <option value="Wild Transforms">Wild Transforms</option>
+                            <option value="Multiplier Upgrade">Multiplier Upgrade</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </FormField>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
             <Button type="button" variant="outline" onClick={addFeature} className="w-full border-dashed">
