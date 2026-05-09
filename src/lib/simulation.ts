@@ -488,7 +488,7 @@ export function computeArchetypeStopReasons(
       time:       18 - featurePressure * 3,
     },
     {
-      archetype: "Volatility-Seeking",
+      archetype: "Volatility-Seeking Player",
       boredom:    18 + deadSpinPressure * 3,
       loss:       42 + lossPressure * 10,
       bankroll:   28 + bankrollPressure * 8,
