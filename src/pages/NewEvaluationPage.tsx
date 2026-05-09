@@ -243,10 +243,21 @@ export default function NewEvaluationPage() {
   const featureDependency = rtpNum > 0 ? featureRtpNum / rtpNum : 0;
   const riskFlagFeatureHeavy = featureDependency > 0.6;
 
-  const waysLinesLabel = gameType === "Paylines" ? "Number of Paylines"
-    : gameType === "Payways" ? "Ways Constant"
-    : gameType === "Megaways" ? "Max Ways"
-    : "—";
+  const isFormValid = (() => {
+    if (!gameName.trim()) return false;
+    if (!gameType) return false;
+    if (!volatility) return false;
+    if (rtpNum < 85 || rtpNum > 99) return false;
+    return true;
+  })();
+
+  const validationMessage = (() => {
+    if (!gameName.trim()) return "Game name is required";
+    if (!gameType) return "Game type must be selected";
+    if (!volatility) return "Volatility must be selected";
+    if (rtpNum < 85 || rtpNum > 99) return "RTP target must be between 85% and 99%";
+    return "";
+  })();
 
   const requiresSimulation =
     (specialMechanics.includes("Cascades") && ["Megaways", "Cluster Pays", "Grid"].includes(gameType)) ||
