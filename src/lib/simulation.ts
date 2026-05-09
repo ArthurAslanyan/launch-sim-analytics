@@ -326,7 +326,7 @@ export function computeSessionBehavior(game: GameConcept, metrics: ComputedInput
   const baseMap: Record<string, number> = {
     Low: 5,
     Medium: 6,
-    "Medium-High": 7,
+    
     High: 8.5,
     "Very High": 9,
   };
