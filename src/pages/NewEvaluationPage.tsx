@@ -149,11 +149,7 @@ export default function NewEvaluationPage() {
 
   // Structure (new)
   const [reelType, setReelType] = useState<"Classic" | "Video">("Video");
-  const [paylineCount, setPaylineCount] = useState("20");
-  const [waysConstant, setWaysConstant] = useState("243");
   const [irregularWindow, setIrregularWindow] = useState(false);
-  const [megawaysMaxWays, setMegawaysMaxWays] = useState("117649");
-  const [minClusterSize, setMinClusterSize] = useState("5");
 
   // Wild
   const [hasWild, setHasWild] = useState(true);
