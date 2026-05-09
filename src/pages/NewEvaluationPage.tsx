@@ -149,11 +149,7 @@ export default function NewEvaluationPage() {
 
   // Structure (new)
   const [reelType, setReelType] = useState<"Classic" | "Video">("Video");
-  const [paylineCount, setPaylineCount] = useState("20");
-  const [waysConstant, setWaysConstant] = useState("243");
   const [irregularWindow, setIrregularWindow] = useState(false);
-  const [megawaysMaxWays, setMegawaysMaxWays] = useState("117649");
-  const [minClusterSize, setMinClusterSize] = useState("5");
 
   // Wild
   const [hasWild, setHasWild] = useState(true);
@@ -382,11 +378,7 @@ export default function NewEvaluationPage() {
       bonusImportance: featureDependency > 0.5 ? "Core" : featureDependency > 0.3 ? "Important" : "Decorative",
       earlyExcitement: overallHitFreq.includes("High") ? "High" : overallHitFreq.includes("Low") ? "Low" : "Moderate",
       reelType,
-      paylineCount: gameType === "Paylines" ? parseInt(paylineCount) || 20 : undefined,
-      waysConstant: gameType === "Payways" ? parseInt(waysConstant) || 243 : undefined,
       irregularWindow: gameType === "Payways" ? irregularWindow : undefined,
-      megawaysMaxWays: gameType === "Megaways" ? parseInt(megawaysMaxWays) || 117649 : undefined,
-      minClusterSize: ["Cluster Pays", "Grid"].includes(gameType) ? parseInt(minClusterSize) || 5 : undefined,
       hasWild,
       wildType: hasWild ? (wildType as GameConcept["wildType"]) : undefined,
       expandingWildScope: (wildType === "Expanding" || wildType === "Expanding + Multiplier") ? (expandingWildScope as GameConcept["expandingWildScope"]) : undefined,
@@ -569,15 +561,15 @@ export default function NewEvaluationPage() {
 
           {gameType === "Paylines" && (
             <FormField label={<span className="inline-flex items-center gap-1.5">Number of Paylines * <Tip text="Standard 5×3: 20–40 paylines. Max theoretical for 5×3: 243." /></span>} required>
-              <Input type="number" min="1" value={paylineCount} onChange={e => setPaylineCount(e.target.value)} className="max-w-32" />
+              <Input type="number" min="1" value={waysOrLines} onChange={e => setWaysOrLines(e.target.value)} className="max-w-32" />
               <p className="text-xs text-muted-foreground mt-1">Standard 5×3: 20–40 paylines. Max theoretical for 5×3: 243.</p>
             </FormField>
           )}
 
           {gameType === "Payways" && (
             <>
-              <FormField label={<span className="inline-flex items-center gap-1.5">Ways Constant <Tip text="Total ways = product of symbols on each reel (e.g. 3×3×3×3×3 = 243)." /></span>}>
-                <Input type="number" min="1" value={waysConstant} onChange={e => setWaysConstant(e.target.value)} className="max-w-32" />
+              <FormField label={<span className="inline-flex items-center gap-1.5">Ways Constant * <Tip text="Total ways = product of symbols on each reel (e.g. 3×3×3×3×3 = 243)." /></span>} required>
+                <Input type="number" min="1" value={waysOrLines} onChange={e => setWaysOrLines(e.target.value)} className="max-w-32" />
               </FormField>
               <FormField label={<span className="inline-flex items-center gap-1.5">Irregular Window Shape <Tip text="Some Payways games use different row counts per reel, e.g. 3-4-5-4-3." /></span>}>
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -590,8 +582,8 @@ export default function NewEvaluationPage() {
 
           {gameType === "Megaways" && (
             <>
-              <FormField label={<span className="inline-flex items-center gap-1.5">Max Ways <Tip text="The Megaways patent peaks at 117,649 ways (7^6). Some implementations cap lower." /></span>}>
-                <Input type="number" min="1" value={megawaysMaxWays} onChange={e => setMegawaysMaxWays(e.target.value)} className="max-w-40" />
+              <FormField label={<span className="inline-flex items-center gap-1.5">Max Ways * <Tip text="The Megaways patent peaks at 117,649 ways (7^6). Some implementations cap lower." /></span>} required>
+                <Input type="number" min="1" value={waysOrLines} onChange={e => setWaysOrLines(e.target.value)} className="max-w-40" />
               </FormField>
               <div className="rounded-lg border-l-4 border-amber-500 bg-amber-500/10 p-3 text-sm">
                 <p className="text-foreground/90">
@@ -603,8 +595,8 @@ export default function NewEvaluationPage() {
 
           {(gameType === "Cluster Pays" || gameType === "Grid") && (
             <>
-              <FormField label={<span className="inline-flex items-center gap-1.5">Minimum Symbols for Win * <Tip text="Cluster: requires adjacent matching symbols. Grid: any positions count." /></span>} required>
-                <Input type="number" min="3" max="20" value={minClusterSize} onChange={e => setMinClusterSize(e.target.value)} className="max-w-24" />
+              <FormField label={<span className="inline-flex items-center gap-1.5">Minimum Symbols for Win * <Tip text={gameType === "Grid" ? "Grid: any positions count." : "Cluster: requires adjacent matching symbols."} /></span>} required>
+                <Input type="number" min="3" max="20" value={waysOrLines} onChange={e => setWaysOrLines(e.target.value)} className="max-w-24" />
                 <p className="text-xs text-muted-foreground mt-1">
                   {gameType === "Grid" ? "Grid: no adjacency required — any positions count." : "Cluster: adjacent symbols only."}
                 </p>
@@ -638,12 +630,6 @@ export default function NewEvaluationPage() {
               </div>
             )}
           </FormField>
-
-          {(gameType === "Paylines" || gameType === "Payways") && (
-            <FormField label={waysLinesLabel}>
-              <Input type="number" min="1" value={waysOrLines} onChange={e => setWaysOrLines(e.target.value)} className="max-w-32" />
-            </FormField>
-          )}
         </CollapsibleSection>
 
         {/* SECTION 4 — Symbol Configuration */}
