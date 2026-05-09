@@ -26,6 +26,58 @@ export interface Feature {
   progressImpact: string;
 }
 
+export interface PotLevel {
+  name: string;
+  prizeType: string;
+  averageValue: number;
+  numberOfSpins?: number;
+  numberOfWilds?: number;
+  multiplierValue?: number;
+  duration?: number;
+  reEvaluationCount?: number;
+  description?: string;
+  impactCategory?: string;
+}
+
+export interface PersistentPotFeature extends Omit<Feature, 'type'> {
+  type: "Pot / Perceived Persistent";
+  collector: string;
+  collectionPositionsNeeded: number;
+  averageSymbolsPerSpin: number;
+  pots: PotLevel[];
+}
+
+export interface ProgressThreshold {
+  symbolsRequired: number;
+  awardType: string;
+  awardValue?: number;
+  numberOfSpins?: number;
+  numberOfWilds?: number;
+  multiplierValue?: number;
+  duration?: number;
+  reEvaluationCount?: number;
+  description?: string;
+  impactCategory?: string;
+}
+
+export interface TruePersistentFeature extends Omit<Feature, 'type'> {
+  type: "Progress Meter / True Persistent";
+  collector: string;
+  collectionPositionsNeeded: number;
+  averageSymbolsPerSpin: number;
+  progressionStyle: "Single Threshold" | "Multi-Threshold";
+  entryMode?: "Quick Setup" | "Manual Milestones";
+  totalSections?: number;
+  startingPrize?: number;
+  finalPrize?: number;
+  escalationType?: "Linear" | "Exponential";
+  finalTriggerAward?: string;
+  finalTriggerSpins?: number;
+  thresholds?: ProgressThreshold[];
+}
+
+export type ExtendedFeature = Feature | PersistentPotFeature | TruePersistentFeature;
+
 export interface WinDistribution {
   sub1x: number;
   x1to5: number;
@@ -55,7 +107,7 @@ export interface GameConcept {
   maxExposureCategory: string;
   rtpBreakdown: RtpBreakdown;
   winDistribution: WinDistribution;
-  features: Feature[];
+  features: ExtendedFeature[];
   baseGameStrength: string;
   averageBaseWin: number;
   deadSpinFrequency: string;
@@ -778,7 +830,36 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
     featureFreq = featureFreqCounts.High === maxCount ? "High" : featureFreqCounts.Medium === maxCount ? "Medium" : "Low";
   }
   const featureScoreMap: Record<string, number> = { Low: 0.2, Medium: 0.5, High: 0.8 };
-  const featureScore = featureScoreMap[featureFreq] ?? 0.5;
+  let featureScore = featureScoreMap[featureFreq] ?? 0.5;
+
+  // Persistent / Pot feature handling — boost retention and progress signal
+  let potRetentionBoost = 0;
+  let hasProgressMeter = false;
+  for (const f of features as ExtendedFeature[]) {
+    if (f.type === "Pot / Perceived Persistent") {
+      const pf = f as PersistentPotFeature;
+      potRetentionBoost += (pf.pots ?? []).reduce((sum, pot) => {
+        const prizeImpact =
+          pot.prizeType === "Free Spins" ? 1.8 :
+          pot.prizeType === "Hold & Spin" ? 1.5 :
+          pot.prizeType === "Wild Transforms" ? 1.2 :
+          pot.prizeType === "Multiplier Upgrade" ? 1.2 :
+          pot.prizeType === "Respins" ? 1.3 :
+          pot.prizeType === "Instant Win" ? 1.0 :
+          pot.prizeType === "Grid Shuffle" ? 1.1 :
+          pot.impactCategory === "Session Extension" ? 1.4 :
+          pot.impactCategory === "Cash Prize" ? 1.0 :
+          1.1;
+        return sum + (pot.averageValue || 10) * prizeImpact;
+      }, 0);
+    }
+    if (f.type === "Progress Meter / True Persistent") {
+      hasProgressMeter = true;
+    }
+  }
+  if (potRetentionBoost > 0) {
+    featureScore = Math.min(1, featureScore + Math.min(0.25, potRetentionBoost / 400));
+  }
 
   const baseRtp = (game.rtpBreakdown?.baseGameRtp ?? 0) / 100;
   const deadSpinPressure = 1 - hitScore;
@@ -786,9 +867,10 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
   const featureAbsencePressure = 1 - featureScore;
 
   // Progress pressure: high when game lacks collection mechanics or base strength is weak
-  const hasProgressSystem = game.specialMechanics?.includes("Collection Mechanics") ||
+  const hasProgressSystem = hasProgressMeter ||
+    game.specialMechanics?.includes("Collection Mechanics") ||
     game.specialMechanics?.includes("Progressive Jackpot");
-  const progressPressure = hasProgressSystem ? 0.2 : 0.7;
+  const progressPressure = hasProgressSystem ? (hasProgressMeter ? 0.1 : 0.2) : 0.7;
 
   // Bankroll pressure: derived from volatility and bankroll target
   const bankrollMap: Record<string, number> = { Low: 0.8, Medium: 0.5, High: 0.3 };
