@@ -26,6 +26,58 @@ export interface Feature {
   progressImpact: string;
 }
 
+export interface PotLevel {
+  name: string;
+  prizeType: string;
+  averageValue: number;
+  numberOfSpins?: number;
+  numberOfWilds?: number;
+  multiplierValue?: number;
+  duration?: number;
+  reEvaluationCount?: number;
+  description?: string;
+  impactCategory?: string;
+}
+
+export interface PersistentPotFeature extends Omit<Feature, 'type'> {
+  type: "Pot / Perceived Persistent";
+  collector: string;
+  collectionPositionsNeeded: number;
+  averageSymbolsPerSpin: number;
+  pots: PotLevel[];
+}
+
+export interface ProgressThreshold {
+  symbolsRequired: number;
+  awardType: string;
+  awardValue?: number;
+  numberOfSpins?: number;
+  numberOfWilds?: number;
+  multiplierValue?: number;
+  duration?: number;
+  reEvaluationCount?: number;
+  description?: string;
+  impactCategory?: string;
+}
+
+export interface TruePersistentFeature extends Omit<Feature, 'type'> {
+  type: "Progress Meter / True Persistent";
+  collector: string;
+  collectionPositionsNeeded: number;
+  averageSymbolsPerSpin: number;
+  progressionStyle: "Single Threshold" | "Multi-Threshold";
+  entryMode?: "Quick Setup" | "Manual Milestones";
+  totalSections?: number;
+  startingPrize?: number;
+  finalPrize?: number;
+  escalationType?: "Linear" | "Exponential";
+  finalTriggerAward?: string;
+  finalTriggerSpins?: number;
+  thresholds?: ProgressThreshold[];
+}
+
+export type ExtendedFeature = Feature | PersistentPotFeature | TruePersistentFeature;
+
 export interface WinDistribution {
   sub1x: number;
   x1to5: number;
