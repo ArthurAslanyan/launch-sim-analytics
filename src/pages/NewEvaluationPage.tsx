@@ -98,14 +98,16 @@ function CollapsibleSection({ title, icon, description, children, defaultOpen = 
   return (
     <Collapsible open={open} onOpenChange={setOpen}>
       <div className="form-section animate-fade-in">
-        <CollapsibleTrigger className="flex w-full items-center justify-between text-left">
-          <div className="flex items-center gap-2">
-            <span className="text-primary">{icon}</span>
-            <span className="form-section-title !mb-0">{title}</span>
+        <CollapsibleTrigger className="group flex w-full items-start justify-between text-left">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <span className="text-primary">{icon}</span>
+              <span className="form-section-title !mb-0">{title}</span>
+            </div>
+            {description && <p className="form-section-description mt-1">{description}</p>}
           </div>
-          <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform", open && "rotate-180")} />
+          <ChevronDown className={cn("h-5 w-5 text-muted-foreground transition-transform mt-1", open && "rotate-180")} />
         </CollapsibleTrigger>
-        {description && <p className="form-section-description mt-1">{description}</p>}
         <CollapsibleContent>
           <div className="mt-4 space-y-4">
             {children}
