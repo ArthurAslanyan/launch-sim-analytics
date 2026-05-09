@@ -20,10 +20,12 @@ export interface Feature {
   maxValue: number;
   featureVolatility: string;
   rtpContribution?: number;
-  // Legacy compat
-  visibility: string;
-  winImpact: string;
-  progressImpact: string;
+  /** @deprecated Legacy field — not used in current simulation. Kept for backward compatibility with stored sessions. */
+  visibility?: string;
+  /** @deprecated Legacy field — not used in current simulation. Kept for backward compatibility with stored sessions. */
+  winImpact?: string;
+  /** @deprecated Legacy field — not used in current simulation. Kept for backward compatibility with stored sessions. */
+  progressImpact?: string;
 }
 
 export interface PotLevel {
@@ -148,8 +150,10 @@ export interface GameConcept {
   hasMultiplierSymbol?: boolean;
   multiplierSymbolType?: "Spin multiplier" | "Win multiplier" | "Progressive (adds each cascade)";
 
-  // RTP detail
+  // RTP detail (deprecated — kept for backward compatibility)
+  /** @deprecated Use rtpBreakdown.respinRtp instead */
   respinsRtp?: number;
+  /** @deprecated Use rtpBreakdown.wildRtp instead */
   wildContributionRtp?: number;
 
   // Feature options
@@ -322,7 +326,7 @@ export function computeSessionBehavior(game: GameConcept, metrics: ComputedInput
   const baseMap: Record<string, number> = {
     Low: 5,
     Medium: 6,
-    "Medium-High": 7,
+    
     High: 8.5,
     "Very High": 9,
   };
@@ -470,35 +474,35 @@ export function computeArchetypeStopReasons(
 
   const archetypes = [
     {
-      archetype: "Casual",
+      archetype: "Casual Player",
       boredom:    50 + deadSpinPressure * 15,
       loss:       20 + lossPressure * 12,
       bankroll:   10 + bankrollPressure * 5,
       time:       20 - deadSpinPressure * 5,
     },
     {
-      archetype: "Bonus-Seeking",
+      archetype: "Bonus-Seeking Player",
       boredom:    45 + featurePressure * 10,
       loss:       25 + lossPressure * 8,
       bankroll:   12 + bankrollPressure * 5,
       time:       18 - featurePressure * 3,
     },
     {
-      archetype: "Volatility-Seeking",
+      archetype: "Volatility-Seeking Player",
       boredom:    18 + deadSpinPressure * 3,
       loss:       42 + lossPressure * 10,
       bankroll:   28 + bankrollPressure * 8,
       time:       12,
     },
     {
-      archetype: "Budget-Constrained",
+      archetype: "Budget-Constrained Player",
       boredom:    8 + deadSpinPressure * 5,
       loss:       22 + lossPressure * 15,
       bankroll:   55 + bankrollPressure * 10,
       time:       15 - bankrollPressure * 5,
     },
     {
-      archetype: "Progress-Oriented",
+      archetype: "Progress-Oriented Player",
       boredom:    28 + deadSpinPressure * 8 + (featurePressure * 5),
       loss:       30 + lossPressure * 8,
       bankroll:   18 + bankrollPressure * 5,
@@ -806,7 +810,7 @@ export interface BehavioralSimulation {
 }
 
 export function computeBehavioralSimulation(game: GameConcept): BehavioralSimulation {
-  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, "Medium-High": 0.65, High: 0.8, "Very High": 1.0 };
+  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, High: 0.8, "Very High": 1.0 };
   const hitScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, High: 0.7 };
 
   function sdToScore(sd: number): number {
@@ -1402,7 +1406,7 @@ export function generateDataInterpretation(
   // ═══ 4. ARCHETYPE & VOLATILITY ═══
   const selectedArchetype = results.archetypeSelection.archetype;
   const vol = game.volatility;
-  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, "Medium-High": 0.65, High: 0.8, "Very High": 1.0 };
+  const volScoreMap: Record<string, number> = { Low: 0.3, Medium: 0.5, High: 0.8, "Very High": 1.0 };
   const volatilityScore = (game.volatilityStdDev && game.volatilityStdDev > 0)
     ? Math.min(1, game.volatilityStdDev / 20)
     : volScoreMap[game.volatility] ?? 0.5;

@@ -463,7 +463,8 @@ export default function SimulationResultsPage() {
                     color: "#7B8C6F",
                     fitScore: (() => {
                       const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
-                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 0.45 ? -3 : 0;
+                      // baseGameRtp is stored as percentage (e.g., 45 for 45%), not a decimal ratio
+                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 45 ? -3 : 0;
                       return Math.max(2, Math.min(9, vol + bgt));
                     })(),
                     fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
@@ -890,28 +891,37 @@ export default function SimulationResultsPage() {
                   <h4 className="text-sm font-semibold">Simulated Player Retention</h4>
                 </div>
                 <div style={{ width: "100%", height: 240 }}>
-                  <ResponsiveContainer>
-                    <BarChart
-                      data={[
-                        { label: "Session Start", value: 100 },
-                        { label: "Spin 30", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 30)?.casual_survival ?? 100) },
-                        { label: "Spin 60", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 60)?.casual_survival ?? 100) },
-                        { label: "D1 Return", value: results.simulatedPopulation.retentionD1 },
-                        { label: "D7 Return", value: results.simulatedPopulation.retentionD7 },
-                      ]}
-                      margin={{ top: 5, right: 10, left: -20, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                      <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
-                      <Tooltip formatter={(v: number) => [`${v}%`, "Players remaining"]} />
-                      <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <Cell key={i} fill={i < 2 ? "hsl(160,45%,35%)" : "hsl(40,85%,52%)"} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {(() => {
+                    const retentionData = [
+                      { label: "Session Start", value: 100 },
+                      { label: "Spin 30", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 30)?.casual_survival ?? 100) },
+                      { label: "Spin 60", value: Math.round(results.behavioralSimulation?.survivalData?.find(r => r.spin === 60)?.casual_survival ?? 100) },
+                      { label: "D1 Return", value: results.simulatedPopulation.retentionD1 },
+                      { label: "D7 Return", value: results.simulatedPopulation.retentionD7 },
+                    ];
+                    return (
+                      <ResponsiveContainer>
+                        <BarChart data={retentionData} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} domain={[0, 100]} tickFormatter={(v) => `${v}%`} />
+                          <Tooltip formatter={(v: number) => [`${v}%`, "Players remaining"]} />
+                          <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                            {retentionData.map((d, i) => (
+                              <Cell
+                                key={i}
+                                fill={
+                                  d.value >= 60 ? "#2E8950" :
+                                  d.value >= 30 ? "#E6A933" :
+                                  "#C84B4B"
+                                }
+                              />
+                            ))}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    );
+                  })()}
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
                   Session survival uses Casual Player archetype as the retention baseline. D1/D7 are structurally derived estimates.
@@ -921,6 +931,83 @@ export default function SimulationResultsPage() {
           )}
 
         </SectionCard>
+        )}
+
+        {/* ────── Data Interpretation Guide ────── */}
+        {results.dataInterpretation && results.dataInterpretation.length > 0 && (
+          <SectionCard title="Data Interpretation Guide" icon={<BarChart3 className="h-5 w-5 text-primary" />}>
+            <p className="text-sm text-muted-foreground mb-4">
+              Detailed breakdown of key metrics, benchmarks, and actionable recommendations tied to this simulation.
+            </p>
+            <div className="space-y-6">
+              {results.dataInterpretation.map((interp, idx) => (
+                <div key={idx} className="rounded-lg border bg-card p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Target className="h-4 w-4 text-primary" />
+                    <h4 className="text-sm font-semibold">{interp.category}</h4>
+                  </div>
+
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {interp.metrics.map((metric, i) => {
+                      const verdictColors = {
+                        excellent: { border: "#2E8950", bg: "#E8F4EE", text: "#145230" },
+                        good: { border: "#3D6955", bg: "#EBF1ED", text: "#1D3D2D" },
+                        average: { border: "#7B8C6F", bg: "#F0F2ED", text: "#3D4538" },
+                        poor: { border: "#C84B4B", bg: "#FDECEC", text: "#7A2828" },
+                      };
+                      const colors = verdictColors[metric.verdict];
+                      return (
+                        <div key={i} className="rounded-md border-l-4 p-3" style={{ borderLeftColor: colors.border, backgroundColor: colors.bg }}>
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <span className="text-xs font-semibold" style={{ color: colors.text }}>{metric.name}</span>
+                            <span className="text-[10px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded" style={{ color: colors.text, backgroundColor: "rgba(255,255,255,0.5)" }}>
+                              {metric.verdict.charAt(0).toUpperCase() + metric.verdict.slice(1)}
+                            </span>
+                          </div>
+                          <p className="text-lg font-bold" style={{ color: colors.text }}>{metric.value}</p>
+                          <p className="text-xs mt-1" style={{ color: colors.text }}>{metric.explanation}</p>
+                          {metric.benchmark && (
+                            <p className="text-[11px] mt-1 italic opacity-75" style={{ color: colors.text }}>
+                              Benchmark: {metric.benchmark}
+                            </p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 rounded-md bg-muted/50 p-3">
+                    <div className="flex items-start gap-2">
+                      <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                      <div>
+                        <p className="text-xs font-semibold mb-1">What This Means</p>
+                        <p className="text-xs text-muted-foreground">{interp.narrative}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {interp.actionable.length > 0 && (
+                    <div className="mt-3 rounded-md border border-primary/20 bg-primary/5 p-3">
+                      <div className="flex items-start gap-2">
+                        <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-xs font-semibold mb-1">Recommended Actions</p>
+                          <ul className="space-y-1">
+                            {interp.actionable.map((action, ai) => (
+                              <li key={ai} className="text-xs text-muted-foreground flex gap-2">
+                                <span className="text-primary">→</span>
+                                <span>{action}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </SectionCard>
         )}
 
         {/* ────── Behavioral Insights (kept) ────── */}
