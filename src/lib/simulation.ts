@@ -150,8 +150,10 @@ export interface GameConcept {
   hasMultiplierSymbol?: boolean;
   multiplierSymbolType?: "Spin multiplier" | "Win multiplier" | "Progressive (adds each cascade)";
 
-  // RTP detail
+  // RTP detail (deprecated — kept for backward compatibility)
+  /** @deprecated Use rtpBreakdown.respinRtp instead */
   respinsRtp?: number;
+  /** @deprecated Use rtpBreakdown.wildRtp instead */
   wildContributionRtp?: number;
 
   // Feature options
