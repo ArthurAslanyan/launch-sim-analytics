@@ -20,10 +20,12 @@ export interface Feature {
   maxValue: number;
   featureVolatility: string;
   rtpContribution?: number;
-  // Legacy compat
-  visibility: string;
-  winImpact: string;
-  progressImpact: string;
+  /** @deprecated Legacy field — not used in current simulation. Kept for backward compatibility with stored sessions. */
+  visibility?: string;
+  /** @deprecated Legacy field — not used in current simulation. Kept for backward compatibility with stored sessions. */
+  winImpact?: string;
+  /** @deprecated Legacy field — not used in current simulation. Kept for backward compatibility with stored sessions. */
+  progressImpact?: string;
 }
 
 export interface PotLevel {
