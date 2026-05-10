@@ -2201,9 +2201,11 @@ export default function NewEvaluationPage() {
                   </div>
 
                   {symbolSwapRules.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic">
-                      No swap rules defined. Add at least one to enable the feature.
-                    </p>
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-2">
+                      <p className="text-xs text-destructive">
+                        ⚠ No swap rules defined. Add at least one for the feature to apply. With no rules, swap impact will be ignored.
+                      </p>
+                    </div>
                   )}
 
                   {symbolSwapRules.map((rule, idx) => (
