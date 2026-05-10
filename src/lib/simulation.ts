@@ -1786,6 +1786,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
   const inputMetrics = computeInputMetrics(game);
   const gambleImpact = computeGambleImpact(game);
   const symbolSwapImpact = computeSymbolSwapImpact(game);
+  const archetypeFitScores = computeArchetypeFitScores(game, inputMetrics);
   const archetypeSelection = selectArchetype(game, inputMetrics);
   const sessionBehavior = computeSessionBehavior(game, inputMetrics);
   const featureInteraction = computeFeatureInteraction(game, inputMetrics);
