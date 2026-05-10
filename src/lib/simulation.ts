@@ -1374,15 +1374,23 @@ export function computeSimulatedPopulation(
   sessionBehavior: SessionBehavior,
   metrics: ComputedInputMetrics,
   behavioralSim: BehavioralSimulation,
-  archetypeStopReasons: Array<{ archetype: string; [key: string]: any }>
+  archetypeStopReasons: Array<{
+    archetype: string;
+    boredomLowEngagement?: number;
+    lossToleranceExceeded?: number;
+    bankrollDepleted?: number;
+    sessionTimeLimit?: number;
+    boredom?: number;
+  }>
 ): SimulatedPopulation {
   const range = game.populationRange ?? "10000-50000";
   const midpoint = POPULATION_MIDPOINTS[range];
   const rangeLabel = POPULATION_LABELS[range];
 
-  // ═══ Variance Multiplier ═══
-  // Add realistic ±5–10% variance so same concept produces different results on each run
-  const varianceMultiplier = 0.95 + Math.random() * 0.1; // 0.95 to 1.05
+  // ═══ Variance Multiplier (deterministic seeded) ═══
+  // Same game inputs produce same variance — reproducible results
+  const seededRandom = getSeededRandom(game);
+  const varianceMultiplier = 0.95 + seededRandom() * 0.1; // 0.95 to 1.05
 
   // ═══ Derive actual session metrics from simulation ═══
   const avgSessionMinutes = sessionBehavior.adjustedSessionLength;
