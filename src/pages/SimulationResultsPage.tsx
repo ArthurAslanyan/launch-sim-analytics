@@ -14,6 +14,7 @@ import {
   Shield,
   Clock,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import {
   LineChart,
