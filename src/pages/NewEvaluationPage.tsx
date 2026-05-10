@@ -349,6 +349,25 @@ export default function NewEvaluationPage() {
     }
   }, []);
 
+  const createSymbolSwapRule = () => ({
+    id: crypto.randomUUID(),
+    sourceSymbol: "A",
+    targetSymbol: "K",
+    swapCount: 1 as const,
+  });
+
+  const updateSymbolSwapRule = (id: string, field: string, value: string | number) => {
+    setSymbolSwapRules(symbolSwapRules.map(rule =>
+      rule.id === id
+        ? { ...rule, [field]: field === "swapCount" ? (value === "all" ? "all" : parseInt(String(value)) || 1) : value }
+        : rule
+    ));
+  };
+
+  const removeSymbolSwapRule = (id: string) => {
+    setSymbolSwapRules(symbolSwapRules.filter(rule => rule.id !== id));
+  };
+
   const addFeature = () => setFeatures([...features, createEmptyFeature()]);
   const removeFeature = (id: string) => { if (features.length > 1) setFeatures(features.filter(f => f.id !== id)); };
   const updateFeature = (id: string, field: string, value: string | number) => {
