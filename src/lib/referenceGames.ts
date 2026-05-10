@@ -92,7 +92,7 @@ function themeGroupsFor(theme: string): Set<string> {
 export function scoreGameMatch(
   ref: ReferenceGame,
   gameType: string,
-  theme: string,
+  theme: string | string[],
   volatility: string,
   features: string[],
   targetMarkets: string[],
@@ -104,11 +104,18 @@ export function scoreGameMatch(
 
   // Theme match — 25 pts
   let themePts = 0;
-  if (theme) {
-    const expanded = themeGroupsFor(theme);
+  const themeList = Array.isArray(theme)
+    ? theme.map(t => normalise(t)).filter(Boolean)
+    : (theme ? [normalise(theme)] : []);
+  if (themeList.length > 0) {
     const refThemes = ref.themeCategories.map(normalise);
-    const hits = refThemes.filter(t => [...expanded].some(e => t.includes(e) || e.includes(t))).length;
-    themePts = Math.min(25, Math.round((hits / Math.max(refThemes.length, 1)) * 25));
+    let totalHits = 0;
+    for (const t of themeList) {
+      const expanded = themeGroupsFor(t);
+      const hits = refThemes.filter(rt => [...expanded].some(e => rt.includes(e) || e.includes(rt))).length;
+      if (hits > 0) totalHits += 1;
+    }
+    themePts = Math.min(25, Math.round((totalHits / themeList.length) * 25));
   }
 
   // Volatility match — 20 pts
