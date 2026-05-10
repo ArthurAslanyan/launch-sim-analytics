@@ -131,7 +131,8 @@ function buildStaticAnalysis(game: GameConcept, matches: MatchedGame[], saturati
   };
 
   const inputFeatsNorm = fNames.map(f => f.toLowerCase());
-  const inputThemesNorm = (game.targetMarkets?.[0] ?? "").toLowerCase();
+  // Use actual theme categories from the game concept
+  const inputThemes = normalizeThemes(game.themeCategories ?? []);
 
   const similarGames: SimilarGameEntry[] = top4.map(g => {
     const refFeatsNorm = g.features.map(f => f.toLowerCase());
@@ -141,14 +142,16 @@ function buildStaticAnalysis(game: GameConcept, matches: MatchedGame[], saturati
     const structMatch = g.gameplayStructures.some(s => s.toLowerCase().includes(gtNorm) || gtNorm.includes(s.toLowerCase()));
     const mechanicsScore = structMatch ? 100 : (g.gameplayStructures.some(s => s.toLowerCase().includes("pay")) && gtNorm.includes("pay")) ? 60 : 20;
 
-    const refThemes = g.themeCategories.map(t => t.toLowerCase());
-    const themeKeywords = inputThemesNorm.split(/[\s,]+/).filter(Boolean);
-    const themeHits = themeKeywords.length > 0
-      ? refThemes.filter(t => themeKeywords.some(k => t.includes(k) || k.includes(t))).length
-      : 0;
-    const themeScore = themeKeywords.length > 0
-      ? Math.min(100, Math.round((themeHits / Math.max(themeKeywords.length, 1)) * 100))
-      : Math.min(100, Math.round(g.matchScore * 0.8));
+    // Normalize reference themes for consistent matching
+    const refThemes = normalizeThemes(g.themeCategories);
+
+    // Calculate theme overlap
+    const themeHits = inputThemes.filter(t => refThemes.includes(t)).length;
+
+    // Theme score: % of input themes found in reference game
+    const themeScore = inputThemes.length > 0
+      ? Math.min(100, Math.round((themeHits / inputThemes.length) * 100))
+      : 0; // 0% if no themes specified
 
     const featureHits = inputFeatsNorm.filter(f => refFeatsNorm.some(rf => rf.includes(f) || f.includes(rf))).length;
     const featureScore = inputFeatsNorm.length > 0
