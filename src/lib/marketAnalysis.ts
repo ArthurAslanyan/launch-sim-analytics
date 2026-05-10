@@ -6,6 +6,51 @@ import { findSimilarGames, computeMarketSaturation, MatchedGame, scoreGameMatch,
 import { fetchLiveGames, mergeLiveWithStatic } from "@/lib/slotCatalogApi";
 import { REFERENCE_GAMES } from "@/lib/referenceGames";
 
+// ============================================
+// THEME NORMALIZATION
+// ============================================
+// Maps similar theme names to canonical forms to improve matching
+
+const THEME_ALIASES: Record<string, string> = {
+  "ancient egypt": "Egyptian", "egypt": "Egyptian", "egyptian": "Egyptian", "pharaoh": "Egyptian", "cleopatra": "Egyptian",
+  "greek mythology": "Greek", "greek": "Greek", "ancient greece": "Greek", "olympus": "Greek", "zeus": "Greek",
+  "rome": "Roman", "roman": "Roman", "gladiator": "Roman",
+  "asian": "Asian", "china": "Asian", "chinese": "Asian", "japan": "Asian", "japanese": "Asian", "oriental": "Asian",
+  "vikings": "Vikings", "viking": "Vikings", "norse": "Vikings", "valhalla": "Vikings", "odin": "Vikings", "thor": "Vikings",
+  "fantasy": "Fantasy", "magic": "Fantasy", "wizard": "Fantasy", "dragon": "Fantasy",
+  "fairytale": "Fairytale", "fairy tale": "Fairytale",
+  "adventure": "Adventure", "explorer": "Adventure", "treasure": "Adventure", "jungle": "Adventure",
+  "pirates": "Pirates", "pirate": "Pirates",
+  "ocean": "Ocean", "underwater": "Ocean", "sea": "Ocean",
+  "animals": "Animals", "animal": "Animals", "wildlife": "Animals", "safari": "Animals", "nature": "Animals",
+  "mythology": "Mythology", "mythological": "Mythology", "legend": "Mythology", "legendary": "Mythology",
+  "wild west": "Wild West", "western": "Wild West", "cowboy": "Wild West", "outlaws": "Wild West",
+  "sci-fi": "Sci-Fi", "science fiction": "Sci-Fi", "futuristic": "Sci-Fi", "space": "Sci-Fi",
+  "steampunk": "Steampunk",
+  "horror": "Dark", "dark": "Dark", "scary": "Dark",
+  "fruit": "Fruit",
+  "classic": "Classic", "retro": "Classic",
+  "candy": "Candy", "sweets": "Candy",
+  "music": "Music", "rock": "Music", "party": "Music",
+  "mexican": "Mexican", "aztec": "Mexican", "mayan": "Mexican",
+  "fishing": "Fishing", "angler": "Fishing",
+  "mining": "Mining", "gold rush": "Mining", "gems": "Mining",
+  "urban": "Urban", "city": "Urban", "street": "Urban",
+  "anime": "Anime", "manga": "Anime",
+  "cartoon": "Cartoon", "animated": "Cartoon",
+  "casual": "Casual",
+  "mystic": "Mystic", "mystical": "Mystic", "spiritual": "Mystic",
+};
+
+function normalizeTheme(raw: string): string {
+  const cleaned = raw.toLowerCase().trim();
+  return THEME_ALIASES[cleaned] || raw;
+}
+
+function normalizeThemes(themes: string[]): string[] {
+  return [...new Set(themes.map(normalizeTheme))];
+}
+
 let _mergedGamesCache: ReferenceGame[] | null = null;
 
 async function getMergedGames(): Promise<ReferenceGame[]> {
