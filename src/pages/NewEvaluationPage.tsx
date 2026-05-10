@@ -141,6 +141,8 @@ export default function NewEvaluationPage() {
   // Basic
   const [gameName, setGameName] = useState("");
   const [targetMarkets, setTargetMarkets] = useState<string[]>([]);
+  const [themeCategories, setThemeCategories] = useState<string[]>([]);
+  const [themeInput, setThemeInput] = useState("");
   const [playerFocus, setPlayerFocus] = useState<string[]>([]);
 
   // Game Structure
@@ -398,6 +400,7 @@ export default function NewEvaluationPage() {
     const gameConcept: GameConcept = {
       gameName: gameName || "Untitled Game",
       targetMarkets,
+      themeCategories: themeCategories.length > 0 ? themeCategories : undefined,
       playerFocus,
       gridLayout: `${gridColumns}×${gridRows}`,
       gridRows: parseInt(gridRows) || 3,
@@ -521,6 +524,83 @@ export default function NewEvaluationPage() {
           </FormField>
           <FormField label="Target Markets">
             <MultiSelect options={TARGET_MARKETS} selected={targetMarkets} onChange={setTargetMarkets} />
+          </FormField>
+          <FormField label="Theme Categories">
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g., Egyptian, Adventure, Mythology"
+                  value={themeInput}
+                  onChange={(e) => setThemeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && themeInput.trim()) {
+                      e.preventDefault();
+                      const newTheme = themeInput.trim();
+                      if (!themeCategories.includes(newTheme)) {
+                        setThemeCategories([...themeCategories, newTheme]);
+                      }
+                      setThemeInput("");
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const v = themeInput.trim();
+                    if (v && !themeCategories.includes(v)) {
+                      setThemeCategories([...themeCategories, v]);
+                      setThemeInput("");
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {themeCategories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {themeCategories.map((theme, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-sm"
+                    >
+                      <span>{theme}</span>
+                      <button
+                        type="button"
+                        onClick={() => setThemeCategories(themeCategories.filter((_, i) => i !== idx))}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Add themes that describe your game's visual style or setting (e.g., Egyptian, Greek, Pirates, Fantasy). Press Enter or click + to add. These help match similar games.
+              </p>
+              <details className="text-xs text-muted-foreground">
+                <summary className="cursor-pointer hover:text-foreground">💡 Common themes</summary>
+                <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-1">
+                  {["Egyptian", "Greek", "Asian", "Vikings", "Pirates", "Fantasy", "Adventure", "Animals", "Ocean", "Wild West", "Sci-Fi", "Dark", "Mythology", "Fruit", "Candy", "Music", "Fishing", "Mining"].map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => {
+                        if (!themeCategories.includes(t)) {
+                          setThemeCategories([...themeCategories, t]);
+                        }
+                      }}
+                      className="text-left px-2 py-1 rounded border border-border hover:bg-secondary/50 text-xs"
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              </details>
+            </div>
           </FormField>
           <FormField label={<span className="inline-flex items-center gap-1.5">Intended Player Focus <Tip text="Drives archetype weighting in the behavioral simulation." /></span>}>
             <MultiSelect options={PLAYER_FOCUS} selected={playerFocus} onChange={setPlayerFocus} />
