@@ -1858,18 +1858,6 @@ export default function NewEvaluationPage() {
               <SelectButtons options={DEAD_SPIN_FREQ} value={deadSpinFrequency} onChange={setDeadSpinFrequency} />
             </FormField>
           </FormRow>
-          <FormField label={<span className="inline-flex items-center gap-1.5">Bonus Buy Available <Tip text="Bonus Buy lets players pay directly to enter the feature. Affects RTP calculation and player segmentation." /></span>}>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={bonusBuyAvailable} onCheckedChange={(c) => setBonusBuyAvailable(!!c)} />
-              <span className="text-sm">This game includes a Bonus Buy feature</span>
-            </label>
-          </FormField>
-          <FormField label={<span className="inline-flex items-center gap-1.5">Ante Bet Available <Tip text="Ante Bet is an optional surcharge that doubles trigger probability." /></span>}>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <Checkbox checked={anteBetAvailable} onCheckedChange={(c) => setAnteBetAvailable(!!c)} />
-              <span className="text-sm">This game includes an Ante Bet option</span>
-            </label>
-          </FormField>
         </CollapsibleSection>
 
         {/* SECTION 11 — Bankroll & Session */}
