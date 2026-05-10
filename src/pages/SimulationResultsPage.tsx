@@ -192,7 +192,9 @@ export default function SimulationResultsPage() {
       try {
         sessionStorage.removeItem("launchindex_game");
         sessionStorage.removeItem("launchindex_results");
-      } catch {}
+      } catch (cleanupErr) {
+        console.warn("Failed to clean up sessionStorage:", cleanupErr);
+      }
     }
   }, []);
 
