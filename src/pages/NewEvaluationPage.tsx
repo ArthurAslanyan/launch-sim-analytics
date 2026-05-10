@@ -1870,8 +1870,15 @@ export default function NewEvaluationPage() {
           </FormField>
         </CollapsibleSection>
 
-        {/* SECTION 12 — Special Mechanics */}
-        <CollapsibleSection title="Special Mechanics" icon={<Sparkles className="h-5 w-5" />}>
+        {/* SECTION 12 — Base Game Modifiers */}
+        <CollapsibleSection
+          title="Base Game Modifiers"
+          icon={<Sparkles className="h-5 w-5" />}
+          description="Mechanics that are always active in the base game (cascades, wilds, multipliers, etc.)"
+        >
+          <p className="text-xs text-muted-foreground mb-2">
+            Always-active mechanics that modify base game behavior
+          </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {SPECIAL_MECHANICS.map(mech => (
               <label key={mech} className="flex items-center gap-2 rounded-lg border p-3 cursor-pointer hover:bg-secondary/50 transition-colors">
@@ -1885,6 +1892,59 @@ export default function NewEvaluationPage() {
                 <span className="text-sm font-medium">{mech}</span>
               </label>
             ))}
+          </div>
+        </CollapsibleSection>
+
+        {/* SECTION 12b — Feature Enhancements */}
+        <CollapsibleSection
+          title="Feature Enhancements"
+          icon={<Zap className="h-5 w-5" />}
+          description="Entry points and modifiers that enhance primary features (Bonus Buy, Ante Bet, Gamble, Symbol Swap)"
+        >
+          <div className="space-y-4">
+            {/* Bonus Buy */}
+            <div className="rounded-lg border bg-card p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={bonusBuyAvailable}
+                  onCheckedChange={(c) => setBonusBuyAvailable(!!c)}
+                />
+                <div>
+                  <div className="text-sm font-semibold">Bonus Buy</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Players can purchase direct entry to a bonus feature (typically Free Spins). Regulated in most markets.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            {/* Ante Bet */}
+            <div className="rounded-lg border bg-card p-4">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <Checkbox
+                  checked={anteBetAvailable}
+                  onCheckedChange={(c) => setAnteBetAvailable(!!c)}
+                />
+                <div>
+                  <div className="text-sm font-semibold">Ante Bet</div>
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Players can increase bet size for enhanced odds or feature access. Higher bet, higher feature trigger rate.
+                  </div>
+                </div>
+              </label>
+            </div>
+
+            <div className="rounded-lg border-l-4 border-secondary bg-secondary/10 p-3 text-sm">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">
+                💡 Feature Enhancement Rules
+              </p>
+              <ul className="text-xs text-muted-foreground space-y-0.5">
+                <li>• Bonus Buy reduces barrier to features (good for engagement, bad for session length)</li>
+                <li>• Ante Bet increases volatility (players risk more, expect more)</li>
+                <li>• Both can coexist with any primary feature</li>
+                <li>• Can be combined: e.g., "Buy in + Ante Bet" for premium access</li>
+              </ul>
+            </div>
           </div>
 
           {/* Gamble Feature */}
