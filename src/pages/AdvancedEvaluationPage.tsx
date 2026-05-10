@@ -90,6 +90,8 @@ export default function AdvancedEvaluationPage() {
   const [gridColumns, setGridColumns] = useState("5");
   const [waysOrLines, setWaysOrLines] = useState("243");
   const [targetMarkets, setTargetMarkets] = useState<string[]>([]);
+  const [themeCategories, setThemeCategories] = useState<string[]>([]);
+  const [themeInput, setThemeInput] = useState("");
 
   // Section 2 — RTP
   const [baseRtp, setBaseRtp] = useState("60");
@@ -250,6 +252,7 @@ export default function AdvancedEvaluationPage() {
     const gameConcept: GameConcept = {
       gameName: gameName || "Untitled Game",
       targetMarkets,
+      themeCategories: themeCategories.length > 0 ? themeCategories : undefined,
       playerFocus: [],
       gridLayout: `${gridColumns}×${gridRows}`,
       gridRows: parseInt(gridRows) || 3,
@@ -367,6 +370,62 @@ export default function AdvancedEvaluationPage() {
           </FormRow>
           <FormField label="Target Markets">
             <MultiSelect options={TARGET_MARKETS} selected={targetMarkets} onChange={setTargetMarkets} />
+          </FormField>
+          <FormField label="Theme Categories">
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g., Egyptian, Adventure, Mythology"
+                  value={themeInput}
+                  onChange={(e) => setThemeInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && themeInput.trim()) {
+                      e.preventDefault();
+                      const v = themeInput.trim();
+                      if (!themeCategories.includes(v)) setThemeCategories([...themeCategories, v]);
+                      setThemeInput("");
+                    }
+                  }}
+                  className="flex-1"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const v = themeInput.trim();
+                    if (v && !themeCategories.includes(v)) {
+                      setThemeCategories([...themeCategories, v]);
+                      setThemeInput("");
+                    }
+                  }}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+              {themeCategories.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {themeCategories.map((theme, idx) => (
+                    <div
+                      key={idx}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-primary/20 bg-primary/10 px-2.5 py-1 text-sm"
+                    >
+                      <span>{theme}</span>
+                      <button
+                        type="button"
+                        onClick={() => setThemeCategories(themeCategories.filter((_, i) => i !== idx))}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Add themes that describe your game's visual style or setting. Press Enter or click + to add.
+              </p>
+            </div>
           </FormField>
         </Section>
 
