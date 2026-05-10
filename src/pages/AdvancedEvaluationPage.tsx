@@ -138,6 +138,43 @@ export default function AdvancedEvaluationPage() {
   const [hsAvgPayout, setHsAvgPayout] = useState("");
   const [avgMultiplier, setAvgMultiplier] = useState("");
 
+  // Gamble Feature
+  const [gambleEnabled, setGambleEnabled] = useState(false);
+  const [gambleTriggerMode, setGambleTriggerMode] = useState<"Per-Win" | "Feature-End" | "Both">("Per-Win");
+  const [gambleColorEnabled, setGambleColorEnabled] = useState(true);
+  const [gambleSuitEnabled, setGambleSuitEnabled] = useState(false);
+  const [gambleMultiStepEnabled, setGambleMultiStepEnabled] = useState(false);
+  const [gambleMaxRounds, setGambleMaxRounds] = useState("");
+  const [gambleWinCap, setGambleWinCap] = useState("");
+
+  // Symbol Swap Feature
+  const [symbolSwapEnabled, setSymbolSwapEnabled] = useState(false);
+  const [symbolSwapTriggerMode, setSymbolSwapTriggerMode] = useState<"Random Non-Winning" | "Specific Interval" | "Both">("Random Non-Winning");
+  const [symbolSwapRandomProbability, setSymbolSwapRandomProbability] = useState("30");
+  const [symbolSwapIntervalSpins, setSymbolSwapIntervalSpins] = useState("");
+  const [symbolSwapRules, setSymbolSwapRules] = useState<Array<{ id: string; sourceSymbol: string; targetSymbol: string; swapCount: number | "all" }>>([]);
+  const [symbolSwapRtpContribution, setSymbolSwapRtpContribution] = useState("0.75");
+  const [symbolSwapWinFrequencyBoost, setSymbolSwapWinFrequencyBoost] = useState("1.08");
+
+  const createSymbolSwapRule = () => ({
+    id: crypto.randomUUID(),
+    sourceSymbol: "A",
+    targetSymbol: "K",
+    swapCount: 1 as number | "all",
+  });
+
+  const updateSymbolSwapRule = (id: string, field: string, value: string | number) => {
+    setSymbolSwapRules(symbolSwapRules.map(rule =>
+      rule.id === id
+        ? { ...rule, [field]: field === "swapCount" ? (value === "all" ? "all" : (parseInt(value as string) || 1)) : value }
+        : rule
+    ));
+  };
+
+  const removeSymbolSwapRule = (id: string) => {
+    setSymbolSwapRules(symbolSwapRules.filter(rule => rule.id !== id));
+  };
+
   // Derived metrics
   const totalRtp = useMemo(() => rtpRows.reduce((s, r) => s + (parseFloat(r.rtp) || 0), 0), [rtpRows]);
   const baseRtpNum = parseFloat(baseRtp) || 0;
