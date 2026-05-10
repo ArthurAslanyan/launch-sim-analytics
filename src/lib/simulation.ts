@@ -516,9 +516,11 @@ export function computeSymbolSwapImpact(game: GameConcept): SymbolSwapImpact {
 
   const estimatedRtpContribution = swap.estimatedRtpContribution ?? 0.75;
 
+  // Use form-provided value if specified, otherwise compute from rules
   const baseFrequencyBoost = 1.08;
-  const frequencyMultiplier = Math.min(1.25, 1 + (swap.swapRules.length * 0.03));
-  const estimatedWinFrequencyBoost = baseFrequencyBoost * frequencyMultiplier;
+  const frequencyMultiplier = Math.min(1.25, 1 + (swap!.swapRules.length * 0.03));
+  const computedFrequencyBoost = baseFrequencyBoost * frequencyMultiplier;
+  const estimatedWinFrequencyBoost = swap!.estimatedWinFrequencyBoost ?? computedFrequencyBoost;
 
   const retentionD1Boost = 2;
   const retentionD7Boost = 1;
