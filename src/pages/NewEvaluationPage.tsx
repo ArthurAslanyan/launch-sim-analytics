@@ -2035,9 +2035,11 @@ export default function NewEvaluationPage() {
                     </label>
                   </div>
                   {!gambleColorEnabled && !gambleSuitEnabled && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                      ⚠ At least one gamble style should be enabled
-                    </p>
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-2 mt-2">
+                      <p className="text-xs text-destructive">
+                        ⚠ At least one gamble style must be enabled for the feature to apply. With no styles selected, gamble impact will be ignored.
+                      </p>
+                    </div>
                   )}
                 </FormField>
 
