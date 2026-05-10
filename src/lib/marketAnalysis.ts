@@ -6,6 +6,51 @@ import { findSimilarGames, computeMarketSaturation, MatchedGame, scoreGameMatch,
 import { fetchLiveGames, mergeLiveWithStatic } from "@/lib/slotCatalogApi";
 import { REFERENCE_GAMES } from "@/lib/referenceGames";
 
+// ============================================
+// THEME NORMALIZATION
+// ============================================
+// Maps similar theme names to canonical forms to improve matching
+
+const THEME_ALIASES: Record<string, string> = {
+  "ancient egypt": "Egyptian", "egypt": "Egyptian", "egyptian": "Egyptian", "pharaoh": "Egyptian", "cleopatra": "Egyptian",
+  "greek mythology": "Greek", "greek": "Greek", "ancient greece": "Greek", "olympus": "Greek", "zeus": "Greek",
+  "rome": "Roman", "roman": "Roman", "gladiator": "Roman",
+  "asian": "Asian", "china": "Asian", "chinese": "Asian", "japan": "Asian", "japanese": "Asian", "oriental": "Asian",
+  "vikings": "Vikings", "viking": "Vikings", "norse": "Vikings", "valhalla": "Vikings", "odin": "Vikings", "thor": "Vikings",
+  "fantasy": "Fantasy", "magic": "Fantasy", "wizard": "Fantasy", "dragon": "Fantasy",
+  "fairytale": "Fairytale", "fairy tale": "Fairytale",
+  "adventure": "Adventure", "explorer": "Adventure", "treasure": "Adventure", "jungle": "Adventure",
+  "pirates": "Pirates", "pirate": "Pirates",
+  "ocean": "Ocean", "underwater": "Ocean", "sea": "Ocean",
+  "animals": "Animals", "animal": "Animals", "wildlife": "Animals", "safari": "Animals", "nature": "Animals",
+  "mythology": "Mythology", "mythological": "Mythology", "legend": "Mythology", "legendary": "Mythology",
+  "wild west": "Wild West", "western": "Wild West", "cowboy": "Wild West", "outlaws": "Wild West",
+  "sci-fi": "Sci-Fi", "science fiction": "Sci-Fi", "futuristic": "Sci-Fi", "space": "Sci-Fi",
+  "steampunk": "Steampunk",
+  "horror": "Dark", "dark": "Dark", "scary": "Dark",
+  "fruit": "Fruit",
+  "classic": "Classic", "retro": "Classic",
+  "candy": "Candy", "sweets": "Candy",
+  "music": "Music", "rock": "Music", "party": "Music",
+  "mexican": "Mexican", "aztec": "Mexican", "mayan": "Mexican",
+  "fishing": "Fishing", "angler": "Fishing",
+  "mining": "Mining", "gold rush": "Mining", "gems": "Mining",
+  "urban": "Urban", "city": "Urban", "street": "Urban",
+  "anime": "Anime", "manga": "Anime",
+  "cartoon": "Cartoon", "animated": "Cartoon",
+  "casual": "Casual",
+  "mystic": "Mystic", "mystical": "Mystic", "spiritual": "Mystic",
+};
+
+function normalizeTheme(raw: string): string {
+  const cleaned = raw.toLowerCase().trim();
+  return THEME_ALIASES[cleaned] || raw;
+}
+
+function normalizeThemes(themes: string[]): string[] {
+  return [...new Set(themes.map(normalizeTheme))];
+}
+
 let _mergedGamesCache: ReferenceGame[] | null = null;
 
 async function getMergedGames(): Promise<ReferenceGame[]> {
@@ -131,7 +176,8 @@ function buildStaticAnalysis(game: GameConcept, matches: MatchedGame[], saturati
   };
 
   const inputFeatsNorm = fNames.map(f => f.toLowerCase());
-  const inputThemesNorm = (game.targetMarkets?.[0] ?? "").toLowerCase();
+  // Use actual theme categories from the game concept
+  const inputThemes = normalizeThemes(game.themeCategories ?? []);
 
   const similarGames: SimilarGameEntry[] = top4.map(g => {
     const refFeatsNorm = g.features.map(f => f.toLowerCase());
@@ -141,14 +187,16 @@ function buildStaticAnalysis(game: GameConcept, matches: MatchedGame[], saturati
     const structMatch = g.gameplayStructures.some(s => s.toLowerCase().includes(gtNorm) || gtNorm.includes(s.toLowerCase()));
     const mechanicsScore = structMatch ? 100 : (g.gameplayStructures.some(s => s.toLowerCase().includes("pay")) && gtNorm.includes("pay")) ? 60 : 20;
 
-    const refThemes = g.themeCategories.map(t => t.toLowerCase());
-    const themeKeywords = inputThemesNorm.split(/[\s,]+/).filter(Boolean);
-    const themeHits = themeKeywords.length > 0
-      ? refThemes.filter(t => themeKeywords.some(k => t.includes(k) || k.includes(t))).length
-      : 0;
-    const themeScore = themeKeywords.length > 0
-      ? Math.min(100, Math.round((themeHits / Math.max(themeKeywords.length, 1)) * 100))
-      : Math.min(100, Math.round(g.matchScore * 0.8));
+    // Normalize reference themes for consistent matching
+    const refThemes = normalizeThemes(g.themeCategories);
+
+    // Calculate theme overlap
+    const themeHits = inputThemes.filter(t => refThemes.includes(t)).length;
+
+    // Theme score: % of input themes found in reference game
+    const themeScore = inputThemes.length > 0
+      ? Math.min(100, Math.round((themeHits / inputThemes.length) * 100))
+      : 0; // 0% if no themes specified
 
     const featureHits = inputFeatsNorm.filter(f => refFeatsNorm.some(rf => rf.includes(f) || f.includes(rf))).length;
     const featureScore = inputFeatsNorm.length > 0
@@ -278,7 +326,7 @@ export async function runMarketAnalysis(game: GameConcept): Promise<MarketAnalys
       matchScore: scoreGameMatch(
         ref,
         game.gameType,
-        game.targetMarkets?.[0] ?? "",
+        game.themeCategories ?? [],
         game.volatility,
         fNames,
         game.targetMarkets || []

@@ -152,6 +152,7 @@ export interface SymbolSwapFeature {
 export interface GameConcept {
   gameName: string;
   targetMarkets: string[];
+  themeCategories?: string[]; // e.g., ["Egyptian", "Adventure", "Mythology"]
   playerFocus: string[];
   gridLayout: string;
   gridRows: number;
