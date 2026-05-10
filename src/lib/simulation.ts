@@ -535,6 +535,87 @@ export function computeSymbolSwapImpact(game: GameConcept): SymbolSwapImpact {
   };
 }
 
+// ============================================
+// ARCHETYPE FIT SCORES (with modifiers)
+// ============================================
+
+export interface ArchetypeFitScore {
+  archetype: string;
+  baseScore: number;
+  gambleAdjustment: number;
+  symbolSwapAdjustment: number;
+  finalScore: number;
+  fitLabel: "Good fit" | "Moderate fit" | "Challenging";
+}
+
+export function computeArchetypeFitScores(game: GameConcept, metrics: ComputedInputMetrics): ArchetypeFitScore[] {
+  const gambleImpact = computeGambleImpact(game);
+  const swapImpact = computeSymbolSwapImpact(game);
+
+  const archetypes: Array<{ name: string; baseScore: number; minClamp: number; maxClamp: number }> = [
+    {
+      name: "Casual Player",
+      baseScore: (() => {
+        const vol = game.volatility === "Low" ? 9 : game.volatility === "Medium" ? 7 : game.volatility === "High" ? 5 : 2;
+        const fdi = metrics.featureDependencyIndex > 0.65 ? -2 : 0;
+        return vol + fdi;
+      })(),
+      minClamp: 2, maxClamp: 10,
+    },
+    {
+      name: "Bonus-Seeking Player",
+      baseScore: (() => {
+        const fdi = metrics.featureDependencyIndex >= 0.55 && metrics.featureDependencyIndex <= 0.75 ? 9 : 6;
+        const vol = game.volatility === "High" || game.volatility === "Very High" ? 1 : 0;
+        return fdi + vol;
+      })(),
+      minClamp: 4, maxClamp: 10,
+    },
+    {
+      name: "Volatility-Seeking Player",
+      baseScore: (() => {
+        const vol = game.volatility === "Very High" ? 10 : game.volatility === "High" ? 8 : 4;
+        const topWin = game.topWin >= 5000 ? 1 : -2;
+        return vol + topWin;
+      })(),
+      minClamp: 3, maxClamp: 10,
+    },
+    {
+      name: "Budget-Constrained Player",
+      baseScore: (() => {
+        const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
+        const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 45 ? -3 : 0;
+        return vol + bgt;
+      })(),
+      minClamp: 2, maxClamp: 9,
+    },
+    {
+      name: "Progress-Oriented Player",
+      baseScore: (() => {
+        const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
+        return 5 + hasProgress;
+      })(),
+      minClamp: 3, maxClamp: 9,
+    },
+  ];
+
+  return archetypes.map(arch => {
+    const gambleAdj = gambleImpact.archetypeFitAdjustments[arch.name] ?? 0;
+    const swapAdj = swapImpact.archetypeFitAdjustments[arch.name] ?? 0;
+    const rawScore = arch.baseScore + gambleAdj + swapAdj;
+    const finalScore = Math.max(arch.minClamp, Math.min(arch.maxClamp, rawScore));
+    const fitLabel: ArchetypeFitScore["fitLabel"] = finalScore >= 6 ? "Good fit" : finalScore >= 4 ? "Moderate fit" : "Challenging";
+
+    return {
+      archetype: arch.name,
+      baseScore: arch.baseScore,
+      gambleAdjustment: gambleAdj,
+      symbolSwapAdjustment: swapAdj,
+      finalScore,
+      fitLabel,
+    };
+  });
+}
 
 
 export interface SessionBehavior {
