@@ -442,6 +442,24 @@ export default function NewEvaluationPage() {
           winCap: gambleWinCap ? parseInt(gambleWinCap) : undefined,
         },
       },
+      symbolSwapFeature: {
+        enabled: symbolSwapEnabled,
+        triggerMode: symbolSwapTriggerMode,
+        randomTriggerProbability: (symbolSwapTriggerMode === "Random Non-Winning" || symbolSwapTriggerMode === "Both")
+          ? parseInt(symbolSwapRandomProbability) || 30
+          : undefined,
+        intervalSpins: (symbolSwapTriggerMode === "Specific Interval" || symbolSwapTriggerMode === "Both")
+          ? (parseInt(symbolSwapIntervalSpins) || undefined)
+          : undefined,
+        swapRules: symbolSwapRules.map(rule => ({
+          id: rule.id,
+          sourceSymbol: rule.sourceSymbol,
+          targetSymbol: rule.targetSymbol,
+          swapCount: rule.swapCount,
+        })),
+        estimatedRtpContribution: parseFloat(symbolSwapRtpContribution) || 0.75,
+        estimatedWinFrequencyBoost: parseFloat(symbolSwapWinFrequencyBoost) || 1.08,
+      },
       populationRange,
       referenceGame,
     };
