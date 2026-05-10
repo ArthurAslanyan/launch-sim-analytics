@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   Info, Grid3X3, PieChart, Sparkles, BarChart3, TrendingUp,
   Zap, Target, Plus, Trash2, Play, ChevronDown, ArrowLeft,
-  HelpCircle,
+  HelpCircle, RefreshCw, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,6 +138,43 @@ export default function AdvancedEvaluationPage() {
   const [hsAvgPayout, setHsAvgPayout] = useState("");
   const [avgMultiplier, setAvgMultiplier] = useState("");
 
+  // Gamble Feature
+  const [gambleEnabled, setGambleEnabled] = useState(false);
+  const [gambleTriggerMode, setGambleTriggerMode] = useState<"Per-Win" | "Feature-End" | "Both">("Per-Win");
+  const [gambleColorEnabled, setGambleColorEnabled] = useState(true);
+  const [gambleSuitEnabled, setGambleSuitEnabled] = useState(false);
+  const [gambleMultiStepEnabled, setGambleMultiStepEnabled] = useState(false);
+  const [gambleMaxRounds, setGambleMaxRounds] = useState("");
+  const [gambleWinCap, setGambleWinCap] = useState("");
+
+  // Symbol Swap Feature
+  const [symbolSwapEnabled, setSymbolSwapEnabled] = useState(false);
+  const [symbolSwapTriggerMode, setSymbolSwapTriggerMode] = useState<"Random Non-Winning" | "Specific Interval" | "Both">("Random Non-Winning");
+  const [symbolSwapRandomProbability, setSymbolSwapRandomProbability] = useState("30");
+  const [symbolSwapIntervalSpins, setSymbolSwapIntervalSpins] = useState("");
+  const [symbolSwapRules, setSymbolSwapRules] = useState<Array<{ id: string; sourceSymbol: string; targetSymbol: string; swapCount: number | "all" }>>([]);
+  const [symbolSwapRtpContribution, setSymbolSwapRtpContribution] = useState("0.75");
+  const [symbolSwapWinFrequencyBoost, setSymbolSwapWinFrequencyBoost] = useState("1.08");
+
+  const createSymbolSwapRule = () => ({
+    id: crypto.randomUUID(),
+    sourceSymbol: "A",
+    targetSymbol: "K",
+    swapCount: 1 as number | "all",
+  });
+
+  const updateSymbolSwapRule = (id: string, field: string, value: string | number) => {
+    setSymbolSwapRules(symbolSwapRules.map(rule =>
+      rule.id === id
+        ? { ...rule, [field]: field === "swapCount" ? (value === "all" ? "all" : (parseInt(value as string) || 1)) : value }
+        : rule
+    ));
+  };
+
+  const removeSymbolSwapRule = (id: string) => {
+    setSymbolSwapRules(symbolSwapRules.filter(rule => rule.id !== id));
+  };
+
   // Derived metrics
   const totalRtp = useMemo(() => rtpRows.reduce((s, r) => s + (parseFloat(r.rtp) || 0), 0), [rtpRows]);
   const baseRtpNum = parseFloat(baseRtp) || 0;
@@ -252,6 +289,34 @@ export default function AdvancedEvaluationPage() {
       bonusBuyAvailable: false,
       anteBetAvailable: false,
       requiresSimulation: specialMechanics.includes("Cascades") && ["Megaways", "Cluster Pays"].includes(gameType),
+      gambleFeature: {
+        enabled: gambleEnabled,
+        triggerMode: gambleTriggerMode,
+        styles: { color: gambleColorEnabled, suit: gambleSuitEnabled },
+        multiStep: {
+          enabled: gambleMultiStepEnabled,
+          maxRounds: gambleMaxRounds ? parseInt(gambleMaxRounds) : undefined,
+          winCap: gambleWinCap ? parseInt(gambleWinCap) : undefined,
+        },
+      },
+      symbolSwapFeature: {
+        enabled: symbolSwapEnabled,
+        triggerMode: symbolSwapTriggerMode,
+        randomTriggerProbability: (symbolSwapTriggerMode === "Random Non-Winning" || symbolSwapTriggerMode === "Both")
+          ? (parseInt(symbolSwapRandomProbability) || 30)
+          : undefined,
+        intervalSpins: (symbolSwapTriggerMode === "Specific Interval" || symbolSwapTriggerMode === "Both")
+          ? (parseInt(symbolSwapIntervalSpins) || undefined)
+          : undefined,
+        swapRules: symbolSwapRules.map(rule => ({
+          id: rule.id,
+          sourceSymbol: rule.sourceSymbol,
+          targetSymbol: rule.targetSymbol,
+          swapCount: rule.swapCount,
+        })),
+        estimatedRtpContribution: parseFloat(symbolSwapRtpContribution) || 0.75,
+        estimatedWinFrequencyBoost: parseFloat(symbolSwapWinFrequencyBoost) || 1.08,
+      },
     };
 
     const results = runSimulation(gameConcept);
@@ -586,6 +651,231 @@ export default function AdvancedEvaluationPage() {
 
         {/* Player Archetype Configuration */}
         <PlayerArchetypeConfig />
+
+        {/* Feature Enhancements: Gamble & Symbol Swap */}
+        <Section title="Feature Enhancements" icon={<Zap className="h-5 w-5" />} description="Gamble Feature & Symbol Swap">
+
+          {/* Gamble Feature */}
+          <div className="rounded-lg border border-border p-4 bg-card space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <ArrowRight className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold">Gamble Feature</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Allows players to risk wins for a chance to multiply them
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm shrink-0">
+                <Checkbox checked={gambleEnabled} onCheckedChange={(c) => setGambleEnabled(!!c)} />
+                Enable
+              </label>
+            </div>
+
+            {gambleEnabled && (
+              <div className="space-y-4 pt-2 border-t border-border">
+                <FormField label="Trigger Mode">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {(["Per-Win", "Feature-End", "Both"] as const).map(mode => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setGambleTriggerMode(mode)}
+                        className={cn(
+                          "rounded-lg border px-3 py-2 text-sm transition-colors text-left",
+                          gambleTriggerMode === mode
+                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                            : "border-border bg-card text-foreground hover:bg-secondary/50"
+                        )}
+                      >
+                        <div className="font-medium">{mode}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {mode === "Per-Win" && "After every base game win"}
+                          {mode === "Feature-End" && "After feature completion"}
+                          {mode === "Both" && "Per-win AND feature-end"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </FormField>
+
+                <FormField label="Gamble Styles">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <label className="flex items-start gap-2 rounded-lg border border-border p-3 cursor-pointer hover:bg-secondary/30">
+                      <Checkbox checked={gambleColorEnabled} onCheckedChange={(c) => setGambleColorEnabled(!!c)} />
+                      <div>
+                        <div className="text-sm font-medium">Color (Red/Black)</div>
+                        <div className="text-xs text-muted-foreground">50/50 odds · 2× multiplier · Lower risk</div>
+                      </div>
+                    </label>
+                    <label className="flex items-start gap-2 rounded-lg border border-border p-3 cursor-pointer hover:bg-secondary/30">
+                      <Checkbox checked={gambleSuitEnabled} onCheckedChange={(c) => setGambleSuitEnabled(!!c)} />
+                      <div>
+                        <div className="text-sm font-medium">Suit (♠♥♦♣)</div>
+                        <div className="text-xs text-muted-foreground">25% odds · 4× multiplier · Higher risk</div>
+                      </div>
+                    </label>
+                  </div>
+                  {!gambleColorEnabled && !gambleSuitEnabled && (
+                    <p className="text-xs text-destructive mt-2">
+                      ⚠ At least one gamble style must be enabled for the feature to apply
+                    </p>
+                  )}
+                </FormField>
+
+                <FormField label="Multi-Step Gamble">
+                  <label className="flex items-center gap-2 text-sm">
+                    <Checkbox checked={gambleMultiStepEnabled} onCheckedChange={(c) => setGambleMultiStepEnabled(!!c)} />
+                    Allow consecutive gambles
+                  </label>
+                  {gambleMultiStepEnabled && (
+                    <FormRow>
+                      <FormField label="Max Rounds (empty = unlimited)">
+                        <Input type="number" min="1" value={gambleMaxRounds} onChange={e => setGambleMaxRounds(e.target.value)} className="max-w-32" />
+                      </FormField>
+                      <FormField label="Win Cap × bet (empty = no cap)">
+                        <Input type="number" min="1" value={gambleWinCap} onChange={e => setGambleWinCap(e.target.value)} className="max-w-32" />
+                      </FormField>
+                    </FormRow>
+                  )}
+                </FormField>
+              </div>
+            )}
+          </div>
+
+          {/* Symbol Swap Feature */}
+          <div className="rounded-lg border border-border p-4 bg-card space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="flex items-center gap-2">
+                  <RefreshCw className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold">Symbol Swap</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Random symbol conversions on non-winning or specific spins
+                </p>
+              </div>
+              <label className="flex items-center gap-2 text-sm shrink-0">
+                <Checkbox checked={symbolSwapEnabled} onCheckedChange={(c) => setSymbolSwapEnabled(!!c)} />
+                Enable
+              </label>
+            </div>
+
+            {symbolSwapEnabled && (
+              <div className="space-y-4 pt-2 border-t border-border">
+                <FormField label="Trigger Mode">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                    {(["Random Non-Winning", "Specific Interval", "Both"] as const).map(mode => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setSymbolSwapTriggerMode(mode)}
+                        className={cn(
+                          "rounded-lg border px-3 py-2 text-sm transition-colors text-left",
+                          symbolSwapTriggerMode === mode
+                            ? "border-primary bg-primary/10 text-primary font-semibold"
+                            : "border-border bg-card text-foreground hover:bg-secondary/50"
+                        )}
+                      >
+                        <div className="font-medium">{mode}</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {mode === "Random Non-Winning" && "X% of non-winning spins"}
+                          {mode === "Specific Interval" && "Every N spins"}
+                          {mode === "Both" && "Both triggers active"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </FormField>
+
+                {(symbolSwapTriggerMode === "Random Non-Winning" || symbolSwapTriggerMode === "Both") && (
+                  <FormField label="Random Trigger Probability (%)">
+                    <Input type="number" min="0" max="100" value={symbolSwapRandomProbability} onChange={e => setSymbolSwapRandomProbability(e.target.value)} className="max-w-32" />
+                    <p className="text-xs text-muted-foreground mt-1">Flat probability per spin</p>
+                  </FormField>
+                )}
+
+                {(symbolSwapTriggerMode === "Specific Interval" || symbolSwapTriggerMode === "Both") && (
+                  <FormField label="Interval (spins)">
+                    <Input type="number" min="2" value={symbolSwapIntervalSpins} onChange={e => setSymbolSwapIntervalSpins(e.target.value)} className="max-w-32" />
+                    <p className="text-xs text-muted-foreground mt-1">Trigger every N spins</p>
+                  </FormField>
+                )}
+
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Swap Rules</span>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setSymbolSwapRules([...symbolSwapRules, createSymbolSwapRule()])}>
+                      <Plus className="h-3 w-3 mr-1" /> Add Rule
+                    </Button>
+                  </div>
+
+                  {symbolSwapRules.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-destructive/50 bg-destructive/5 p-3">
+                      <p className="text-xs text-destructive">
+                        ⚠ No swap rules defined. Add at least one for the feature to apply.
+                      </p>
+                    </div>
+                  )}
+
+                  {symbolSwapRules.map((rule, idx) => (
+                    <div key={rule.id} className="rounded-lg border border-border p-3 space-y-3 bg-background">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground">Swap Rule {idx + 1}</span>
+                        <Button type="button" variant="ghost" size="sm" onClick={() => removeSymbolSwapRule(rule.id)} className="text-muted-foreground hover:text-destructive">
+                          <Trash2 className="h-3 w-3 mr-1" /> Remove
+                        </Button>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <FormField label="From">
+                          <Input value={rule.sourceSymbol} onChange={e => updateSymbolSwapRule(rule.id, "sourceSymbol", e.target.value.toUpperCase().slice(0, 1))} maxLength={1} className="max-w-24 text-center text-lg font-bold" />
+                        </FormField>
+                        <div className="pt-6">
+                          <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <FormField label="To">
+                          <Input value={rule.targetSymbol} onChange={e => updateSymbolSwapRule(rule.id, "targetSymbol", e.target.value.toUpperCase().slice(0, 1))} maxLength={1} className="max-w-24 text-center text-lg font-bold" />
+                        </FormField>
+                      </div>
+
+                      <FormField label="Swap Count">
+                        <div className="flex flex-col gap-2">
+                          <label className="flex items-center gap-2 text-sm">
+                            <input type="radio" name={`swapCount-${rule.id}`} checked={rule.swapCount === "all"} onChange={() => updateSymbolSwapRule(rule.id, "swapCount", "all")} />
+                            All instances
+                          </label>
+                          <label className="flex items-center gap-2 text-sm">
+                            <input type="radio" name={`swapCount-${rule.id}`} checked={rule.swapCount !== "all"} onChange={() => updateSymbolSwapRule(rule.id, "swapCount", 1)} />
+                            Specific count:
+                            <Input type="number" min="1" value={rule.swapCount === "all" ? "" : String(rule.swapCount)} onChange={e => updateSymbolSwapRule(rule.id, "swapCount", e.target.value)} className="max-w-16" disabled={rule.swapCount === "all"} />
+                          </label>
+                        </div>
+                      </FormField>
+                    </div>
+                  ))}
+                </div>
+
+                {symbolSwapRules.length > 0 && (
+                  <div className="rounded-lg border border-border p-3 bg-secondary/30 space-y-3">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      RTP & Win Frequency Tuning
+                    </div>
+                    <FormRow>
+                      <FormField label="Estimated RTP Contribution (%)">
+                        <Input type="number" step="0.01" min="0" value={symbolSwapRtpContribution} onChange={e => setSymbolSwapRtpContribution(e.target.value)} className="max-w-32" />
+                      </FormField>
+                      <FormField label="Win Frequency Boost (×)">
+                        <Input type="number" step="0.01" min="1" value={symbolSwapWinFrequencyBoost} onChange={e => setSymbolSwapWinFrequencyBoost(e.target.value)} className="max-w-32" />
+                      </FormField>
+                    </FormRow>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </Section>
 
         {/* Validation & Summary */}
         <div className="form-section animate-fade-in">

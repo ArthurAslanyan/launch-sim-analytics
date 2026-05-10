@@ -192,7 +192,9 @@ export default function SimulationResultsPage() {
       try {
         sessionStorage.removeItem("launchindex_game");
         sessionStorage.removeItem("launchindex_results");
-      } catch {}
+      } catch (cleanupErr) {
+        console.warn("Failed to clean up sessionStorage:", cleanupErr);
+      }
     }
   }, []);
 
@@ -428,73 +430,48 @@ export default function SimulationResultsPage() {
             <div className="space-y-6">
               {/* Archetype Legend + Quick Fit Assessment — 5 Archetypes */}
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                {[
-                  {
-                    name: "Casual Player",
-                    color: "#5B9F8B",
-                    fitScore: (() => {
-                      const vol = game.volatility === "Low" ? 9 : game.volatility === "Medium" ? 7 : game.volatility === "High" ? 5 : 2;
-                      const fdi = results.inputMetrics.featureDependencyIndex > 0.65 ? -2 : 0;
-                      return Math.max(2, Math.min(10, vol + fdi));
-                    })(),
-                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
-                  },
-                  {
-                    name: "Bonus-Seeking Player",
-                    color: "#3D6955",
-                    fitScore: (() => {
-                      const fdi = results.inputMetrics.featureDependencyIndex >= 0.55 && results.inputMetrics.featureDependencyIndex <= 0.75 ? 9 : 6;
-                      const vol = game.volatility === "High" || game.volatility === "Very High" ? 1 : 0;
-                      return Math.max(4, Math.min(10, fdi + vol));
-                    })(),
-                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
-                  },
-                  {
-                    name: "Volatility-Seeking Player",
-                    color: "#2E8950",
-                    fitScore: (() => {
-                      const vol = game.volatility === "Very High" ? 10 : game.volatility === "High" ? 8 : 4;
-                      const topWin = game.topWin >= 5000 ? 1 : -2;
-                      return Math.max(3, Math.min(10, vol + topWin));
-                    })(),
-                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
-                  },
-                  {
-                    name: "Budget-Constrained Player",
-                    color: "#7B8C6F",
-                    fitScore: (() => {
-                      const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
-                      // baseGameRtp is stored as percentage (e.g., 45 for 45%), not a decimal ratio
-                      const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 45 ? -3 : 0;
-                      return Math.max(2, Math.min(9, vol + bgt));
-                    })(),
-                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
-                  },
-                  {
-                    name: "Progress-Oriented Player",
-                    color: "#4A7BA7",
-                    fitScore: (() => {
-                      const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
-                      return Math.max(3, Math.min(9, 5 + hasProgress));
-                    })(),
-                    fit: (score: number) => score >= 6 ? "Good fit" : score >= 4 ? "Moderate fit" : "Challenging",
-                  },
-                ].map(arch => (
-                  <div key={arch.name} className="rounded-lg border p-3 flex flex-col gap-2 min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: arch.color }} />
-                      <p className="text-sm font-semibold leading-tight truncate" title={arch.name}>
-                        {arch.name.replace(" Player", "")}
-                      </p>
+                {(results.archetypeFitScores ?? []).map(arch => {
+                  const colorMap: Record<string, string> = {
+                    "Casual Player": "#5B9F8B",
+                    "Bonus-Seeking Player": "#3D6955",
+                    "Volatility-Seeking Player": "#2E8950",
+                    "Budget-Constrained Player": "#7B8C6F",
+                    "Progress-Oriented Player": "#4A7BA7",
+                  };
+                  const color = colorMap[arch.archetype] ?? "#5B9F8B";
+                  const hasModifiers = arch.gambleAdjustment !== 0 || arch.symbolSwapAdjustment !== 0;
+                  return (
+                    <div key={arch.archetype} className="rounded-lg border p-3 flex flex-col gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: color }} />
+                        <p className="text-sm font-semibold leading-tight truncate" title={arch.archetype}>
+                          {arch.archetype.replace(" Player", "")}
+                        </p>
+                      </div>
+                      <div className="flex items-end justify-between gap-2">
+                        <p className="text-xs text-muted-foreground truncate">{arch.fitLabel}</p>
+                        <p className="text-xl font-bold tabular-nums leading-none shrink-0" style={{ color }}>
+                          {arch.finalScore.toFixed(1)}
+                        </p>
+                      </div>
+                      {hasModifiers && (
+                        <p className="text-[10px] text-muted-foreground leading-tight">
+                          Base: {arch.baseScore.toFixed(1)}
+                          {arch.gambleAdjustment !== 0 && (
+                            <span className={arch.gambleAdjustment > 0 ? "text-green-600" : "text-red-600"}>
+                              {" "}{arch.gambleAdjustment > 0 ? "+" : ""}{arch.gambleAdjustment.toFixed(1)} gamble
+                            </span>
+                          )}
+                          {arch.symbolSwapAdjustment !== 0 && (
+                            <span className={arch.symbolSwapAdjustment > 0 ? "text-green-600" : "text-red-600"}>
+                              {" "}{arch.symbolSwapAdjustment > 0 ? "+" : ""}{arch.symbolSwapAdjustment.toFixed(1)} swap
+                            </span>
+                          )}
+                        </p>
+                      )}
                     </div>
-                    <div className="flex items-end justify-between gap-2">
-                      <p className="text-xs text-muted-foreground truncate">{arch.fit(arch.fitScore)}</p>
-                      <p className="text-xl font-bold tabular-nums leading-none shrink-0" style={{ color: arch.color }}>
-                        {arch.fitScore.toFixed(1)}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Main Chart — Session Survival */}
@@ -866,6 +843,9 @@ export default function SimulationResultsPage() {
                   Simulated Population Metrics — {results.simulatedPopulation.rangeLabel}
                 </h3>
               </div>
+              <p className="text-xs text-muted-foreground mb-4 -mt-2">
+                ℹ Population estimates are reproducible for the same game inputs. Different inputs produce structural variations of ±5%.
+              </p>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {[

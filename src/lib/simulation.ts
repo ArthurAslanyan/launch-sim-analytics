@@ -1,6 +1,36 @@
 // LaunchIndex Deterministic Behavioral Simulation Engine
 // All outputs are rule-based, computed from game math inputs
 
+// ============================================
+// DETERMINISTIC SEEDED RNG
+// ============================================
+// Same game inputs → same variance, ensuring reproducible results.
+
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash |= 0;
+  }
+  return Math.abs(hash);
+}
+
+function mulberry32(seed: number): () => number {
+  return function() {
+    let t = seed += 0x6D2B79F5;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function getSeededRandom(game: GameConcept): () => number {
+  const seedString = JSON.stringify(game);
+  const seed = hashString(seedString);
+  return mulberry32(seed);
+}
+
 export interface RtpBreakdown {
   baseGameRtp: number;
   wildRtp: number;
@@ -353,10 +383,31 @@ export interface GambleImpact {
   notes: string[];
 }
 
+// ============================================
+// CONFIGURATION VALIDATION
+// ============================================
+
+export function isGambleFeatureValid(gamble: GambleFeature | undefined): boolean {
+  if (!gamble || !gamble.enabled) return false;
+  if (!gamble.styles.color && !gamble.styles.suit) return false;
+  return true;
+}
+
+export function isSymbolSwapFeatureValid(swap: SymbolSwapFeature | undefined): boolean {
+  if (!swap || !swap.enabled) return false;
+  if (!swap.swapRules || swap.swapRules.length === 0) return false;
+  const hasValidRandom = (swap.triggerMode === "Random Non-Winning" || swap.triggerMode === "Both")
+    && (swap.randomTriggerProbability ?? 0) > 0;
+  const hasValidInterval = (swap.triggerMode === "Specific Interval" || swap.triggerMode === "Both")
+    && (swap.intervalSpins ?? 0) >= 2;
+  return hasValidRandom || hasValidInterval;
+}
+
 export function computeGambleImpact(game: GameConcept): GambleImpact {
   const gamble = game.gambleFeature;
 
-  if (!gamble || !gamble.enabled) {
+  // Validate configuration — invalid config = no impact (treat as disabled)
+  if (!isGambleFeatureValid(gamble)) {
     return {
       archetypeFitAdjustments: {},
       sessionVarianceMultiplier: 1.0,
@@ -418,7 +469,8 @@ export interface SymbolSwapImpact {
 export function computeSymbolSwapImpact(game: GameConcept): SymbolSwapImpact {
   const swap = game.symbolSwapFeature;
 
-  if (!swap || !swap.enabled) {
+  // Validate configuration — invalid config = no impact (treat as disabled)
+  if (!isSymbolSwapFeatureValid(swap)) {
     return {
       archetypeFitAdjustments: {},
       retentionD1Boost: 0,
@@ -464,9 +516,11 @@ export function computeSymbolSwapImpact(game: GameConcept): SymbolSwapImpact {
 
   const estimatedRtpContribution = swap.estimatedRtpContribution ?? 0.75;
 
+  // Use form-provided value if specified, otherwise compute from rules
   const baseFrequencyBoost = 1.08;
-  const frequencyMultiplier = Math.min(1.25, 1 + (swap.swapRules.length * 0.03));
-  const estimatedWinFrequencyBoost = baseFrequencyBoost * frequencyMultiplier;
+  const frequencyMultiplier = Math.min(1.25, 1 + (swap!.swapRules.length * 0.03));
+  const computedFrequencyBoost = baseFrequencyBoost * frequencyMultiplier;
+  const estimatedWinFrequencyBoost = swap!.estimatedWinFrequencyBoost ?? computedFrequencyBoost;
 
   const retentionD1Boost = 2;
   const retentionD7Boost = 1;
@@ -481,6 +535,87 @@ export function computeSymbolSwapImpact(game: GameConcept): SymbolSwapImpact {
   };
 }
 
+// ============================================
+// ARCHETYPE FIT SCORES (with modifiers)
+// ============================================
+
+export interface ArchetypeFitScore {
+  archetype: string;
+  baseScore: number;
+  gambleAdjustment: number;
+  symbolSwapAdjustment: number;
+  finalScore: number;
+  fitLabel: "Good fit" | "Moderate fit" | "Challenging";
+}
+
+export function computeArchetypeFitScores(game: GameConcept, metrics: ComputedInputMetrics): ArchetypeFitScore[] {
+  const gambleImpact = computeGambleImpact(game);
+  const swapImpact = computeSymbolSwapImpact(game);
+
+  const archetypes: Array<{ name: string; baseScore: number; minClamp: number; maxClamp: number }> = [
+    {
+      name: "Casual Player",
+      baseScore: (() => {
+        const vol = game.volatility === "Low" ? 9 : game.volatility === "Medium" ? 7 : game.volatility === "High" ? 5 : 2;
+        const fdi = metrics.featureDependencyIndex > 0.65 ? -2 : 0;
+        return vol + fdi;
+      })(),
+      minClamp: 2, maxClamp: 10,
+    },
+    {
+      name: "Bonus-Seeking Player",
+      baseScore: (() => {
+        const fdi = metrics.featureDependencyIndex >= 0.55 && metrics.featureDependencyIndex <= 0.75 ? 9 : 6;
+        const vol = game.volatility === "High" || game.volatility === "Very High" ? 1 : 0;
+        return fdi + vol;
+      })(),
+      minClamp: 4, maxClamp: 10,
+    },
+    {
+      name: "Volatility-Seeking Player",
+      baseScore: (() => {
+        const vol = game.volatility === "Very High" ? 10 : game.volatility === "High" ? 8 : 4;
+        const topWin = game.topWin >= 5000 ? 1 : -2;
+        return vol + topWin;
+      })(),
+      minClamp: 3, maxClamp: 10,
+    },
+    {
+      name: "Budget-Constrained Player",
+      baseScore: (() => {
+        const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
+        const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 45 ? -3 : 0;
+        return vol + bgt;
+      })(),
+      minClamp: 2, maxClamp: 9,
+    },
+    {
+      name: "Progress-Oriented Player",
+      baseScore: (() => {
+        const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
+        return 5 + hasProgress;
+      })(),
+      minClamp: 3, maxClamp: 9,
+    },
+  ];
+
+  return archetypes.map(arch => {
+    const gambleAdj = gambleImpact.archetypeFitAdjustments[arch.name] ?? 0;
+    const swapAdj = swapImpact.archetypeFitAdjustments[arch.name] ?? 0;
+    const rawScore = arch.baseScore + gambleAdj + swapAdj;
+    const finalScore = Math.max(arch.minClamp, Math.min(arch.maxClamp, rawScore));
+    const fitLabel: ArchetypeFitScore["fitLabel"] = finalScore >= 6 ? "Good fit" : finalScore >= 4 ? "Moderate fit" : "Challenging";
+
+    return {
+      archetype: arch.name,
+      baseScore: arch.baseScore,
+      gambleAdjustment: gambleAdj,
+      symbolSwapAdjustment: swapAdj,
+      finalScore,
+      fitLabel,
+    };
+  });
+}
 
 
 export interface SessionBehavior {
@@ -1209,6 +1344,7 @@ export interface SimulationResults {
   dataInterpretation: DataInterpretation[];
   gambleImpact?: GambleImpact;
   symbolSwapImpact?: SymbolSwapImpact;
+  archetypeFitScores: ArchetypeFitScore[];
 }
 
 const POPULATION_MIDPOINTS: Record<PopulationRange, number> = {
@@ -1238,15 +1374,23 @@ export function computeSimulatedPopulation(
   sessionBehavior: SessionBehavior,
   metrics: ComputedInputMetrics,
   behavioralSim: BehavioralSimulation,
-  archetypeStopReasons: Array<{ archetype: string; [key: string]: any }>
+  archetypeStopReasons: Array<{
+    archetype: string;
+    boredomLowEngagement?: number;
+    lossToleranceExceeded?: number;
+    bankrollDepleted?: number;
+    sessionTimeLimit?: number;
+    boredom?: number;
+  }>
 ): SimulatedPopulation {
   const range = game.populationRange ?? "10000-50000";
   const midpoint = POPULATION_MIDPOINTS[range];
   const rangeLabel = POPULATION_LABELS[range];
 
-  // ═══ Variance Multiplier ═══
-  // Add realistic ±5–10% variance so same concept produces different results on each run
-  const varianceMultiplier = 0.95 + Math.random() * 0.1; // 0.95 to 1.05
+  // ═══ Variance Multiplier (deterministic seeded) ═══
+  // Same game inputs produce same variance — reproducible results
+  const seededRandom = getSeededRandom(game);
+  const varianceMultiplier = 0.95 + seededRandom() * 0.1; // 0.95 to 1.05
 
   // ═══ Derive actual session metrics from simulation ═══
   const avgSessionMinutes = sessionBehavior.adjustedSessionLength;
@@ -1303,7 +1447,8 @@ export function computeSimulatedPopulation(
   const d7Base = Math.round(retentionD1 * (volDecayFactor + (1 - metrics.featureDependencyIndex) * 0.15));
   const gambleImpact = computeGambleImpact(game);
   const d7WithBonuses = d7Base + gambleImpact.retentionD7Adjustment + symbolSwapImpact.retentionD7Boost;
-  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7WithBonuses * varianceMultiplier)));
+  // No second variance multiplication — D7 inherits variance from D1
+  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7WithBonuses)));
 
   // ═══ Churn Rate ═══
   const churnRate = Math.max(15, Math.min(95, earlyChurnRate));
@@ -1641,6 +1786,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
   const inputMetrics = computeInputMetrics(game);
   const gambleImpact = computeGambleImpact(game);
   const symbolSwapImpact = computeSymbolSwapImpact(game);
+  const archetypeFitScores = computeArchetypeFitScores(game, inputMetrics);
   const archetypeSelection = selectArchetype(game, inputMetrics);
   const sessionBehavior = computeSessionBehavior(game, inputMetrics);
   const featureInteraction = computeFeatureInteraction(game, inputMetrics);
@@ -1697,6 +1843,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
     archetypeStopReasons,
     simulatedPopulation,
     performanceScore,
+    archetypeFitScores,
   });
 
   return {
@@ -1722,5 +1869,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     dataInterpretation,
     gambleImpact,
     symbolSwapImpact,
+    archetypeFitScores,
   };
 }

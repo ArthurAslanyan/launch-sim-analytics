@@ -2035,9 +2035,11 @@ export default function NewEvaluationPage() {
                     </label>
                   </div>
                   {!gambleColorEnabled && !gambleSuitEnabled && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-2">
-                      ⚠ At least one gamble style should be enabled
-                    </p>
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-2 mt-2">
+                      <p className="text-xs text-destructive">
+                        ⚠ At least one gamble style must be enabled for the feature to apply. With no styles selected, gamble impact will be ignored.
+                      </p>
+                    </div>
                   )}
                 </FormField>
 
@@ -2199,9 +2201,11 @@ export default function NewEvaluationPage() {
                   </div>
 
                   {symbolSwapRules.length === 0 && (
-                    <p className="text-xs text-muted-foreground italic">
-                      No swap rules defined. Add at least one to enable the feature.
-                    </p>
+                    <div className="rounded-lg border border-destructive/50 bg-destructive/5 p-2">
+                      <p className="text-xs text-destructive">
+                        ⚠ No swap rules defined. Add at least one for the feature to apply. With no rules, swap impact will be ignored.
+                      </p>
+                    </div>
                   )}
 
                   {symbolSwapRules.map((rule, idx) => (
