@@ -1870,6 +1870,17 @@ export default function NewEvaluationPage() {
           </FormField>
         </CollapsibleSection>
 
+        {/* Tier explanation */}
+        <div className="rounded-lg border-l-4 border-primary bg-primary/5 p-4 mb-4">
+          <p className="text-sm font-semibold text-foreground mb-2">📐 How This Form Works</p>
+          <p className="text-xs text-muted-foreground">
+            Define your game in layers: <strong>Structure</strong> (how it plays) →{" "}
+            <strong>Base Modifiers</strong> (always-on mechanics) →{" "}
+            <strong>Primary Features</strong> (triggered rewards) →{" "}
+            <strong>Enhancements</strong> (feature modifiers like Gamble, Bonus Buy).
+          </p>
+        </div>
+
         {/* SECTION 12 — Base Game Modifiers */}
         <CollapsibleSection
           title="Base Game Modifiers"
