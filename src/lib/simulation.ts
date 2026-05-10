@@ -1288,7 +1288,9 @@ export function computeSimulatedPopulation(
   const volDeepSurvival = deepSpinData?.volatility_survival ?? 72;
 
   const d1Base = Math.round((casualDeepSurvival * 0.3 + bonusDeepSurvival * 0.4 + volDeepSurvival * 0.3) * 0.7);
-  const retentionD1 = Math.max(10, Math.min(85, Math.round(d1Base * varianceMultiplier)));
+  const symbolSwapImpact = computeSymbolSwapImpact(game);
+  const d1WithBoosts = d1Base + symbolSwapImpact.retentionD1Boost;
+  const retentionD1 = Math.max(10, Math.min(85, Math.round(d1WithBoosts * varianceMultiplier)));
 
   // ═══ D7 Retention — derived from D1 with volatility decay ═══
   const volDecayFactor =
