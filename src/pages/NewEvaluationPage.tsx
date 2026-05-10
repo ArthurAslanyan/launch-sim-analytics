@@ -230,6 +230,15 @@ export default function NewEvaluationPage() {
   const [gambleMaxRounds, setGambleMaxRounds] = useState("");
   const [gambleWinCap, setGambleWinCap] = useState("");
 
+  // Symbol Swap Feature
+  const [symbolSwapEnabled, setSymbolSwapEnabled] = useState(false);
+  const [symbolSwapTriggerMode, setSymbolSwapTriggerMode] = useState<"Random Non-Winning" | "Specific Interval" | "Both">("Random Non-Winning");
+  const [symbolSwapRandomProbability, setSymbolSwapRandomProbability] = useState("30");
+  const [symbolSwapIntervalSpins, setSymbolSwapIntervalSpins] = useState("");
+  const [symbolSwapRules, setSymbolSwapRules] = useState<Array<{ id: string; sourceSymbol: string; targetSymbol: string; swapCount: "all" | number }>>([]);
+  const [symbolSwapRtpContribution, setSymbolSwapRtpContribution] = useState("0.75");
+  const [symbolSwapWinFrequencyBoost, setSymbolSwapWinFrequencyBoost] = useState("1.08");
+
   // Design Intent
   const [primaryGoal, setPrimaryGoal] = useState("");
   const [targetAudience, setTargetAudience] = useState("");
