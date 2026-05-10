@@ -195,6 +195,7 @@ export interface GameConcept {
   winPacing?: "Front-loaded" | "Even" | "Bonus-dependent";
   requiresSimulation?: boolean;
   gambleFeature?: GambleFeature;
+  symbolSwapFeature?: SymbolSwapFeature;
   populationRange?: PopulationRange;
   referenceGame?: string;
 }
