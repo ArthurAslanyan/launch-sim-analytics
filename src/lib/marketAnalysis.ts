@@ -326,7 +326,7 @@ export async function runMarketAnalysis(game: GameConcept): Promise<MarketAnalys
       matchScore: scoreGameMatch(
         ref,
         game.gameType,
-        game.targetMarkets?.[0] ?? "",
+        game.themeCategories ?? [],
         game.volatility,
         fNames,
         game.targetMarkets || []
