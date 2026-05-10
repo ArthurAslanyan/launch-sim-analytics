@@ -1721,5 +1721,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     performanceScore,
     dataInterpretation,
     gambleImpact,
+    symbolSwapImpact,
   };
 }
