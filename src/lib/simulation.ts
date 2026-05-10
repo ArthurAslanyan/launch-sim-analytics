@@ -1344,6 +1344,7 @@ export interface SimulationResults {
   dataInterpretation: DataInterpretation[];
   gambleImpact?: GambleImpact;
   symbolSwapImpact?: SymbolSwapImpact;
+  archetypeFitScores: ArchetypeFitScore[];
 }
 
 const POPULATION_MIDPOINTS: Record<PopulationRange, number> = {
