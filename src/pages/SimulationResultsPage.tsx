@@ -14,6 +14,7 @@ import {
   Shield,
   Clock,
   Zap,
+  RefreshCw,
 } from "lucide-react";
 import {
   LineChart,
@@ -1063,6 +1064,94 @@ export default function SimulationResultsPage() {
               </p>
               <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {Object.entries(results.gambleImpact.archetypeFitAdjustments).map(([archetype, adjustment]) => {
+                  if (adjustment === 0) return null;
+                  const isPositive = adjustment > 0;
+                  return (
+                    <div
+                      key={archetype}
+                      className={cn(
+                        "rounded-lg border p-3 flex items-center justify-between",
+                        isPositive ? "border-green-500/30 bg-green-500/5" : "border-red-500/30 bg-red-500/5"
+                      )}
+                    >
+                      <span className="text-sm font-medium">
+                        {archetype.replace(" Player", "")}
+                      </span>
+                      <span className={cn(
+                        "text-sm font-bold tabular-nums",
+                        isPositive ? "text-green-600 dark:text-green-400" : "text-red-600 dark:text-red-400"
+                      )}>
+                        {isPositive ? "+" : ""}{adjustment.toFixed(1)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ────── Symbol Swap Impact ────── */}
+        {results.symbolSwapImpact && results.symbolSwapImpact.notes.length > 0 && (
+          <SectionCard title="Symbol Swap Impact" icon={<RefreshCw className="h-5 w-5 text-primary" />}>
+            <p className="text-sm text-muted-foreground mb-4">
+              Behavioral effect of the symbol swap mechanic on player archetypes and win frequency.
+            </p>
+
+            <div className="grid gap-4 sm:grid-cols-2 mb-4">
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+                  Configuration
+                </p>
+                <ul className="space-y-1.5">
+                  {results.symbolSwapImpact.notes.map((note, i) => (
+                    <li key={i} className="text-sm flex items-start gap-2">
+                      <span className="text-primary mt-1">•</span>
+                      <span className="text-foreground">{note}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <div className="rounded-lg border bg-card p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                  Quantitative Impact
+                </p>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">RTP Contribution</span>
+                    <span className="font-bold text-green-600">
+                      +{results.symbolSwapImpact.estimatedRtpContribution.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">Win Frequency Boost</span>
+                    <span className="font-bold text-green-600">
+                      {((results.symbolSwapImpact.estimatedWinFrequencyBoost - 1) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm border-t pt-2">
+                    <span className="text-muted-foreground">D1 Retention Boost</span>
+                    <span className="font-bold text-primary">
+                      +{results.symbolSwapImpact.retentionD1Boost} pts
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-muted-foreground">D7 Retention Boost</span>
+                    <span className="font-bold text-primary">
+                      +{results.symbolSwapImpact.retentionD7Boost} pts
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-lg border bg-card p-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
+                Per-Archetype Fit Adjustment
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {Object.entries(results.symbolSwapImpact.archetypeFitAdjustments).map(([archetype, adjustment]) => {
                   if (adjustment === 0) return null;
                   const isPositive = adjustment > 0;
                   return (

@@ -102,6 +102,23 @@ export interface GambleFeature {
   };
 }
 
+export interface SymbolSwapRule {
+  id: string;
+  sourceSymbol: string;
+  targetSymbol: string;
+  swapCount: "all" | number;
+}
+
+export interface SymbolSwapFeature {
+  enabled: boolean;
+  triggerMode: "Random Non-Winning" | "Specific Interval" | "Both";
+  randomTriggerProbability?: number;
+  intervalSpins?: number;
+  swapRules: SymbolSwapRule[];
+  estimatedRtpContribution?: number;
+  estimatedWinFrequencyBoost?: number;
+}
+
 export interface GameConcept {
   gameName: string;
   targetMarkets: string[];
@@ -178,6 +195,7 @@ export interface GameConcept {
   winPacing?: "Front-loaded" | "Even" | "Bonus-dependent";
   requiresSimulation?: boolean;
   gambleFeature?: GambleFeature;
+  symbolSwapFeature?: SymbolSwapFeature;
   populationRange?: PopulationRange;
   referenceGame?: string;
 }
@@ -385,8 +403,85 @@ export function computeGambleImpact(game: GameConcept): GambleImpact {
 }
 
 // ============================================
-// SESSION BEHAVIOR CALCULATION
+// SYMBOL SWAP BEHAVIORAL IMPACT
 // ============================================
+
+export interface SymbolSwapImpact {
+  archetypeFitAdjustments: Record<string, number>;
+  retentionD1Boost: number;
+  retentionD7Boost: number;
+  estimatedRtpContribution: number;
+  estimatedWinFrequencyBoost: number;
+  notes: string[];
+}
+
+export function computeSymbolSwapImpact(game: GameConcept): SymbolSwapImpact {
+  const swap = game.symbolSwapFeature;
+
+  if (!swap || !swap.enabled) {
+    return {
+      archetypeFitAdjustments: {},
+      retentionD1Boost: 0,
+      retentionD7Boost: 0,
+      estimatedRtpContribution: 0,
+      estimatedWinFrequencyBoost: 1.0,
+      notes: [],
+    };
+  }
+
+  const notes: string[] = [];
+  notes.push(`Symbol Swap enabled (${swap.triggerMode})`);
+
+  if (swap.triggerMode === "Random Non-Winning" || swap.triggerMode === "Both") {
+    if (swap.randomTriggerProbability) {
+      notes.push(`Random trigger: ${swap.randomTriggerProbability}% of spins`);
+    }
+  }
+
+  if (swap.triggerMode === "Specific Interval" || swap.triggerMode === "Both") {
+    if (swap.intervalSpins) {
+      notes.push(`Interval trigger: every ${swap.intervalSpins} spins`);
+    }
+  }
+
+  if (swap.swapRules.length > 0) {
+    const ruleCount = swap.swapRules.length;
+    notes.push(`${ruleCount} swap rule${ruleCount > 1 ? "s" : ""} defined`);
+    swap.swapRules.forEach(rule => {
+      const swapText = rule.swapCount === "all" ? "all instances" : `${rule.swapCount} instance${rule.swapCount !== 1 ? "s" : ""}`;
+      notes.push(`  • Swap ${rule.sourceSymbol} → ${rule.targetSymbol} (${swapText})`);
+    });
+  }
+
+  const archetypeFitAdjustments: Record<string, number> = {
+    "Casual Player": 1.2,
+    "Bonus-Seeking Player": 0.3,
+    "Volatility-Seeking Player": -0.5,
+    "Budget-Constrained Player": 0.8,
+    "Progress-Oriented Player": 0.6,
+    "Feature-Focused Player": 0.2,
+  };
+
+  const estimatedRtpContribution = swap.estimatedRtpContribution ?? 0.75;
+
+  const baseFrequencyBoost = 1.08;
+  const frequencyMultiplier = Math.min(1.25, 1 + (swap.swapRules.length * 0.03));
+  const estimatedWinFrequencyBoost = baseFrequencyBoost * frequencyMultiplier;
+
+  const retentionD1Boost = 2;
+  const retentionD7Boost = 1;
+
+  return {
+    archetypeFitAdjustments,
+    retentionD1Boost,
+    retentionD7Boost,
+    estimatedRtpContribution,
+    estimatedWinFrequencyBoost,
+    notes,
+  };
+}
+
+
 
 export interface SessionBehavior {
   baseSessionLength: number;
@@ -1113,6 +1208,7 @@ export interface SimulationResults {
   performanceScore: PerformanceScore;
   dataInterpretation: DataInterpretation[];
   gambleImpact?: GambleImpact;
+  symbolSwapImpact?: SymbolSwapImpact;
 }
 
 const POPULATION_MIDPOINTS: Record<PopulationRange, number> = {
@@ -1193,7 +1289,9 @@ export function computeSimulatedPopulation(
   const volDeepSurvival = deepSpinData?.volatility_survival ?? 72;
 
   const d1Base = Math.round((casualDeepSurvival * 0.3 + bonusDeepSurvival * 0.4 + volDeepSurvival * 0.3) * 0.7);
-  const retentionD1 = Math.max(10, Math.min(85, Math.round(d1Base * varianceMultiplier)));
+  const symbolSwapImpact = computeSymbolSwapImpact(game);
+  const d1WithBoosts = d1Base + symbolSwapImpact.retentionD1Boost;
+  const retentionD1 = Math.max(10, Math.min(85, Math.round(d1WithBoosts * varianceMultiplier)));
 
   // ═══ D7 Retention — derived from D1 with volatility decay ═══
   const volDecayFactor =
@@ -1204,8 +1302,8 @@ export function computeSimulatedPopulation(
 
   const d7Base = Math.round(retentionD1 * (volDecayFactor + (1 - metrics.featureDependencyIndex) * 0.15));
   const gambleImpact = computeGambleImpact(game);
-  const d7WithGamble = d7Base + gambleImpact.retentionD7Adjustment;
-  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7WithGamble * varianceMultiplier)));
+  const d7WithBonuses = d7Base + gambleImpact.retentionD7Adjustment + symbolSwapImpact.retentionD7Boost;
+  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7WithBonuses * varianceMultiplier)));
 
   // ═══ Churn Rate ═══
   const churnRate = Math.max(15, Math.min(95, earlyChurnRate));
@@ -1542,6 +1640,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
   const behavioralSimulation = computeBehavioralSimulation(game);
   const inputMetrics = computeInputMetrics(game);
   const gambleImpact = computeGambleImpact(game);
+  const symbolSwapImpact = computeSymbolSwapImpact(game);
   const archetypeSelection = selectArchetype(game, inputMetrics);
   const sessionBehavior = computeSessionBehavior(game, inputMetrics);
   const featureInteraction = computeFeatureInteraction(game, inputMetrics);
@@ -1622,5 +1721,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     performanceScore,
     dataInterpretation,
     gambleImpact,
+    symbolSwapImpact,
   };
 }
