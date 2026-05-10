@@ -1640,6 +1640,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
   const behavioralSimulation = computeBehavioralSimulation(game);
   const inputMetrics = computeInputMetrics(game);
   const gambleImpact = computeGambleImpact(game);
+  const symbolSwapImpact = computeSymbolSwapImpact(game);
   const archetypeSelection = selectArchetype(game, inputMetrics);
   const sessionBehavior = computeSessionBehavior(game, inputMetrics);
   const featureInteraction = computeFeatureInteraction(game, inputMetrics);
