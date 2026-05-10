@@ -469,7 +469,8 @@ export interface SymbolSwapImpact {
 export function computeSymbolSwapImpact(game: GameConcept): SymbolSwapImpact {
   const swap = game.symbolSwapFeature;
 
-  if (!swap || !swap.enabled) {
+  // Validate configuration — invalid config = no impact (treat as disabled)
+  if (!isSymbolSwapFeatureValid(swap)) {
     return {
       archetypeFitAdjustments: {},
       retentionD1Boost: 0,
