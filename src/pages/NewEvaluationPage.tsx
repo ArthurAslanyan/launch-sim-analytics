@@ -70,7 +70,7 @@ const TARGET_AUDIENCES = ["Casual", "Bonus seekers", "High volatility players"];
 const SPECIAL_MECHANICS = [
   "Cascades", "Expanding Wilds", "Sticky Wilds", "Multiplier Symbols",
   "Split Symbols", "Progressive Jackpot", "Collection Mechanics",
-  "Bonus Buy", "Ante Bet", "Megacluster",
+  "Megacluster",
 ];
 
 const createEmptyFeature = (): Feature => ({
