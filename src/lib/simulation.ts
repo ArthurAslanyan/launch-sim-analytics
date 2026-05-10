@@ -1843,6 +1843,7 @@ export function runSimulation(game: GameConcept): SimulationResults {
     archetypeStopReasons,
     simulatedPopulation,
     performanceScore,
+    archetypeFitScores,
   });
 
   return {
