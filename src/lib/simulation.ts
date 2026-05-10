@@ -383,10 +383,31 @@ export interface GambleImpact {
   notes: string[];
 }
 
+// ============================================
+// CONFIGURATION VALIDATION
+// ============================================
+
+export function isGambleFeatureValid(gamble: GambleFeature | undefined): boolean {
+  if (!gamble || !gamble.enabled) return false;
+  if (!gamble.styles.color && !gamble.styles.suit) return false;
+  return true;
+}
+
+export function isSymbolSwapFeatureValid(swap: SymbolSwapFeature | undefined): boolean {
+  if (!swap || !swap.enabled) return false;
+  if (!swap.swapRules || swap.swapRules.length === 0) return false;
+  const hasValidRandom = (swap.triggerMode === "Random Non-Winning" || swap.triggerMode === "Both")
+    && (swap.randomTriggerProbability ?? 0) > 0;
+  const hasValidInterval = (swap.triggerMode === "Specific Interval" || swap.triggerMode === "Both")
+    && (swap.intervalSpins ?? 0) >= 2;
+  return hasValidRandom || hasValidInterval;
+}
+
 export function computeGambleImpact(game: GameConcept): GambleImpact {
   const gamble = game.gambleFeature;
 
-  if (!gamble || !gamble.enabled) {
+  // Validate configuration — invalid config = no impact (treat as disabled)
+  if (!isGambleFeatureValid(gamble)) {
     return {
       archetypeFitAdjustments: {},
       sessionVarianceMultiplier: 1.0,
