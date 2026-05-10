@@ -843,6 +843,9 @@ export default function SimulationResultsPage() {
                   Simulated Population Metrics — {results.simulatedPopulation.rangeLabel}
                 </h3>
               </div>
+              <p className="text-xs text-muted-foreground mb-4 -mt-2">
+                ℹ Population estimates are reproducible for the same game inputs. Different inputs produce structural variations of ±5%.
+              </p>
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {[
