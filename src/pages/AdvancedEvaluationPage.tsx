@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   Info, Grid3X3, PieChart, Sparkles, BarChart3, TrendingUp,
   Zap, Target, Plus, Trash2, Play, ChevronDown, ArrowLeft,
-  HelpCircle,
+  HelpCircle, RefreshCw, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
