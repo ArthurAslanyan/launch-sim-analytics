@@ -1208,6 +1208,7 @@ export interface SimulationResults {
   performanceScore: PerformanceScore;
   dataInterpretation: DataInterpretation[];
   gambleImpact?: GambleImpact;
+  symbolSwapImpact?: SymbolSwapImpact;
 }
 
 const POPULATION_MIDPOINTS: Record<PopulationRange, number> = {
