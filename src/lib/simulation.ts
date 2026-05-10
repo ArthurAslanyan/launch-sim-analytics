@@ -102,6 +102,23 @@ export interface GambleFeature {
   };
 }
 
+export interface SymbolSwapRule {
+  id: string;
+  sourceSymbol: string;
+  targetSymbol: string;
+  swapCount: "all" | number;
+}
+
+export interface SymbolSwapFeature {
+  enabled: boolean;
+  triggerMode: "Random Non-Winning" | "Specific Interval" | "Both";
+  randomTriggerProbability?: number;
+  intervalSpins?: number;
+  swapRules: SymbolSwapRule[];
+  estimatedRtpContribution?: number;
+  estimatedWinFrequencyBoost?: number;
+}
+
 export interface GameConcept {
   gameName: string;
   targetMarkets: string[];
