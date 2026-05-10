@@ -1301,8 +1301,8 @@ export function computeSimulatedPopulation(
 
   const d7Base = Math.round(retentionD1 * (volDecayFactor + (1 - metrics.featureDependencyIndex) * 0.15));
   const gambleImpact = computeGambleImpact(game);
-  const d7WithGamble = d7Base + gambleImpact.retentionD7Adjustment;
-  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7WithGamble * varianceMultiplier)));
+  const d7WithBonuses = d7Base + gambleImpact.retentionD7Adjustment + symbolSwapImpact.retentionD7Boost;
+  const retentionD7 = Math.max(5, Math.min(40, Math.round(d7WithBonuses * varianceMultiplier)));
 
   // ═══ Churn Rate ═══
   const churnRate = Math.max(15, Math.min(95, earlyChurnRate));
