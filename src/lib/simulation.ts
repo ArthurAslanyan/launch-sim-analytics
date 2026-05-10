@@ -1869,5 +1869,6 @@ export function runSimulation(game: GameConcept): SimulationResults {
     dataInterpretation,
     gambleImpact,
     symbolSwapImpact,
+    archetypeFitScores,
   };
 }
