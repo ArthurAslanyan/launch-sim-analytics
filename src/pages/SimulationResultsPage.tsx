@@ -15,7 +15,9 @@ import {
   Clock,
   Zap,
   RefreshCw,
+  FileDown,
 } from "lucide-react";
+import { ExportDialog } from "@/components/ExportDialog";
 import {
   LineChart,
   Line,
