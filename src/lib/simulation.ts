@@ -838,17 +838,31 @@ export interface BehavioralInsight {
   type: "warning" | "info" | "positive";
 }
 
+export interface ActionableInsight {
+  action: string;
+  expectedImpact: string;
+  difficulty: "Easy" | "Medium" | "Hard";
+  priority: 1 | 2 | 3;
+  reasoning: string;
+  example?: string;
+}
+
 export interface DataInterpretation {
   category: string;
+  priority: "Critical" | "High" | "Medium" | "Low";
+  impact: "Severe" | "Moderate" | "Minor";
   metrics: Array<{
     name: string;
     value: string;
     explanation: string;
-    benchmark?: string;
+    benchmark: string;
     verdict: "excellent" | "good" | "average" | "poor";
   }>;
   narrative: string;
-  actionable: string[];
+  rootCause: string;
+  actionable: ActionableInsight[];
+  comparativeContext?: string;
+  riskFlags?: string[];
 }
 
 export function generateBehavioralInsights(
