@@ -647,63 +647,93 @@ export function computeArchetypeFitScores(game: GameConcept, metrics: ComputedIn
   const gambleImpact = computeGambleImpact(game);
   const swapImpact = computeSymbolSwapImpact(game);
 
-  const archetypes: Array<{ name: string; baseScore: number; minClamp: number; maxClamp: number }> = [
+  const volOrder: Record<string, number> = { "Low": 1, "Medium": 2, "High": 3, "Very High": 4 };
+  const gameVolTier = volOrder[game.volatility] || 2;
+
+  const archetypes: Array<{ name: string; compute: () => { base: number; passes: boolean } }> = [
     {
       name: "Casual Player",
-      baseScore: (() => {
-        const vol = game.volatility === "Low" ? 9 : game.volatility === "Medium" ? 7 : game.volatility === "High" ? 5 : 2;
-        const fdi = metrics.featureDependencyIndex > 0.65 ? -2 : 0;
-        return vol + fdi;
-      })(),
-      minClamp: 2, maxClamp: 10,
+      compute: () => {
+        if (gameVolTier > volOrder["Medium"]) return { base: 2, passes: false };
+        if (metrics.featureDependencyIndex > 0.60) return { base: 3, passes: false };
+        let score = 5;
+        if (game.volatility === "Low") score += 3;
+        else if (game.volatility === "Medium") score += 1;
+        if (metrics.featureDependencyIndex < 0.45) score += 2;
+        return { base: Math.min(10, score), passes: true };
+      },
     },
     {
       name: "Bonus-Seeking Player",
-      baseScore: (() => {
-        const fdi = metrics.featureDependencyIndex >= 0.55 && metrics.featureDependencyIndex <= 0.75 ? 9 : 6;
-        const vol = game.volatility === "High" || game.volatility === "Very High" ? 1 : 0;
-        return fdi + vol;
-      })(),
-      minClamp: 4, maxClamp: 10,
+      compute: () => {
+        const { triggerProbability } = computeEffectiveFDI(
+          metrics.featureDependencyIndex, 12, game.featureTriggerFrequency || "1 in 150"
+        );
+        if (metrics.featureDependencyIndex < 0.45) return { base: 3, passes: false };
+        if (triggerProbability < 0.40) return { base: 4, passes: false };
+        let score = 5;
+        if (metrics.featureDependencyIndex >= 0.55 && metrics.featureDependencyIndex <= 0.75) score += 3;
+        if (triggerProbability > 0.60) score += 2;
+        return { base: Math.min(10, score), passes: true };
+      },
     },
     {
       name: "Volatility-Seeking Player",
-      baseScore: (() => {
-        const vol = game.volatility === "Very High" ? 10 : game.volatility === "High" ? 8 : 4;
-        const topWin = game.topWin >= 5000 ? 1 : -2;
-        return vol + topWin;
-      })(),
-      minClamp: 3, maxClamp: 10,
+      compute: () => {
+        if (gameVolTier < volOrder["High"]) return { base: 2, passes: false };
+        if (game.topWin < 3000) return { base: 3, passes: false };
+        let score = 5;
+        if (game.volatility === "Very High") score += 4;
+        else if (game.volatility === "High") score += 2;
+        if (game.topWin >= 5000) score += 2;
+        return { base: Math.min(10, score), passes: true };
+      },
     },
     {
       name: "Budget-Constrained Player",
-      baseScore: (() => {
-        const vol = game.volatility === "Low" || game.volatility === "Medium" ? 8 : 3;
-        const bgt = (game.rtpBreakdown?.baseGameRtp ?? 0) < 45 ? -3 : 0;
-        return vol + bgt;
-      })(),
-      minClamp: 2, maxClamp: 9,
+      compute: () => {
+        const baseRTP = game.rtpBreakdown?.baseGameRtp || 50;
+        if (gameVolTier > volOrder["Medium"]) return { base: 2, passes: false };
+        if (baseRTP < 45) return { base: 3, passes: false };
+        let score = 5;
+        if (game.volatility === "Low") score += 3;
+        if (baseRTP >= 50) score += 2;
+        return { base: Math.min(10, score), passes: true };
+      },
     },
     {
       name: "Progress-Oriented Player",
-      baseScore: (() => {
-        const hasProgress = game.specialMechanics?.some(m => m.includes("Collection") || m.includes("Unlock")) ? 5 : 0;
-        return 5 + hasProgress;
-      })(),
-      minClamp: 3, maxClamp: 9,
+      compute: () => {
+        const hasProgression =
+          game.specialMechanics?.includes("Collection Mechanics") ||
+          game.specialMechanics?.includes("Progressive Jackpot") ||
+          game.features.some(f => f.type === "Progress Meter / True Persistent");
+        if (!hasProgression) return { base: 3, passes: false };
+        let score = 6;
+        const progressFeatureCount = game.features.filter(f =>
+          f.type === "Progress Meter / True Persistent" ||
+          f.type === "Pot / Perceived Persistent"
+        ).length;
+        score += Math.min(3, progressFeatureCount * 1.5);
+        return { base: Math.min(10, score), passes: true };
+      },
     },
   ];
 
   return archetypes.map(arch => {
+    const result = arch.compute();
     const gambleAdj = gambleImpact.archetypeFitAdjustments[arch.name] ?? 0;
     const swapAdj = swapImpact.archetypeFitAdjustments[arch.name] ?? 0;
-    const rawScore = arch.baseScore + gambleAdj + swapAdj;
-    const finalScore = Math.max(arch.minClamp, Math.min(arch.maxClamp, rawScore));
-    const fitLabel: ArchetypeFitScore["fitLabel"] = finalScore >= 6 ? "Good fit" : finalScore >= 4 ? "Moderate fit" : "Challenging";
+    const rawScore = result.base + gambleAdj + swapAdj;
+    const finalScore = result.passes
+      ? Math.max(2, Math.min(10, rawScore))
+      : Math.min(4, rawScore);
+    const fitLabel: ArchetypeFitScore["fitLabel"] =
+      finalScore >= 7 ? "Good fit" : finalScore >= 5 ? "Moderate fit" : "Challenging";
 
     return {
       archetype: arch.name,
-      baseScore: arch.baseScore,
+      baseScore: result.base,
       gambleAdjustment: gambleAdj,
       symbolSwapAdjustment: swapAdj,
       finalScore,
