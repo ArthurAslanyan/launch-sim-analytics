@@ -37,15 +37,15 @@ function getSeededRandom(game: GameConcept): () => number {
 
 export function isHitFrequencyCompatible(
   hitFrequency: number,
-  volatility: "Low" | "Medium" | "High" | "Very High"
+  volatility: string
 ): boolean {
-  const ranges = {
+  const ranges: Record<string, { minHF: number; maxHF: number }> = {
     "Low": { minHF: 0.35, maxHF: 0.50 },
     "Medium": { minHF: 0.25, maxHF: 0.38 },
     "High": { minHF: 0.18, maxHF: 0.28 },
     "Very High": { minHF: 0.12, maxHF: 0.22 },
   };
-  const r = ranges[volatility];
+  const r = ranges[volatility] || ranges["Medium"];
   return hitFrequency >= r.minHF && hitFrequency <= r.maxHF;
 }
 
