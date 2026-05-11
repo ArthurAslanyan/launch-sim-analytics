@@ -31,6 +31,100 @@ function getSeededRandom(game: GameConcept): () => number {
   return mulberry32(seed);
 }
 
+// ============================================
+// MATHEMATICAL CONSTRAINT UTILITIES
+// ============================================
+
+export function isHitFrequencyCompatible(
+  hitFrequency: number,
+  volatility: "Low" | "Medium" | "High" | "Very High"
+): boolean {
+  const ranges = {
+    "Low": { minHF: 0.35, maxHF: 0.50 },
+    "Medium": { minHF: 0.25, maxHF: 0.38 },
+    "High": { minHF: 0.18, maxHF: 0.28 },
+    "Very High": { minHF: 0.12, maxHF: 0.22 },
+  };
+  const r = ranges[volatility];
+  return hitFrequency >= r.minHF && hitFrequency <= r.maxHF;
+}
+
+export function estimateVolatilityAfterRTPShift(
+  currentRTPBreakdown: GameConcept["rtpBreakdown"],
+  shiftAmount: number,
+  from: "features" | "base",
+  to: "features" | "base",
+  currentVolatility: "Low" | "Medium" | "High" | "Very High"
+): "Low" | "Medium" | "High" | "Very High" {
+  if (!currentRTPBreakdown) return currentVolatility;
+
+  const featureRTP = (currentRTPBreakdown.freeSpinsRtp || 0) +
+                     (currentRTPBreakdown.respinRtp || 0) +
+                     (currentRTPBreakdown.otherFeatureRtp || 0);
+  const baseRTP = currentRTPBreakdown.baseGameRtp || 0;
+
+  let newFeatureRTP = featureRTP;
+  let newBaseRTP = baseRTP;
+  if (from === "features" && to === "base") {
+    newFeatureRTP -= shiftAmount;
+    newBaseRTP += shiftAmount;
+  } else if (from === "base" && to === "features") {
+    newBaseRTP -= shiftAmount;
+    newFeatureRTP += shiftAmount;
+  }
+
+  const totalRTP = newFeatureRTP + newBaseRTP +
+    (currentRTPBreakdown.wildRtp || 0) + (currentRTPBreakdown.jackpotRtp || 0);
+  const newFDI = totalRTP > 0 ? newFeatureRTP / totalRTP : 0.5;
+  const oldFDI = (baseRTP + featureRTP) > 0 ? featureRTP / (baseRTP + featureRTP) : 0.5;
+
+  const tierMap = { "Low": 1, "Medium": 2, "High": 3, "Very High": 4 } as const;
+  const tierToVol: Record<number, "Low" | "Medium" | "High" | "Very High"> = {
+    1: "Low", 2: "Medium", 3: "High", 4: "Very High",
+  };
+  const currentTier = tierMap[currentVolatility];
+  const fdiChange = oldFDI - newFDI;
+  const tierChange = Math.round(fdiChange / 0.1);
+  const newTier = Math.max(1, Math.min(4, currentTier + tierChange));
+  return tierToVol[newTier];
+}
+
+export function isRecommendationFeasible(
+  action: string,
+  game: GameConcept
+): { feasible: boolean; reason?: string } {
+  const a = action.toLowerCase();
+  if (a.includes("cluster") && game.gameType !== "Cluster Pays") {
+    return { feasible: false, reason: "Game is not Cluster Pays type" };
+  }
+  if ((a.includes("cascade") || a.includes("tumble")) &&
+      game.gameType === "Paylines" &&
+      !game.specialMechanics?.includes("Cascades")) {
+    return { feasible: false, reason: "Cascades require game type change or special mechanic addition" };
+  }
+  if (a.includes("guaranteed") && !a.includes("near-miss")) {
+    return { feasible: true, reason: "⚠️ Guaranteed outcomes may require RNG recertification in regulated markets" };
+  }
+  return { feasible: true };
+}
+
+export function computeEffectiveFDI(
+  fdi: number,
+  avgSessionMinutes: number,
+  featureTriggerFrequency: string
+): { effectiveFDI: number; triggerProbability: number } {
+  const avgSessionSpins = avgSessionMinutes * 6;
+  let triggerSpins = 100;
+  if (featureTriggerFrequency.includes("200")) triggerSpins = 200;
+  else if (featureTriggerFrequency.includes("150")) triggerSpins = 150;
+  else if (featureTriggerFrequency.includes("100")) triggerSpins = 100;
+  else if (featureTriggerFrequency.includes("80")) triggerSpins = 80;
+  else if (featureTriggerFrequency.includes("50")) triggerSpins = 50;
+
+  const triggerProbability = Math.min(1, 1 - Math.pow(1 - 1 / triggerSpins, avgSessionSpins));
+  return { effectiveFDI: fdi * triggerProbability, triggerProbability };
+}
+
 export interface RtpBreakdown {
   baseGameRtp: number;
   wildRtp: number;
