@@ -225,7 +225,21 @@ export default function SimulationResultsPage() {
   const riskFlags = results.riskFlags ?? [];
 
   return (
-    <DashboardLayout title="Behavioral Simulation Report" subtitle={`Analysis for "${game.gameName}"`}>
+    <DashboardLayout
+      title="Behavioral Simulation Report"
+      subtitle={`Analysis for "${game.gameName}"`}
+      headerActions={
+        <>
+          <Button variant="outline" onClick={() => navigate("/evaluate")}>
+            Run New Evaluation
+          </Button>
+          <Button onClick={() => setExportDialogOpen(true)} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Export Report
+          </Button>
+        </>
+      }
+    >
       <div className="space-y-8">
 
         {/* Score Summary Bar */}
