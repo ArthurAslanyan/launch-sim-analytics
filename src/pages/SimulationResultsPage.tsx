@@ -934,77 +934,148 @@ export default function SimulationResultsPage() {
 
         {/* ────── Data Interpretation Guide ────── */}
         {results.dataInterpretation && results.dataInterpretation.length > 0 && (
-          <SectionCard title="Data Interpretation Guide" icon={<BarChart3 className="h-5 w-5 text-primary" />}>
-            <p className="text-sm text-muted-foreground mb-4">
-              Detailed breakdown of key metrics, benchmarks, and actionable recommendations tied to this simulation.
+          <SectionCard title="Strategic Insights & Recommendations" icon={<Lightbulb className="h-5 w-5 text-amber-500" />}>
+            <p className="text-sm text-muted-foreground mb-6">
+              Actionable guidance based on your game's simulated performance. Each insight includes concrete steps, expected impact, and real-world examples.
             </p>
             <div className="space-y-6">
-              {results.dataInterpretation.map((interp, idx) => (
-                <div key={idx} className="rounded-lg border bg-card p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Target className="h-4 w-4 text-primary" />
-                    <h4 className="text-sm font-semibold">{interp.category}</h4>
-                  </div>
+              {[...results.dataInterpretation]
+                .sort((a, b) => {
+                  const order = { Critical: 0, High: 1, Medium: 2, Low: 3 } as const;
+                  return order[a.priority] - order[b.priority];
+                })
+                .map((interpretation, idx) => (
+                  <div
+                    key={idx}
+                    className={cn(
+                      "rounded-lg border-l-4 p-5 space-y-4",
+                      interpretation.priority === "Critical" && "border-red-500 bg-red-500/5",
+                      interpretation.priority === "High" && "border-amber-500 bg-amber-500/5",
+                      interpretation.priority === "Medium" && "border-blue-500 bg-blue-500/5",
+                      interpretation.priority === "Low" && "border-green-500 bg-green-500/5"
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-lg font-bold">{interpretation.category}</h3>
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded text-xs font-semibold",
+                            interpretation.priority === "Critical" && "bg-red-500 text-white",
+                            interpretation.priority === "High" && "bg-amber-500 text-white",
+                            interpretation.priority === "Medium" && "bg-blue-500 text-white",
+                            interpretation.priority === "Low" && "bg-green-500 text-white"
+                          )}
+                        >
+                          {interpretation.priority} Priority
+                        </span>
+                        <span
+                          className={cn(
+                            "px-2 py-0.5 rounded text-xs font-medium border",
+                            interpretation.impact === "Severe" && "border-red-500 text-red-600 dark:text-red-400",
+                            interpretation.impact === "Moderate" && "border-amber-500 text-amber-600 dark:text-amber-400",
+                            interpretation.impact === "Minor" && "border-green-500 text-green-600 dark:text-green-400"
+                          )}
+                        >
+                          {interpretation.impact} Impact
+                        </span>
+                      </div>
+                    </div>
 
-                  <div className="grid gap-3 md:grid-cols-2">
-                    {interp.metrics.map((metric, i) => {
-                      const verdictColors = {
-                        excellent: { border: "#2E8950", bg: "#E8F4EE", text: "#145230" },
-                        good: { border: "#3D6955", bg: "#EBF1ED", text: "#1D3D2D" },
-                        average: { border: "#7B8C6F", bg: "#F0F2ED", text: "#3D4538" },
-                        poor: { border: "#C84B4B", bg: "#FDECEC", text: "#7A2828" },
-                      };
-                      const colors = verdictColors[metric.verdict];
-                      return (
-                        <div key={i} className="rounded-md border-l-4 p-3" style={{ borderLeftColor: colors.border, backgroundColor: colors.bg }}>
-                          <div className="flex items-center justify-between gap-2 mb-1">
-                            <span className="text-xs font-semibold" style={{ color: colors.text }}>{metric.name}</span>
-                            <span className="text-[10px] uppercase tracking-wide font-bold px-1.5 py-0.5 rounded" style={{ color: colors.text, backgroundColor: "rgba(255,255,255,0.5)" }}>
-                              {metric.verdict.charAt(0).toUpperCase() + metric.verdict.slice(1)}
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      {interpretation.metrics.map((metric, mIdx) => (
+                        <div key={mIdx} className="rounded-md border bg-card p-3">
+                          <div className="flex items-center justify-between mb-1">
+                            <p className="text-xs font-medium text-muted-foreground">{metric.name}</p>
+                            <span
+                              className={cn(
+                                "text-xs font-bold px-1.5 py-0.5 rounded",
+                                metric.verdict === "excellent" && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                                metric.verdict === "good" && "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+                                metric.verdict === "average" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                                metric.verdict === "poor" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                              )}
+                            >
+                              {metric.verdict}
                             </span>
                           </div>
-                          <p className="text-lg font-bold" style={{ color: colors.text }}>{metric.value}</p>
-                          <p className="text-xs mt-1" style={{ color: colors.text }}>{metric.explanation}</p>
-                          {metric.benchmark && (
-                            <p className="text-[11px] mt-1 italic opacity-75" style={{ color: colors.text }}>
-                              Benchmark: {metric.benchmark}
-                            </p>
-                          )}
+                          <p className="text-lg font-bold text-foreground">{metric.value}</p>
+                          <p className="text-xs text-muted-foreground mt-1">{metric.benchmark}</p>
                         </div>
-                      );
-                    })}
-                  </div>
+                      ))}
+                    </div>
 
-                  <div className="mt-4 rounded-md bg-muted/50 p-3">
-                    <div className="flex items-start gap-2">
-                      <Info className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                      <div>
-                        <p className="text-xs font-semibold mb-1">What This Means</p>
-                        <p className="text-xs text-muted-foreground">{interp.narrative}</p>
+                    <div className="rounded-md bg-secondary/30 p-4">
+                      <p className="text-sm text-foreground leading-relaxed">{interpretation.narrative}</p>
+                    </div>
+
+                    <div className="rounded-md border-l-2 border-muted-foreground/30 pl-4">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-1">Root Cause</p>
+                      <p className="text-sm text-foreground">{interpretation.rootCause}</p>
+                    </div>
+
+                    {interpretation.comparativeContext && (
+                      <div className="rounded-md bg-primary/5 border border-primary/20 p-3">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-primary mb-1">📊 Market Comparison</p>
+                        <p className="text-sm text-foreground">{interpretation.comparativeContext}</p>
                       </div>
+                    )}
+
+                    {interpretation.riskFlags && interpretation.riskFlags.length > 0 && (
+                      <div className="rounded-md bg-red-500/10 border border-red-500/30 p-3 space-y-2">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-red-600 dark:text-red-400">🚨 Risk Alerts</p>
+                        {interpretation.riskFlags.map((risk, rIdx) => (
+                          <p key={rIdx} className="text-sm text-foreground">{risk}</p>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="space-y-3">
+                      <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">💡 Recommended Actions</p>
+                      {[...interpretation.actionable]
+                        .sort((a, b) => a.priority - b.priority)
+                        .map((action, aIdx) => (
+                          <div key={aIdx} className="rounded-lg border bg-card p-4 space-y-2 hover:bg-secondary/50 transition-colors">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
+                                    {action.priority}
+                                  </span>
+                                  <p className="text-sm font-semibold text-foreground">{action.action}</p>
+                                </div>
+                                <p className="text-xs text-muted-foreground ml-8">{action.reasoning}</p>
+                              </div>
+                              <div className="flex flex-col items-end gap-1 shrink-0">
+                                <span
+                                  className={cn(
+                                    "px-2 py-0.5 rounded text-xs font-medium",
+                                    action.difficulty === "Easy" && "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+                                    action.difficulty === "Medium" && "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+                                    action.difficulty === "Hard" && "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
+                                  )}
+                                >
+                                  {action.difficulty}
+                                </span>
+                              </div>
+                            </div>
+                            {action.expectedImpact && action.expectedImpact !== "N/A" && (
+                              <div className="rounded-md bg-primary/10 border border-primary/20 p-2 ml-8">
+                                <p className="text-xs font-semibold text-primary mb-0.5">Expected Impact:</p>
+                                <p className="text-xs text-foreground">{action.expectedImpact}</p>
+                              </div>
+                            )}
+                            {action.example && (
+                              <div className="rounded-md bg-secondary/50 p-2 ml-8">
+                                <p className="text-xs font-semibold text-muted-foreground mb-0.5">Real-World Example:</p>
+                                <p className="text-xs text-foreground italic">{action.example}</p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                     </div>
                   </div>
-
-                  {interp.actionable.length > 0 && (
-                    <div className="mt-3 rounded-md border border-primary/20 bg-primary/5 p-3">
-                      <div className="flex items-start gap-2">
-                        <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                        <div className="flex-1">
-                          <p className="text-xs font-semibold mb-1">Recommended Actions</p>
-                          <ul className="space-y-1">
-                            {interp.actionable.map((action, ai) => (
-                              <li key={ai} className="text-xs text-muted-foreground flex gap-2">
-                                <span className="text-primary">→</span>
-                                <span>{action}</span>
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                ))}
             </div>
           </SectionCard>
         )}
