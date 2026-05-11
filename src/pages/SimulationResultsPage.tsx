@@ -58,8 +58,9 @@ import { cn } from "@/lib/utils";
 
 function SemiGauge({ value, label, size = 120 }: { value: number; label: string; size?: number }) {
   const cx = size / 2;
-  const cy = size * 0.56;
-  const r = size * 0.38;
+  const cy = size * 0.66;
+  const r = size * 0.42;
+  const vbH = size * 0.8;
   const pct = Math.max(0, Math.min(100, value)) / 100;
   const color = value >= 70 ? "hsl(160,45%,35%)" : value >= 40 ? "hsl(40,85%,52%)" : "hsl(0,72%,50%)";
 
