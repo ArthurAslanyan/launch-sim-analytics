@@ -2059,6 +2059,23 @@ export function generateDataInterpretation(
     actionable: archetypeActions,
   });
 
+  // Apply feasibility checks to all recommendations
+  for (const interpretation of interpretations) {
+    interpretation.actionable = interpretation.actionable.map(action => {
+      const feasibility = isRecommendationFeasible(action.action, game);
+      if (!feasibility.feasible) {
+        return {
+          ...action,
+          difficulty: "Hard" as const,
+          reasoning: action.reasoning + ` ⚠️ Feasibility concern: ${feasibility.reason}. Requires structural game changes.`,
+        };
+      } else if (feasibility.reason) {
+        return { ...action, reasoning: action.reasoning + ` ${feasibility.reason}` };
+      }
+      return action;
+    });
+  }
+
   return interpretations;
 }
 
