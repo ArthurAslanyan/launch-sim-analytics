@@ -54,9 +54,10 @@ export function estimateVolatilityAfterRTPShift(
   shiftAmount: number,
   from: "features" | "base",
   to: "features" | "base",
-  currentVolatility: "Low" | "Medium" | "High" | "Very High"
+  currentVolatility: string
 ): "Low" | "Medium" | "High" | "Very High" {
-  if (!currentRTPBreakdown) return currentVolatility;
+  const tierMap: Record<string, number> = { "Low": 1, "Medium": 2, "High": 3, "Very High": 4 };
+  if (!currentRTPBreakdown) return (tierMap[currentVolatility] ? currentVolatility : "Medium") as "Low" | "Medium" | "High" | "Very High";
 
   const featureRTP = (currentRTPBreakdown.freeSpinsRtp || 0) +
                      (currentRTPBreakdown.respinRtp || 0) +
