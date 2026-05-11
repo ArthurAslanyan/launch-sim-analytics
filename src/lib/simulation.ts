@@ -79,11 +79,10 @@ export function estimateVolatilityAfterRTPShift(
   const newFDI = totalRTP > 0 ? newFeatureRTP / totalRTP : 0.5;
   const oldFDI = (baseRTP + featureRTP) > 0 ? featureRTP / (baseRTP + featureRTP) : 0.5;
 
-  const tierMap = { "Low": 1, "Medium": 2, "High": 3, "Very High": 4 } as const;
   const tierToVol: Record<number, "Low" | "Medium" | "High" | "Very High"> = {
     1: "Low", 2: "Medium", 3: "High", 4: "Very High",
   };
-  const currentTier = tierMap[currentVolatility];
+  const currentTier = tierMap[currentVolatility] || 2;
   const fdiChange = oldFDI - newFDI;
   const tierChange = Math.round(fdiChange / 0.1);
   const newTier = Math.max(1, Math.min(4, currentTier + tierChange));
