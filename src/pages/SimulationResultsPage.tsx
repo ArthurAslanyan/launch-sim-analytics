@@ -83,12 +83,12 @@ function SemiGauge({ value, label, size = 120 }: { value: number; label: string;
 
   return (
     <div className="flex flex-col items-center gap-1">
-      <svg width={size} height={size * 0.66} viewBox={`0 0 ${size} ${size * 0.66}`}>
+      <svg width={size} height={vbH} viewBox={`0 0 ${size} ${vbH}`}>
         <path d={trackD} fill="none" stroke="hsl(var(--border))" strokeWidth={8} strokeLinecap="round" />
         {pct > 0 && <path d={fillD} fill="none" stroke={color} strokeWidth={8} strokeLinecap="round" />}
+        <text x={cx} y={cy - r * 0.5} textAnchor="middle" dominantBaseline="middle" fontSize={18} fontWeight="bold" fill="hsl(var(--foreground))">{value}</text>
         <line x1={cx} y1={cy} x2={needleX} y2={needleY} stroke="hsl(var(--foreground))" strokeWidth={2} />
         <circle cx={cx} cy={cy} r={3} fill="hsl(var(--foreground))" />
-        <text x={cx} y={cy - 8} textAnchor="middle" fontSize={18} fontWeight="bold" fill="hsl(var(--foreground))">{value}</text>
       </svg>
       <span className="text-xs font-medium text-muted-foreground text-center leading-tight">{label}</span>
     </div>
