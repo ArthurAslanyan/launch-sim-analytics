@@ -1910,13 +1910,15 @@ export function generateDataInterpretation(
 
   const featureActions: ActionableInsight[] = [];
   if (fdi > 0.75 && sessionMin < 10) {
+    const newVol = estimateVolatilityAfterRTPShift(game.rtpBreakdown, 6, "features", "base", game.volatility);
+    const volChange = newVol !== game.volatility;
     featureActions.push({
-      action: "Shift 5-8% RTP from features to base game small wins (0.5-1.5× bet)",
-      expectedImpact: "+2-3 min session, -5% churn, maintains RTP",
+      action: `Shift 5-8% RTP from features to base game small wins (0.5-1.5× bet)${volChange ? ` — Note: this will reduce volatility from ${game.volatility} to ${newVol}` : ""}`,
+      expectedImpact: `+2-3 min session, -5% churn. ${volChange ? `Volatility drops to ${newVol}.` : "Volatility maintained."}`,
       difficulty: "Medium",
       priority: 1,
-      reasoning: `Your ${(fdi * 100).toFixed(0)}% FDI creates long dry spells. Redistribute to sustain engagement.`,
-      example: "Sweet Bonanza rebalanced 74%→68% FDI; session length +18%, no RTP change.",
+      reasoning: `Your ${(fdi * 100).toFixed(0)}% FDI creates long dry spells. Redistributing 5-8% RTP from infrequent feature wins to frequent base wins improves pacing. ${volChange ? `⚠️ Mathematical consequence: moving RTP from high-variance (features) to low-variance (base) reduces overall volatility. To maintain ${game.volatility}, use a smaller shift (2-3% RTP) or compress win distribution without changing RTP allocation.` : "Your current RTP balance allows this shift without volatility tier change."}`,
+      example: "Sweet Bonanza v2.0: reduced FDI from 74% to 68% by adding tumble multipliers in base game. Volatility dropped from Very High to High — intentional design choice.",
     });
   }
   if (fdi < 0.35 && archetype.includes("Bonus-Seeking")) {
