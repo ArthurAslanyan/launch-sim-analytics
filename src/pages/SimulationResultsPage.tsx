@@ -852,6 +852,45 @@ export default function SimulationResultsPage() {
             );
           })()}
 
+          {/* Effective FDI (only for feature-driven games) */}
+          {(() => {
+            const fdi = results.inputMetrics.featureDependencyIndex;
+            if (fdi < 0.5) return null;
+            const sessionMin = results.simulatedPopulation.avgSessionDurationMinutes;
+            const triggerFreq = game.featureTriggerFrequency || "1 in 150";
+            const avgSessionSpins = sessionMin * 6;
+            let triggerSpins = 100;
+            if (triggerFreq.includes("200")) triggerSpins = 200;
+            else if (triggerFreq.includes("150")) triggerSpins = 150;
+            else if (triggerFreq.includes("80")) triggerSpins = 80;
+            else if (triggerFreq.includes("50")) triggerSpins = 50;
+            const triggerProb = Math.min(1, 1 - Math.pow(1 - 1 / triggerSpins, avgSessionSpins));
+            const effectiveFDI = fdi * triggerProb;
+            const showWarning = effectiveFDI < 0.40;
+            return (
+              <div className={cn(
+                "rounded-lg border p-4 mt-4",
+                showWarning ? "border-amber-500 bg-amber-500/5" : "border-border bg-card"
+              )}>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-muted-foreground">Effective FDI</span>
+                  {showWarning && (
+                    <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">⚠️ Low Access</span>
+                  )}
+                </div>
+                <div className="flex items-baseline gap-2 flex-wrap">
+                  <span className="text-2xl font-bold">{(effectiveFDI * 100).toFixed(0)}%</span>
+                  <span className="text-sm text-muted-foreground">
+                    (FDI: {(fdi * 100).toFixed(0)}% × {(triggerProb * 100).toFixed(0)}% trigger)
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Actual feature RTP players experience based on trigger probability.
+                </p>
+              </div>
+            );
+          })()}
+
           {/* Population metrics */}
           {results.simulatedPopulation && (
             <>
