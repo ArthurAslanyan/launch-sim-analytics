@@ -1033,7 +1033,12 @@ export default function SimulationResultsPage() {
                     <div className="space-y-3">
                       <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">💡 Recommended Actions</p>
                       {[...interpretation.actionable]
-                        .sort((a, b) => a.priority - b.priority)
+                        .map((a): import("@/lib/simulation").ActionableInsight =>
+                          typeof a === "string"
+                            ? { action: a, reasoning: "", priority: 2, difficulty: "Medium", expectedImpact: "" }
+                            : a
+                        )
+                        .sort((a, b) => (a.priority ?? 2) - (b.priority ?? 2))
                         .map((action, aIdx) => (
                           <div key={aIdx} className="rounded-lg border bg-card p-4 space-y-2 hover:bg-secondary/50 transition-colors">
                             <div className="flex items-start justify-between gap-3">
