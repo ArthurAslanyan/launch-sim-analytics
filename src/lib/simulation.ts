@@ -1553,7 +1553,7 @@ export function computeSimulatedPopulation(
     game.volatility === "Medium" ? 0.35 :
     0.45;
 
-  const d7Base = Math.round(retentionD1 * (volDecayFactor + (1 - metrics.featureDependencyIndex) * 0.15));
+  const d7Base = computeBehavioralD7(game, retentionD1, metrics);
   const gambleImpact = computeGambleImpact(game);
   const d7WithBonuses = d7Base + gambleImpact.retentionD7Adjustment + symbolSwapImpact.retentionD7Boost;
   // No second variance multiplication — D7 inherits variance from D1
