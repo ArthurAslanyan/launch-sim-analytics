@@ -1371,8 +1371,25 @@ export function computeBehavioralSimulation(game: GameConcept): BehavioralSimula
       progress_survival: 0,
     };
     for (const a of archetypes) {
-      const raw = 100 * Math.exp(-a.decayRate * spin / 50);
-      const clamped = Math.max(5, Math.min(100, Math.round(raw * 10) / 10));
+      // Piecewise hazard model (bathtub curve)
+      let hazardRate: number;
+      if (spin < 20) hazardRate = a.decayRate * 1.5;
+      else if (spin < 80) hazardRate = a.decayRate * 0.6;
+      else hazardRate = a.decayRate * 1.2;
+
+      let survival = 100;
+      if (spin < 20) {
+        survival = 100 * Math.exp(-hazardRate * spin / 50);
+      } else if (spin < 80) {
+        const survivalAt20 = 100 * Math.exp(-a.decayRate * 1.5 * 20 / 50);
+        survival = survivalAt20 * Math.exp(-hazardRate * (spin - 20) / 50);
+      } else {
+        const survivalAt20 = 100 * Math.exp(-a.decayRate * 1.5 * 20 / 50);
+        const survivalAt80 = survivalAt20 * Math.exp(-a.decayRate * 0.6 * 60 / 50);
+        survival = survivalAt80 * Math.exp(-hazardRate * (spin - 80) / 50);
+      }
+
+      const clamped = Math.max(5, Math.min(100, Math.round(survival * 10) / 10));
       row[archetypeDefs.find(d => d.name === a.name)!.key] = clamped;
     }
     return row;
