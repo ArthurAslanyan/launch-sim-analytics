@@ -175,6 +175,7 @@ export default function SimulationResultsPage() {
   const [results, setResults] = useState<SimulationResults | null>(null);
   const [market, setMarket] = useState<MarketAnalysis | null>(null);
   const [marketLoading, setMarketLoading] = useState(false);
+  const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -477,7 +478,7 @@ export default function SimulationResultsPage() {
               </div>
 
               {/* Main Chart — Session Survival */}
-              <div className="rounded-lg border bg-card p-5">
+              <div className="rounded-lg border bg-card p-5" id="session-journey-chart">
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
@@ -1206,8 +1207,18 @@ export default function SimulationResultsPage() {
         {/* Action Buttons */}
         <div className="flex justify-center gap-4 border-t pt-6">
           <Button variant="outline" onClick={() => navigate("/evaluate")}>Run New Evaluation</Button>
+          <Button onClick={() => setExportDialogOpen(true)} className="gap-2">
+            <FileDown className="h-4 w-4" />
+            Export Report
+          </Button>
         </div>
       </div>
+      <ExportDialog
+        open={exportDialogOpen}
+        onOpenChange={setExportDialogOpen}
+        game={game}
+        results={results}
+      />
     </DashboardLayout>
   );
 }
