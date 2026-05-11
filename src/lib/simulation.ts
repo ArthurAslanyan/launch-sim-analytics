@@ -1992,6 +1992,62 @@ export function generateDataInterpretation(
       : `Your ${(fdi * 100).toFixed(0)}% FDI is below modern standards. Most 2020+ releases aim for 55-70%.`,
   });
 
+  // ═══ FEATURE ACCESSIBILITY (Effective FDI) ═══
+  {
+    const { effectiveFDI, triggerProbability } = computeEffectiveFDI(
+      fdi,
+      sessionMin,
+      game.featureTriggerFrequency || "1 in 150"
+    );
+
+    if (fdi > 0.55 && triggerProbability < 0.50) {
+      const accessActions: ActionableInsight[] = [{
+        action: `Improve feature trigger frequency to 1-in-${Math.max(40, Math.round(sessionMin * 6 * 0.7))} to ensure 70% of sessions reach features`,
+        expectedImpact: `+15-20% player satisfaction, effective FDI rises from ${(effectiveFDI * 100).toFixed(0)}% to ${(fdi * 0.70 * 100).toFixed(0)}%`,
+        difficulty: "Medium",
+        priority: 1,
+        reasoning: `Your ${(fdi * 100).toFixed(0)}% FDI looks strong on paper, but only ${(triggerProbability * 100).toFixed(0)}% of sessions reach features (effective FDI = ${(effectiveFDI * 100).toFixed(0)}%). This creates a "hope vs delivery mismatch". Two solutions: (A) improve trigger frequency, or (B) reduce FDI to match reality.`,
+        example: "Gates of Olympus: 68% FDI with 1-in-100 trigger = 72% trigger probability. Players get what the RTP promises.",
+      }];
+
+      interpretations.push({
+        category: "Feature Accessibility",
+        priority: "High",
+        impact: "Moderate",
+        metrics: [
+          {
+            name: "Feature Dependency Index",
+            value: `${(fdi * 100).toFixed(0)}%`,
+            explanation: "Percentage of RTP allocated to triggered features",
+            benchmark: "55-70% for modern slots",
+            verdict: fdi >= 0.55 && fdi <= 0.70 ? "good" : "average",
+          },
+          {
+            name: "Effective FDI",
+            value: `${(effectiveFDI * 100).toFixed(0)}%`,
+            explanation: "FDI weighted by trigger probability — what players actually experience",
+            benchmark: "Target: >40%",
+            verdict: effectiveFDI >= 0.40 ? "good" : "poor",
+          },
+          {
+            name: "Trigger Probability",
+            value: `${(triggerProbability * 100).toFixed(0)}%`,
+            explanation: "Likelihood of triggering a feature in an average session",
+            benchmark: ">60% for feature-driven games",
+            verdict: triggerProbability >= 0.60 ? "excellent" : triggerProbability >= 0.40 ? "average" : "poor",
+          },
+        ],
+        narrative: `Your game allocates ${(fdi * 100).toFixed(0)}% of RTP to features, but with ${sessionMin}-minute sessions and ${game.featureTriggerFrequency || "1-in-150"} trigger frequency, only ${(triggerProbability * 100).toFixed(0)}% of players reach features. Effective FDI is ${(effectiveFDI * 100).toFixed(0)}% — significantly lower than designed.`,
+        rootCause: "Mismatch between FDI (design promise) and trigger frequency (delivery). Sessions are too short or features trigger too rarely for the RTP allocation.",
+        actionable: accessActions,
+        comparativeContext: `Your ${(triggerProbability * 100).toFixed(0)}% trigger rate vs. successful games: Gates of Olympus (72%), Big Bass Bonanza (68%), Book of Dead (61%).`,
+        riskFlags: triggerProbability < 0.40 ? [
+          "⚠️ Less than 40% of players will ever see your main feature. They're paying for content they'll never experience."
+        ] : undefined,
+      });
+    }
+  }
+
   // ═══ 4. ARCHETYPE ALIGNMENT ═══
   const archetypeFit = results.archetypeFitScores?.find(a => a.archetype === archetype);
   const fitScore = archetypeFit?.finalScore || 5;
