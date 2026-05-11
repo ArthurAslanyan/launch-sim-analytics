@@ -1478,6 +1478,39 @@ const POPULATION_LABELS: Record<PopulationRange, string> = {
   "1000000+":          "1,000,000+ players",
 };
 
+function computeBehavioralD7(
+  game: GameConcept,
+  d1: number,
+  metrics: ComputedInputMetrics
+): number {
+  const hasProgressionSystems =
+    game.specialMechanics?.includes("Collection Mechanics") ||
+    game.specialMechanics?.includes("Progressive Jackpot") ||
+    game.features.some(f => f.type === "Progress Meter / True Persistent");
+  const hasDailyIncentives = false;
+  const contentVariety = (game.features.length || 0) + (game.specialMechanics?.length || 0);
+
+  const contentDepthScore =
+    (hasProgressionSystems ? 0.35 : 0) +
+    (hasDailyIncentives ? 0.25 : 0) +
+    Math.min(0.40, contentVariety * 0.06);
+
+  const volPenaltyMap: Record<string, number> = {
+    "Very High": 0.82, "High": 0.88, "Medium": 0.94, "Low": 1.0,
+  };
+  const volPenalty = volPenaltyMap[game.volatility] || 0.88;
+
+  const { triggerProbability } = computeEffectiveFDI(
+    metrics.featureDependencyIndex,
+    12,
+    game.featureTriggerFrequency || "1 in 150"
+  );
+  const featureAccessBonus = triggerProbability > 0.6 ? 0.08 : triggerProbability > 0.4 ? 0.04 : 0;
+
+  const baseRetentionRate = 0.25 + (contentDepthScore * 0.20) + featureAccessBonus;
+  return Math.round(d1 * baseRetentionRate * volPenalty);
+}
+
 export function computeSimulatedPopulation(
   game: GameConcept,
   sessionBehavior: SessionBehavior,
