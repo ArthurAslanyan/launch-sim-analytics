@@ -51,7 +51,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { GameConcept, SimulationResults } from "@/lib/simulation";
-import { MarketAnalysis, runMarketAnalysis } from "@/lib/marketAnalysis";
+import { MarketAnalysis } from "@/lib/marketAnalysis";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 
 // ─── SVG Gauge ───────────────────────────────────────────────
@@ -189,7 +190,14 @@ export default function SimulationResultsPage() {
         setResults(r);
 
         setMarketLoading(true);
-        runMarketAnalysis(g).then(m => { setMarket(m); setMarketLoading(false); }).catch(() => setMarketLoading(false));
+        supabase.functions
+          .invoke("run-simulation", { body: { action: "marketAnalysis", gameConcept: g } })
+          .then(({ data, error }) => {
+            if (error) throw error;
+            setMarket(data as MarketAnalysis);
+            setMarketLoading(false);
+          })
+          .catch((err) => { console.error("Market analysis failed:", err); setMarketLoading(false); });
       }
     } catch (err) {
       console.error("Failed to load stored simulation data:", err);

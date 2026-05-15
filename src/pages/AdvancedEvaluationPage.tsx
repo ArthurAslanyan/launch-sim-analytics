@@ -10,7 +10,9 @@ import { Input } from "@/components/ui/input";
 import { DashboardLayout } from "@/components/DashboardLayout";
 import { FormField, FormRow } from "@/components/FormSection";
 import { MultiSelect, SelectButtons } from "@/components/MultiSelect";
-import { GameConcept, Feature, RtpBreakdown, WinDistribution, runSimulation } from "@/lib/simulation";
+import { GameConcept, Feature, RtpBreakdown, WinDistribution, SimulationResults } from "@/lib/simulation";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -322,13 +324,25 @@ export default function AdvancedEvaluationPage() {
       },
     };
 
-    const results = runSimulation(gameConcept);
-    sessionStorage.setItem("launchindex_game", JSON.stringify(gameConcept));
-    sessionStorage.setItem("launchindex_results", JSON.stringify(results));
-
-    await new Promise(resolve => setTimeout(resolve, 800));
-    setIsSubmitting(false);
-    navigate("/results");
+    try {
+      const { data, error } = await supabase.functions.invoke("run-simulation", {
+        body: { gameConcept },
+      });
+      if (error) throw error;
+      const results = data as SimulationResults;
+      sessionStorage.setItem("launchindex_game", JSON.stringify(gameConcept));
+      sessionStorage.setItem("launchindex_results", JSON.stringify(results));
+      setIsSubmitting(false);
+      navigate("/results");
+    } catch (err) {
+      console.error("Simulation failed:", err);
+      toast({
+        title: "Simulation failed",
+        description: err instanceof Error ? err.message : "Please try again.",
+        variant: "destructive",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   return (
